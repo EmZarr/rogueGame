@@ -1,0 +1,3 @@
+# rogueGame
+
+She can’t read. According to her lore, the book itself contains text necessary to produce magic, but since it’s also sentient, Yuumi doesn’t even need to be literate to do jack shit because the book just does everything itself anyways. She literally could not read the title to the book itself and just gave up and called it “Book” as it’s name. Doesn’t she feel absolutely fucking stupid knowing she’s always so close to a book she can’t even read? Like, everybody she’s attached to is obviously gonna assume she isn’t some illiterate idiot carrying a big book but no that’s exactly what it is. Doesn’t she feel embarrassed at all? Any shame whatsoever? Stupid ass cat. 
