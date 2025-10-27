@@ -13,6 +13,8 @@ public class Enemy : MonoBehaviour
     {
         _player = GameObject.FindWithTag("Player");
         _currentHealth = _data.health;
+        _agent.updateRotation = false;
+        _agent.updateUpAxis = false;
     }
 
 
