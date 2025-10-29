@@ -14,6 +14,7 @@ public class GetInRangeState : BaseState
     public override void Execute()
     {
         _agent.SetDestination(_player.transform.position);
+        
 
     }
 

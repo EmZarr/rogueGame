@@ -3,15 +3,16 @@
 public class Projectile : MonoBehaviour
 {
     [SerializeField] float _speed = 10f;
-    [SerializeField] float _damage = 5f;
     [SerializeField] float _lifeTime = 5f;
 
     Vector2 _dir;
     float _deathTime;
+    float _damage;
     bool _unblockable = false;
 
-    public void Init(bool unblockable)
+    public void Init(bool unblockable, float damage)
     {
+        _damage = damage;
         if (unblockable)
         {
             // Double the x and y scale
