@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,6 +11,7 @@ public class PlayerController : MonoBehaviour
     public InputActionReference point;  // Gameplay/Look (Vector2) -> <Pointer>/position
     public InputActionReference block;  // Gameplay/Block (Button)
     public InputActionReference dash;   // Gameplay/Dash (Button)
+    public InputActionReference attack;   // Gameplay/Dash (Button)
 
     [Header("Movement")]
     public float maxSpeed = 8f;
@@ -25,10 +28,20 @@ public class PlayerController : MonoBehaviour
     public float shieldSpeed = 20f; // units per second; <= 0 means snap
     public float fallbackRadius = 1.25f; // used if shield starts exactly on player
 
+    [Header("Attack")]
+    public float attackSpeed = 0.1f;
+    public float attackCooldown = 0.5f;
+    public float attackRange = 0.5f;
+    public float damage = 10f;
+    [SerializeField] PlayerMeleeAttackZone attackZone;
+
     private bool isDashing;
+    private bool isAttacking = false;
+    private Vector2 mousePos;
     private float dashEndTime;
     private float nextDashTime;
     private Vector2 dashDir;
+    float nextAttackTime;
 
     Rigidbody2D rb;
     Vector2 vel;
@@ -63,7 +76,35 @@ public class PlayerController : MonoBehaviour
         move.action.Enable();
         point.action.Enable();
         block.action.Enable();
-        if (dash != null) dash.action.Enable();
+        attack.action.Enable();
+        dash.action.Enable();
+        attack.action.performed += ctx => StartCoroutine(BasicAttack(ctx));
+        dash.action.performed += ctx => StartCoroutine(PerformDash(ctx));
+    }
+
+    private IEnumerator BasicAttack(InputAction.CallbackContext ctx)
+    {
+        if (Time.time < nextAttackTime || shield.activeInHierarchy) yield break; // attack cooldown
+        isAttacking = true;
+        attackZone.Activate(mousePos);
+        yield return new WaitForSeconds(attackSpeed);
+        yield return attackZone.DealDamage(damage);
+        attackZone.Deactivate();    
+        nextAttackTime = Time.time+attackCooldown;
+        isAttacking = false;
+    }
+
+    private IEnumerator PerformDash(InputAction.CallbackContext ctx)
+    {
+       if (isDashing || Time.time < nextDashTime) yield break; // dash cooldown
+        Vector2 input = move.action.ReadValue<Vector2>();
+        if (input.sqrMagnitude > 0.01f)
+        {
+            StartDash(input.normalized);
+            yield return new WaitForSeconds(dashLength);
+            isDashing = false;
+            nextDashTime = Time.time + dashCooldown;
+        }
     }
 
     void OnDisable()
@@ -71,6 +112,7 @@ public class PlayerController : MonoBehaviour
         move.action.Disable();
         point.action.Disable();
         block.action.Disable();
+        attack.action.Disable();
         if (dash != null) dash.action.Disable();
     }
 
@@ -81,17 +123,17 @@ public class PlayerController : MonoBehaviour
         float zDist = Mathf.Abs(cam.transform.position.z - transform.position.z);
         Vector3 mouseWorld3 = cam.ScreenToWorldPoint(new Vector3(mouseScreen.x, mouseScreen.y, zDist));
         mouseWorld3.z = transform.position.z; // lock to 2D plane
-        Vector2 mouseWorld = mouseWorld3;
+        mousePos = mouseWorld3;
 
         // Toggle shield on block
-        if (shield != null)
+        if (shield != null && !isAttacking)
             shield.SetActive(block.action.IsPressed());
 
         // --- Aim & orbit the shield ---
         if (shield != null && shield.activeInHierarchy)
         {
             Vector2 playerPos = rb.position;
-            Vector2 toMouse = mouseWorld - playerPos;
+            Vector2 toMouse = mousePos - playerPos;
 
             Vector2 aimDir = toMouse.sqrMagnitude > 0.000001f ? toMouse.normalized : lastAimDir;
             if (aimDir == Vector2.zero) aimDir = Vector2.right;
@@ -115,26 +157,12 @@ public class PlayerController : MonoBehaviour
             // If your sprite's "forward" is up instead of right, use angle - 90f
             // shield.transform.rotation = Quaternion.AngleAxis(angle - 90f, Vector3.forward);
         }
-
-        // Dash input
-        if (!isDashing && Time.time >= nextDashTime && dash != null && dash.action.WasPressedThisFrame())
-        {
-            Vector2 input = move.action.ReadValue<Vector2>();
-            if (input.sqrMagnitude > 0.01f) StartDash(input.normalized);
-        }
-
-        // End dash
-        if (isDashing && Time.time >= dashEndTime)
-        {
-            isDashing = false;
-            nextDashTime = Time.time + dashCooldown;
-        }
     }
 
     void FixedUpdate()
     {
         float dt = Time.fixedDeltaTime;
-
+        if (isAttacking) return;
         if (isDashing)
         {
             rb.MovePosition(rb.position + dashDir * dashSpeed * dt);
