@@ -1,3 +1,4 @@
+using NavMeshPlus.Components;
 using System.Drawing;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -5,15 +6,17 @@ using UnityEngine.Tilemaps;
 public class MapInstantiator : MonoBehaviour
 {
 
-    Tilemap tilemapGround;
+    [SerializeField] Tilemap tilemapGround;
+    [SerializeField] Tilemap tilemapWall;
 
     [SerializeField] TileBase groundTileGrass1;
 
     [SerializeField] TileBase wallTile;
+
+    [SerializeField] NavMeshSurface surface;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        tilemapGround = FindAnyObjectByType<Tilemap>();
         
     }
 
@@ -31,10 +34,12 @@ public class MapInstantiator : MonoBehaviour
                         tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);
                         break;
                     case 2:
-                        tilemapGround.SetTile(new Vector3Int(x, y, 0), wallTile);
+                        tilemapWall.SetTile(new Vector3Int(x, y, 0), wallTile);
                         break;
                 }
             }
         }
+
+        surface.BuildNavMesh();
     }
 }

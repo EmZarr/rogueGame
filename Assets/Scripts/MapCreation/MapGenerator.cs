@@ -28,58 +28,192 @@ public class MapGenerator : MonoBehaviour
 
     void makeRoomGeometry()
     {
-        Vector3Int outlinePlacement = new Vector3Int(Random.Range(0, mapSize.x), Random.Range(0, mapSize.y), 0);
-        Vector3Int outlineSize = new Vector3Int(Random.Range(1, maxOutLineSize.x), Random.Range(1, maxOutLineSize.y), 0);
-        
-        while (!checkRoomPlacementConstraint(outlinePlacement, outlineSize, mapSize))
-        {
-            outlinePlacement = new Vector3Int(Random.Range(0, mapSize.x), Random.Range(0, mapSize.y), 0);
-            outlineSize = new Vector3Int(Random.Range(1, maxOutLineSize.x), Random.Range(1, maxOutLineSize.y), 0);
-        }
-        int roomAmount = Random.Range(1, maxRoomAmount);
-        for (int i = 0; i<roomAmount; i++)
-        {
-            Vector3Int roomPlacement = new Vector3Int(Random.Range(outlinePlacement.x, outlinePlacement.x+outlineSize.x), Random.Range(outlinePlacement.y, outlinePlacement.y+outlineSize.y), 0);
-            Vector3Int roomSize = new Vector3Int(Random.Range(1, maxRoomSize.x), Random.Range(1, maxRoomSize.y), 0);
+        // outline size
+        Vector3Int outlineSize = new Vector3Int(
+            Random.Range(1, maxOutLineSize.x),
+            Random.Range(1, maxOutLineSize.y),
+            0
+        );
 
-            while (!checkRoomPlacementConstraint(roomPlacement, roomSize, outlinePlacement+outlineSize))
-            {
-                roomPlacement = new Vector3Int(Random.Range(outlinePlacement.x, outlinePlacement.x+outlineSize.x), Random.Range(outlinePlacement.y, outlinePlacement.y+outlineSize.y), 0);
-                roomSize = new Vector3Int(Random.Range(1, maxRoomSize.x), Random.Range(1, maxRoomSize.y), 0);
-            }
+        // outline placement (make sure it fits)
+        Vector3Int outlinePlacement = new Vector3Int(
+            Random.Range(0, mapSize.x - outlineSize.x + 1),
+            Random.Range(0, mapSize.y - outlineSize.y + 1),
+            0
+        );
+
+        int roomAmount = Random.Range(1, maxRoomAmount);
+        for (int i = 0; i < roomAmount; i++)
+        {
+            // clamp room size so it can't be bigger than the outline
+            int roomW = Random.Range(1, Mathf.Min(maxRoomSize.x, outlineSize.x) + 1);
+            int roomH = Random.Range(1, Mathf.Min(maxRoomSize.y, outlineSize.y) + 1);
+            Vector3Int roomSize = new Vector3Int(roomW, roomH, 0);
+
+            // place room inside outline    
+            Vector3Int roomPlacement = new Vector3Int(
+                Random.Range(outlinePlacement.x, outlinePlacement.x + outlineSize.x - roomSize.x + 1),
+                Random.Range(outlinePlacement.y, outlinePlacement.y + outlineSize.y - roomSize.y + 1),
+                0
+            );
+
             rooms.Add((roomPlacement, roomSize));
         }
-        
 
-        for (int x = 0; x<mapSize.x; x++)
+        // See outline as walls
+        /*
+        for (int x = outlinePlacement.x; x < outlinePlacement.x + outlineSize.x; x++)
         {
-            for (int y = 0; y<mapSize.y; y++)
+            for (int y = outlinePlacement.y; y < outlinePlacement.y + outlineSize.y; y++)
             {
-                mapArray[x, y] = 0; // empty
-                if (x >= outlinePlacement.x && x < outlinePlacement.x + outlineSize.x &&
-                         y >= outlinePlacement.y && y < outlinePlacement.y + outlineSize.y){
-                    mapArray[x, y] = 2; // Wall
-                }
-                foreach (var room in rooms)
+                mapArray[x, y] = 2;
+            }
+        }*/
+
+        // paint
+        foreach (var room in rooms)
+        {
+            for (int x = room.placement.x; x < room.placement.x + room.size.x; x++)
+            {
+                for (int y = room.placement.y; y < room.placement.y + room.size.y; y++)
                 {
-                    if (x >= room.placement.x && x < room.placement.x + room.size.x &&
-                    y >= room.placement.y && y < room.placement.y + room.size.y)
-                    {
-                        mapArray[x, y] = 1; // floor
-                    }
-                } 
+                    mapArray[x, y] = 1;
+                }
             }
         }
-        
+
+        RemoveDisconnectedFloors();
+
+        AddWallsAroundFloors();
     }
 
-    bool checkRoomPlacementConstraint(Vector3Int placement, Vector3Int size, Vector3Int mapSize)
+
+    void RemoveDisconnectedFloors()
     {
-        if (placement.x + size.x > mapSize.x || placement.y + size.y > mapSize.y)
+        // this will remember which tiles we have visted
+        bool[,] visited = new bool[mapSize.x, mapSize.y];
+
+        // this will remember which tiles belong to the largest component
+        bool[,] keep = new bool[mapSize.x, mapSize.y];
+
+        int largestSize = 0;
+
+        int[] dx = { 1, -1, 0, 0 };
+        int[] dy = { 0, 0, 1, -1 };
+
+        for (int x = 0; x < mapSize.x; x++)
         {
-            Debug.Log("Here?");
-            return false;
+            for (int y = 0; y < mapSize.y; y++)
+            {
+                // start a new component if we find an unvisited floor
+                if (mapArray[x, y] == 1 && !visited[x, y])
+                {
+                    // BFS for this component
+                    Queue<Vector2Int> q = new Queue<Vector2Int>();
+                    List<Vector2Int> thisComponentTiles = new List<Vector2Int>();
+
+                    q.Enqueue(new Vector2Int(x, y));
+                    visited[x, y] = true;
+
+                    // While there are still tiles in the queue to explore
+                    while (q.Count > 0)
+                    {
+                        // Take (dequeue) the next tile position to check
+                        var cur = q.Dequeue();
+
+                        // Add it to this component's list — it’s part of the connected floor area we’re exploring
+                        thisComponentTiles.Add(cur);
+
+                        // Loop over all 4 directions: right, left, up, down
+                        for (int i = 0; i < 4; i++)
+                        {
+                            int nx = cur.x + dx[i]; // new x position (neighbor)
+                            int ny = cur.y + dy[i]; // new y position (neighbor)
+
+                            // Skip this neighbor if it's outside the map boundaries
+                            if (nx < 0 || ny < 0 || nx >= mapSize.x || ny >= mapSize.y)
+                                continue;
+
+                            // Skip if we’ve already checked this tile before
+                            if (visited[nx, ny])
+                                continue;
+
+                            // If this neighbor is a floor tile (value == 1), it’s part of the same region
+                            if (mapArray[nx, ny] == 1)
+                            {
+                                // Mark it visited so we don’t check it again later
+                                visited[nx, ny] = true;
+
+                                // Add this neighbor to the queue so we’ll explore its neighbors next
+                                q.Enqueue(new Vector2Int(nx, ny));
+                            }
+                        }
+                    }
+
+                    // is this the biggest so far?
+                    if (thisComponentTiles.Count > largestSize)
+                    {
+                        largestSize = thisComponentTiles.Count;
+
+                        // reset keep map and mark this component as the one to keep
+                        keep = new bool[mapSize.x, mapSize.y];
+                        foreach (var tile in thisComponentTiles)
+                        {
+                            keep[tile.x, tile.y] = true;
+                        }
+                    }
+                }
+            }
         }
-        return true;
+
+        // now remove all floor tiles that are not in the largest component
+        for (int x = 0; x < mapSize.x; x++)
+        {
+            for (int y = 0; y < mapSize.y; y++)
+            {
+                if (mapArray[x, y] == 1 && !keep[x, y])
+                {
+                    mapArray[x, y] = 0;
+                }
+            }
+        }
     }
+
+
+
+    // Go through tiles, all floors we add walls to empty neighbors
+    void AddWallsAroundFloors()
+    {
+        List<Vector2Int> wallsToPlace = new List<Vector2Int>();
+
+        for (int x = 0; x < mapSize.x; x++)
+        {
+            for (int y = 0; y < mapSize.y; y++)
+            {
+                if (mapArray[x, y] == 1) // floor
+                {
+                    TryMarkWall(x + 1, y, wallsToPlace);
+                    TryMarkWall(x - 1, y, wallsToPlace);
+                    TryMarkWall(x, y + 1, wallsToPlace);
+                    TryMarkWall(x, y - 1, wallsToPlace);
+                }
+            }
+        }
+
+        // now actually place them
+        foreach (var pos in wallsToPlace)
+        {
+            mapArray[pos.x, pos.y] = 2;
+        }
+    }
+
+    void TryMarkWall(int x, int y, List<Vector2Int> walls)
+    {
+        if (mapArray[x, y] == 0) // empty -> can become wall
+        {
+            walls.Add(new Vector2Int(x, y));
+        }
+    }
+
+
 }
