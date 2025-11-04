@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class Projectile : MonoBehaviour
 {
@@ -54,8 +55,7 @@ public class Projectile : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("No Player found with tag 'Player'. Projectile will not move.");
-            _dir = Vector2.zero;
+            _dir = Vector2.left;
         }
     }
 
@@ -81,6 +81,10 @@ public class Projectile : MonoBehaviour
         {
             var killer = _instigator != null ? _instigator : gameObject;
             player.TakeDamage(_damage, killer);
+            Destroy(gameObject);
+        }
+        else if (other.TryGetComponent<TilemapCollider2D>(out TilemapCollider2D wall))
+        {
             Destroy(gameObject);
         }
     }

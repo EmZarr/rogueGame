@@ -7,6 +7,7 @@ TagManager:
   - Shield
   - Projectile
   - Enemy
+  - Canvas
   layers:
   - Default
   - TransparentFX
