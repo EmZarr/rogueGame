@@ -1,7 +1,7 @@
-using Unity.VisualScripting;
+﻿using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using Unity.AI.Navigation;
+using NavMeshPlus.Components;
 
 
 
@@ -30,11 +30,13 @@ public class CreateMap : MonoBehaviour
 
     [SerializeField] GameObject player;
 
-    [SerializeField] NavMeshSurface surface;
-    
+    [SerializeField] GameObject surface;
+
+    NavMeshSurface surface2D;
+
     void Awake()
     {
-        surface = GetComponent<NavMeshSurface>();
+        surface2D = surface.GetComponent<NavMeshSurface>();
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -55,7 +57,6 @@ public class CreateMap : MonoBehaviour
         AddPlayer();
         BakeNavMesh();
         AddEnemies();
-
     }
 
     void GenerateMap()
@@ -186,6 +187,6 @@ public class CreateMap : MonoBehaviour
 
     void BakeNavMesh()
     {
-        surface.BuildNavMesh();
+        surface2D.BuildNavMesh();
     }
 }
