@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -21,6 +22,10 @@ public class CreateMap : MonoBehaviour
     [SerializeField] GameObject health_pickup;
     [SerializeField] GameObject money_pickup;
     [SerializeField] GameObject spike_trap;
+
+    [SerializeField] GameObject enemy_melee;
+
+    [SerializeField] GameObject enemy_range;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -36,6 +41,7 @@ public class CreateMap : MonoBehaviour
         }
         GenerateMap();
         AddFurnishing();
+        AddEnemies();
         
     }
 
@@ -112,8 +118,38 @@ public class CreateMap : MonoBehaviour
             }
         }
     }
+
+    void AddEnemies()
+    {
+        for (int x = 1; x < sizeX - 1; x++)
+        {
+            for (int y = 1; y < sizeY - 1; y++)
+            {
+                var place = Random.Range(1, 21);
+                if (place == 20)
+                {
+                    if (tilemapGround.GetTile(new Vector3Int(x, y, 0)) != null)
+                    {
+
+                        Vector3 worldPos = tilemapGround.GetCellCenterWorld(new Vector3Int(x, y, 0));
+                        int type = Random.Range(1, 3);
+                        switch (type)
+                        {
+                            case 1:
+                                Instantiate(enemy_melee, worldPos, Quaternion.identity);
+                                break;
+                            case 2:
+                                Instantiate(enemy_range, worldPos, Quaternion.identity);
+                                break;
+                        }
+                    }
+
+                }
+            }
+        }
+    }
     
-    void AddEnemies() 
+    void AddPlayer()
     {
         
     }
