@@ -7,10 +7,12 @@ public abstract class IAttack : MonoBehaviour
     protected float _cooldown;
     protected float _nextReadyTime = 0f;
     protected float _attackSpeed;
+    protected float _damage;
 
 
     private void Start()
     {
+        _damage = _data.damage;
         _cooldown = _data.specialCooldown;
         _attackSpeed = _data.attackSpeed;
     }

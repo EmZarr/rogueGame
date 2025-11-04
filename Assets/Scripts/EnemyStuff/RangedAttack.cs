@@ -8,15 +8,16 @@ public class RangedAttack : IAttack
     {
         // Windup, make attack, wind down
         yield return new WaitForSeconds(_attackSpeed / 2);
-        var proj = Instantiate(_projectilePrefab, gameObject.transform);
-        proj.transform.localScale = new Vector3(0.6f, 0.6f, 3f);
+        var proj = Instantiate(_projectilePrefab, transform.position, Quaternion.identity);
+        proj.Init(true, _damage*2);
         yield return new WaitForSeconds(_attackSpeed / 2);
     }
     protected override IEnumerator BasicAttack()
     {
         // Windup, make attack, wind down
         yield return new WaitForSeconds(_attackSpeed/2);
-        Instantiate(_projectilePrefab, gameObject.transform);
+        var proj = Instantiate(_projectilePrefab, transform.position, Quaternion.identity);
+        proj.Init(false, _damage);
         yield return new WaitForSeconds(_attackSpeed / 2);
     }
 }

@@ -9,5 +9,6 @@ public class EnemyData : ScriptableObject
     [SerializeField] public float health;
     [SerializeField] public float attackSpeed;
     [SerializeField] public float specialCooldown;
+    [SerializeField] public float damage;
 
 }

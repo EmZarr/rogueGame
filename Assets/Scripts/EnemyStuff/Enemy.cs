@@ -13,13 +13,15 @@ public class Enemy : MonoBehaviour
     {
         _player = GameObject.FindWithTag("Player");
         _currentHealth = _data.health;
+        _agent.updateRotation = false;
+        _agent.updateUpAxis = false;
     }
 
 
     public void TakeDamage(float damage)
     {
         _currentHealth -= damage;
-        if (_currentHealth < 0)
+        if (_currentHealth <= 0)
         {
             Destroy(gameObject);
         }
