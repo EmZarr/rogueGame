@@ -18,3 +18,5 @@ MonoBehaviour:
   attackSpeed: 1
   specialCooldown: 5
   damage: 10
+  wanderRadius: 4
+  wanderWaitRange: {x: 2, y: 4}

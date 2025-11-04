@@ -37,6 +37,9 @@ public class AttackState : BaseState
 
     public override BaseState GetNextState()
     {
+        if (_player == null || !_player.activeInHierarchy)
+            return new IdleState(_enemy);
+
         if (Vector3.Distance(_agent.transform.position, _player.transform.position) > _enemy.GetAttackRange() && !_attackInProgress)
         {
             return new GetInRangeState(_enemy); 

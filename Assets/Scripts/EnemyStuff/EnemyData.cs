@@ -11,4 +11,7 @@ public class EnemyData : ScriptableObject
     [SerializeField] public float specialCooldown;
     [SerializeField] public float damage;
 
+    [Header("Idle/Wander")]
+    [SerializeField] public float wanderRadius = 5f;
+    [SerializeField] public Vector2 wanderWaitRange = new(2f, 4f);
 }
