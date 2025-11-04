@@ -21,7 +21,8 @@ public class Player : MonoBehaviour
         _health -= damage;
         if (_health < 0)
         {
-            Destroy (gameObject);
+            Destroy(gameObject);
         }
     }
+    
 }

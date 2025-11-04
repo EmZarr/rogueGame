@@ -410,10 +410,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf7dae57c8f80ca458d20a26cdbb7745, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreateMap
-  groundTile: {fileID: 11400000, guid: 5c7edb569040af94e99c4c3e119f1367, type: 2}
+  groundTileGrass1: {fileID: 11400000, guid: 5c7edb569040af94e99c4c3e119f1367, type: 2}
+  groundTileGrass2: {fileID: 11400000, guid: a553ebaada31f6048a480e71537d6ea8, type: 2}
+  groundTileEarth1: {fileID: 11400000, guid: e15829af497aabd4497fbee6de1f1981, type: 2}
+  groundTileEarth2: {fileID: 11400000, guid: 469d344fa1d980a41b98e04a2b5c0739, type: 2}
   wallTile: {fileID: 11400000, guid: c61893fb968c5f548a30f1e535036592, type: 2}
-  sizeX: 12
-  sizeY: 12
+  sizeX: 20
+  sizeY: 20
+  health_pickup: {fileID: 688636583817786477, guid: 118df840cb0a31942800394f8d291676, type: 3}
+  money_pickup: {fileID: 6425840253016552175, guid: af9da458c414f0e4bb1ae36e70b80304, type: 3}
+  spike_trap: {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
 --- !u!1 &833594977
 GameObject:
   m_ObjectHideFlags: 0
@@ -554,10 +560,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf7dae57c8f80ca458d20a26cdbb7745, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CreateMap
-  groundTile: {fileID: 11400000, guid: 5c7edb569040af94e99c4c3e119f1367, type: 2}
+  groundTileGrass1: {fileID: 0}
+  groundTileGrass2: {fileID: 0}
+  groundTileEarth1: {fileID: 0}
+  groundTileEarth2: {fileID: 0}
   wallTile: {fileID: 11400000, guid: c61893fb968c5f548a30f1e535036592, type: 2}
   sizeX: 10
   sizeY: 10
+  health_pickup: {fileID: 0}
+  money_pickup: {fileID: 0}
+  spike_trap: {fileID: 0}
 --- !u!114 &833594982
 MonoBehaviour:
   m_ObjectHideFlags: 0
