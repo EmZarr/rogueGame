@@ -1,4 +1,6 @@
 using NavMeshPlus.Components;
+using System.Collections.Generic;
+using NUnit.Framework;
 using System.Drawing;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -14,6 +16,10 @@ public class MapInstantiator : MonoBehaviour
     [SerializeField] TileBase wallTile;
 
     [SerializeField] NavMeshSurface surface;
+
+    [SerializeField] GameObject playerPrefab;
+
+    [SerializeField] List<GameObject> enemyPrefabs;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -36,9 +42,22 @@ public class MapInstantiator : MonoBehaviour
                     case 2:
                         tilemapWall.SetTile(new Vector3Int(x, y, 0), wallTile);
                         break;
+                    case 6:
+                        tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);
+                        Instantiate(enemyPrefabs[0], tilemapGround.GetCellCenterWorld(new Vector3Int(x, y, 0)), Quaternion.identity);
+                        break;
+                    case 7:
+                        tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);
+                        Instantiate(enemyPrefabs[1], tilemapGround.GetCellCenterWorld(new Vector3Int(x, y, 0)), Quaternion.identity);
+                        break;
+                    case 100:
+                        tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);
+                        Instantiate(playerPrefab, tilemapGround.GetCellCenterWorld(new Vector3Int(x, y, 0)), Quaternion.identity);
+                        break;
                 }
             }
         }
+
 
         surface.BuildNavMesh();
     }

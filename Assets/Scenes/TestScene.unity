@@ -297,7 +297,7 @@ TilemapCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: -3, y: -3}
   m_MaximumTileChangeCount: 10000
   m_ExtrusionFactor: 0
   m_UseDelaunayMesh: 0
@@ -313,7 +313,6 @@ GameObject:
   - component: {fileID: 859900374}
   - component: {fileID: 859900373}
   - component: {fileID: 859900372}
-  - component: {fileID: 859900376}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -338,6 +337,10 @@ MonoBehaviour:
   groundTileGrass1: {fileID: 11400000, guid: e15829af497aabd4497fbee6de1f1981, type: 2}
   wallTile: {fileID: 11400000, guid: c61893fb968c5f548a30f1e535036592, type: 2}
   surface: {fileID: 1085453245}
+  playerPrefab: {fileID: 7550404422414327367, guid: e9d91d9f7bab5f04cb88ef13f2d5ff43, type: 3}
+  enemyPrefabs:
+  - {fileID: 6164719104617455019, guid: c2b004bf4911a8a4d8249268205e0aa4, type: 3}
+  - {fileID: 7378334077991207350, guid: 6ce7d400bf1a1ce4c89b300c286f1af8, type: 3}
 --- !u!114 &859900373
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -354,6 +357,10 @@ MonoBehaviour:
   maxOutLineSize: {x: 60, y: 60, z: 0}
   maxRoomSize: {x: 15, y: 15, z: 0}
   maxRoomAmount: 30
+  amountOfEnemyTypes: 2
+  budget: 5
+  minDistanceToPlayer: 10
+  minDistanceBetweenEnemies: 2
 --- !u!156049354 &859900374
 Grid:
   m_ObjectHideFlags: 0
@@ -383,25 +390,6 @@ Transform:
   - {fileID: 180224427}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &859900376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 859900371}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ebfa1d2be56432a4689f02810b726486, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  mapGenerator: {fileID: 859900373}
-  tilemapGround: {fileID: 1913072605}
-  playerPrefab: {fileID: 7550404422414327367, guid: e9d91d9f7bab5f04cb88ef13f2d5ff43, type: 3}
-  meleeEnemyPrefab: {fileID: 6164719104617455019, guid: c2b004bf4911a8a4d8249268205e0aa4, type: 3}
-  meleeEnemyCount: 3
-  rangedEnemyPrefab: {fileID: 7378334077991207350, guid: 6ce7d400bf1a1ce4c89b300c286f1af8, type: 3}
-  rangedEnemyCount: 3
 --- !u!1 &1085453243
 GameObject:
   m_ObjectHideFlags: 0
@@ -960,7 +948,7 @@ MonoBehaviour:
   cameraZOffset: -15
   deathPauseDuration: 0.8
   travelDuration: 1.2
-  deathZoomTarget: 12
+  deathZoomTarget: 15
   easingPower: 3
 --- !u!114 &2030661028
 MonoBehaviour:

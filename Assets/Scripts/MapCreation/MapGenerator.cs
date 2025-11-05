@@ -3,14 +3,21 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
+    [Header("Geometry")]
     [SerializeField] Vector3Int mapSize;
     [SerializeField] Vector3Int maxOutLineSize;
     [SerializeField] Vector3Int maxRoomSize;
-
     [SerializeField] int maxRoomAmount;
+
+    [Header("Enemies")]
+    [SerializeField] int amountOfEnemyTypes;
+    [SerializeField] int budget;
+    [SerializeField] float minDistanceToPlayer;
+    [SerializeField] float minDistanceBetweenEnemies;
 
     public int[,] mapArray;
     private List<(Vector3Int placement,Vector3Int size)> rooms = new List<(Vector3Int,Vector3Int)>();
+    private Vector2Int playerStartPos;
 
     MapInstantiator mapInstantiator;
 
@@ -23,6 +30,7 @@ public class MapGenerator : MonoBehaviour
     {
         mapInstantiator = FindFirstObjectByType<MapInstantiator>();
         makeRoomGeometry();
+        placeEnemies();
         mapInstantiator.makeMap(mapArray);
     }
 
@@ -30,8 +38,8 @@ public class MapGenerator : MonoBehaviour
     {
         // outline size
         Vector3Int outlineSize = new Vector3Int(
-            Random.Range(1, maxOutLineSize.x),
-            Random.Range(1, maxOutLineSize.y),
+            Random.Range(5, maxOutLineSize.x),
+            Random.Range(5, maxOutLineSize.y),
             0
         );
 
@@ -46,8 +54,8 @@ public class MapGenerator : MonoBehaviour
         for (int i = 0; i < roomAmount; i++)
         {
             // clamp room size so it can't be bigger than the outline
-            int roomW = Random.Range(1, Mathf.Min(maxRoomSize.x, outlineSize.x) + 1);
-            int roomH = Random.Range(1, Mathf.Min(maxRoomSize.y, outlineSize.y) + 1);
+            int roomW = Random.Range(2, Mathf.Min(maxRoomSize.x, outlineSize.x) + 1);
+            int roomH = Random.Range(2, Mathf.Min(maxRoomSize.y, outlineSize.y) + 1);
             Vector3Int roomSize = new Vector3Int(roomW, roomH, 0);
 
             // place room inside outline    
@@ -83,7 +91,6 @@ public class MapGenerator : MonoBehaviour
         }
 
         RemoveDisconnectedFloors();
-
         AddWallsAroundFloors();
     }
 
@@ -109,7 +116,8 @@ public class MapGenerator : MonoBehaviour
                 if (mapArray[x, y] == 1 && !visited[x, y])
                 {
                     // BFS for this component
-                    Queue<Vector2Int> q = new Queue<Vector2Int>();
+                    Queue<Vector2Int> q = new Queue<Vector2Int
+                        >();
                     List<Vector2Int> thisComponentTiles = new List<Vector2Int>();
 
                     q.Enqueue(new Vector2Int(x, y));
@@ -138,7 +146,7 @@ public class MapGenerator : MonoBehaviour
                             if (visited[nx, ny])
                                 continue;
 
-                            // If this neighbor is a floor tile (value == 1), it’s part of the same region
+                            // If this neighbor is a floor tile (not a wall), it’s part of the same region
                             if (mapArray[nx, ny] == 1)
                             {
                                 // Mark it visited so we don’t check it again later
@@ -165,7 +173,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-
+        bool playerPlaced = false;
         // now remove all floor tiles that are not in the largest component
         for (int x = 0; x < mapSize.x; x++)
         {
@@ -174,6 +182,12 @@ public class MapGenerator : MonoBehaviour
                 if (mapArray[x, y] == 1 && !keep[x, y])
                 {
                     mapArray[x, y] = 0;
+                }
+                if (!playerPlaced && keep[x, y]) // Put player in first available floor tile
+                {
+                    playerPlaced = true;
+                    mapArray[x, y] = 100;
+                    playerStartPos = new Vector2Int(x, y);
                 }
             }
         }
@@ -207,11 +221,58 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+
+
     void TryMarkWall(int x, int y, List<Vector2Int> walls)
     {
-        if (mapArray[x, y] == 0) // empty -> can become wall
-        {
+        if (x < 0 || y < 0 || x >= mapSize.x || y >= mapSize.y)
+            return;
+
+        if (mapArray[x, y] == 0)
             walls.Add(new Vector2Int(x, y));
+    }
+
+
+    void placeEnemies()
+    {
+        List<Vector2Int> placedEnemyPositions = new List<Vector2Int>();
+        int iterations = 0; // for safety to avoid infinite loops
+        while (budget > 0 && iterations < 1000)
+        {
+            iterations++;
+            for (int x = 0; x < mapSize.x; x++)
+            {
+                for (int y = 0; y < mapSize.y; y++)
+                {
+                    if (budget <= 0)
+                        break;
+                    if (mapArray[x, y] == 1) // empty floor
+                    {
+                        // check distance to player and other enemies
+                        if (Vector2Int.Distance(new Vector2Int(x, y), playerStartPos) < minDistanceToPlayer)
+                            continue;
+                        bool tooCloseToOther = false;
+                        foreach (var p in placedEnemyPositions)
+                        {
+                            if (Vector2Int.Distance(new Vector2Int(x, y), p) < minDistanceBetweenEnemies)
+                            {
+                                tooCloseToOther = true;
+                                break;
+                            }
+                        }
+                        if (tooCloseToOther) continue;
+                        // if valid, place enemy and reduce budget
+                        int placeEnemy = Random.Range(0, 100);
+                        if (placeEnemy < 1) // 1% chance to place an enemy
+                        {
+                            placedEnemyPositions.Add(new Vector2Int(x, y));
+                            int enemyType = Random.Range(0, amountOfEnemyTypes);
+                            mapArray[x, y] = 6+enemyType;
+                            budget -= 1; 
+                        }
+                    }
+                }
+            }
         }
     }
 
