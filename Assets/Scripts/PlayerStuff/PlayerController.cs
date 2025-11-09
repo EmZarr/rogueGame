@@ -78,9 +78,33 @@ public class PlayerController : MonoBehaviour
         block.action.Enable();
         attack.action.Enable();
         dash.action.Enable();
-        attack.action.performed += ctx => StartCoroutine(BasicAttack(ctx));
-        dash.action.performed += ctx => StartCoroutine(PerformDash(ctx));
+
+        attack.action.performed += OnAttackPerformed;
+        dash.action.performed += OnDashPerformed;
     }
+
+    void OnDisable()
+    {
+        attack.action.performed -= OnAttackPerformed;
+        dash.action.performed -= OnDashPerformed;
+
+        move.action.Disable();
+        point.action.Disable();
+        block.action.Disable();
+        attack.action.Disable();
+        dash.action.Disable();
+    }
+
+    void OnAttackPerformed(InputAction.CallbackContext ctx)
+    {
+        StartCoroutine(BasicAttack(ctx));
+    }
+
+    void OnDashPerformed(InputAction.CallbackContext ctx)
+    {
+        StartCoroutine(PerformDash(ctx));
+    }
+
 
     private IEnumerator BasicAttack(InputAction.CallbackContext ctx)
     {
@@ -105,15 +129,6 @@ public class PlayerController : MonoBehaviour
             isDashing = false;
             nextDashTime = Time.time + dashCooldown;
         }
-    }
-
-    void OnDisable()
-    {
-        move.action.Disable();
-        point.action.Disable();
-        block.action.Disable();
-        attack.action.Disable();
-        if (dash != null) dash.action.Disable();
     }
 
     void Update()

@@ -443,6 +443,9 @@ MonoBehaviour:
   minDistanceBetweenEnemies: 2
   maxAmountFurnishing: 7
   amountOfFurnishingTypes: 3
+  placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  remakeMap: {fileID: 1708116293339222938, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  mutateMap: {fileID: 101673841628561707, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!156049354 &859900374
 Grid:
   m_ObjectHideFlags: 0
@@ -1027,7 +1030,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollowCinematic
   playerTag: Player
   followSmoothTime: 0.2
-  cameraZOffset: -15
+  cameraZOffset: -25
   deathPauseDuration: 0.8
   travelDuration: 1.2
   deathZoomTarget: 15
