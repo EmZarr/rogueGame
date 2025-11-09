@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class NewMonoBehaviourScript : MonoBehaviour
 {
-    [SerializeField] int healthAmount;
+    [SerializeField] float healthAmount;
 
     Player player;
 
@@ -16,14 +16,9 @@ public class NewMonoBehaviourScript : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            AddHealth();
+            player.Heal(healthAmount);
+            Destroy(gameObject);
         }
     }
     
-    
-    //Change  _health to be public or add public method in player, saving for later to avoid merge conflict
-    void AddHealth()
-    {
-        //player._health += healthAmount;
-    }
 }
