@@ -1,5 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using static Unity.Collections.AllocatorManager;
+using static UnityEngine.Rendering.DebugUI;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -20,37 +25,70 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] int maxAmountFurnishing;
     [SerializeField] int amountOfFurnishingTypes;
 
+
+    [Header("Controls")]
+    public InputActionReference placeObjects;   
+    public InputActionReference remakeMap;
+    public InputActionReference mutateMap;
+
     public int[,] mapArray;
-    private List<(Vector3Int placement,Vector3Int size)> rooms = new List<(Vector3Int,Vector3Int)>();
+    private List<(Vector3Int placement, Vector3Int size)> rooms;
     private Vector2Int playerStartPos;
+    private Vector3Int outlinePlacement;
+    private Vector3Int outlineSize;
 
     MapInstantiator mapInstantiator;
 
-    void Awake()
-    {
-        mapArray = new int[mapSize.x, mapSize.y];
-    }
 
     void Start()
     {
         mapInstantiator = FindFirstObjectByType<MapInstantiator>();
-        makeRoomGeometry();
-        placeFurnishing();
-        placeEnemies();
+        RemakeMap();
+    }
+
+    void OnEnable()
+    {
+        placeObjects.action.Enable();
+        remakeMap.action.Enable();
+        mutateMap.action.Enable();
+        placeObjects.action.performed += ctx => PlaceObjects();
+        remakeMap.action.performed += ctx => RemakeMap();
+        mutateMap.action.performed += ctx => MutateMap();
+    }
+
+    private void PlaceObjects()
+    {
+        placeFurnishing(maxAmountFurnishing);
+        placeEnemies(budget);
         mapInstantiator.makeMap(mapArray);
     }
 
+    private void RemakeMap()
+    {
+        makeRoomGeometry();
+        mapInstantiator.makeMap(mapArray);
+    }
+
+    private void MutateMap()
+    {
+        mutateGeometry();
+        mapInstantiator.makeMap(mapArray);
+    }
+
+
     void makeRoomGeometry()
     {
+        mapArray = new int[mapSize.x, mapSize.y];
+        rooms = new List<(Vector3Int, Vector3Int)>();
         // outline size
-        Vector3Int outlineSize = new Vector3Int(
+        outlineSize = new Vector3Int(
             Random.Range(5, maxOutLineSize.x),
             Random.Range(5, maxOutLineSize.y),
             0
         );
 
         // outline placement (make sure it fits)
-        Vector3Int outlinePlacement = new Vector3Int(
+        outlinePlacement = new Vector3Int(
             Random.Range(0, mapSize.x - outlineSize.x + 1),
             Random.Range(0, mapSize.y - outlineSize.y + 1),
             0
@@ -239,7 +277,7 @@ public class MapGenerator : MonoBehaviour
     }
 
 
-    void placeEnemies()
+    void placeEnemies(int budget)
     {
         List<Vector2Int> placedEnemyPositions = new List<Vector2Int>();
         int iterations = 0; // for safety to avoid infinite loops
@@ -282,7 +320,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
     
-    void placeFurnishing()
+    void placeFurnishing(int maxAmountFurnishing)
     {
         List<Vector2Int> placedFurnishingPositions = new List<Vector2Int>();
         int iterations = 0; // for safety to avoid infinite loops
@@ -314,6 +352,49 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+    }
+
+    void mutateGeometry()
+    {
+
+        // Remove a random existing room
+        int removeIndex = Random.Range(0, rooms.Count);
+        rooms.RemoveAt(removeIndex);
+
+        // Add new room
+        int roomW = Random.Range(2, Mathf.Min(maxRoomSize.x, outlineSize.x) + 1);
+        int roomH = Random.Range(2, Mathf.Min(maxRoomSize.y, outlineSize.y) + 1);
+        Vector3Int roomSize = new Vector3Int(roomW, roomH, 0);  
+        Vector3Int roomPlacement = new Vector3Int(
+            Random.Range(outlinePlacement.x, outlinePlacement.x + outlineSize.x - roomSize.x + 1),
+            Random.Range(outlinePlacement.y, outlinePlacement.y + outlineSize.y - roomSize.y + 1),
+            0
+        );
+
+        rooms.Add((roomPlacement, roomSize));
+
+        // Clear the map
+        for (int x = 0; x < mapSize.x; x++)
+        {
+            for (int y = 0; y < mapSize.y; y++)
+            {
+                mapArray[x, y] = 0;
+            }
+        }
+
+        // Repaint rooms
+        foreach (var room in rooms)
+        {
+            for (int x = room.placement.x; x < room.placement.x + room.size.x; x++)
+            {
+                for (int y = room.placement.y; y < room.placement.y + room.size.y; y++)
+                {
+                    mapArray[x, y] = 1;
+                }
+            }
+        }
+        RemoveDisconnectedFloors();
+        AddWallsAroundFloors();
     }
 
 

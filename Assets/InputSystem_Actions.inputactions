@@ -991,6 +991,74 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "MapGeneration",
+            "id": "ef1448b0-a7ec-4866-8340-ddfacb721354",
+            "actions": [
+                {
+                    "name": "RemakeMap",
+                    "type": "Button",
+                    "id": "11f849c3-e2de-4aa3-9e3b-89ad3e74caa4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MutateMap",
+                    "type": "Button",
+                    "id": "90c59506-167e-4d50-9aed-8c595795113c",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "PlaceObjects",
+                    "type": "Button",
+                    "id": "d9ccbabb-1746-4139-811f-bf646b7e3688",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "0eb1009e-88a2-47b6-afde-2be3617d72a6",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "RemakeMap",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f3400fcf-c489-4915-83d4-0db512f375c6",
+                    "path": "<Keyboard>/3",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MutateMap",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ec835d0e-91a1-45ad-95d8-195e5df4fa38",
+                    "path": "<Keyboard>/2",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "PlaceObjects",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [
