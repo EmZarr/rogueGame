@@ -20,6 +20,8 @@ public class MapInstantiator : MonoBehaviour
     [SerializeField] GameObject playerPrefab;
 
     [SerializeField] List<GameObject> enemyPrefabs;
+
+     [SerializeField] List<GameObject> furnishingPrefabs;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -41,6 +43,18 @@ public class MapInstantiator : MonoBehaviour
                         break;
                     case 2:
                         tilemapWall.SetTile(new Vector3Int(x, y, 0), wallTile);
+                        break;
+                    case 3:
+                        tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);
+                        Instantiate(furnishingPrefabs[0], tilemapGround.GetCellCenterWorld(new Vector3Int(x, y, 0)), Quaternion.identity);
+                        break;
+                    case 4:
+                        tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);
+                        Instantiate(furnishingPrefabs[1], tilemapGround.GetCellCenterWorld(new Vector3Int(x, y, 0)), Quaternion.identity);
+                        break;
+                    case 5:
+                        tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);
+                        Instantiate(furnishingPrefabs[2], tilemapGround.GetCellCenterWorld(new Vector3Int(x, y, 0)), Quaternion.identity);
                         break;
                     case 6:
                         tilemapGround.SetTile(new Vector3Int(x, y, 0), groundTileGrass1);

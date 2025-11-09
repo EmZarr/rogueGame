@@ -16,15 +16,10 @@ public class MoneyLoot : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            AddMoney();
+            player.IncreaseScore(moneyAmount);
+            Destroy(gameObject);
         }
     }
     
-    
-    //Change  _health to be public or add public method in player, saving for later to avoid merge conflict
-    void AddMoney()
-    {
-        //player._money += moneyAmount;
-    }
 }
 
