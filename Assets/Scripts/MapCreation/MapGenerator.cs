@@ -15,6 +15,11 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] float minDistanceToPlayer;
     [SerializeField] float minDistanceBetweenEnemies;
 
+
+    [Header("Furnishing")]
+    [SerializeField] int maxAmountFurnishing;
+    [SerializeField] int amountOfFurnishingTypes;
+
     public int[,] mapArray;
     private List<(Vector3Int placement,Vector3Int size)> rooms = new List<(Vector3Int,Vector3Int)>();
     private Vector2Int playerStartPos;
@@ -30,6 +35,7 @@ public class MapGenerator : MonoBehaviour
     {
         mapInstantiator = FindFirstObjectByType<MapInstantiator>();
         makeRoomGeometry();
+        placeFurnishing();
         placeEnemies();
         mapInstantiator.makeMap(mapArray);
     }
@@ -129,7 +135,7 @@ public class MapGenerator : MonoBehaviour
                         // Take (dequeue) the next tile position to check
                         var cur = q.Dequeue();
 
-                        // Add it to this component's list — it’s part of the connected floor area we’re exploring
+                        // Add it to this component's list ï¿½ itï¿½s part of the connected floor area weï¿½re exploring
                         thisComponentTiles.Add(cur);
 
                         // Loop over all 4 directions: right, left, up, down
@@ -142,17 +148,17 @@ public class MapGenerator : MonoBehaviour
                             if (nx < 0 || ny < 0 || nx >= mapSize.x || ny >= mapSize.y)
                                 continue;
 
-                            // Skip if we’ve already checked this tile before
+                            // Skip if weï¿½ve already checked this tile before
                             if (visited[nx, ny])
                                 continue;
 
-                            // If this neighbor is a floor tile (not a wall), it’s part of the same region
+                            // If this neighbor is a floor tile (not a wall), itï¿½s part of the same region
                             if (mapArray[nx, ny] == 1)
                             {
-                                // Mark it visited so we don’t check it again later
+                                // Mark it visited so we donï¿½t check it again later
                                 visited[nx, ny] = true;
 
-                                // Add this neighbor to the queue so we’ll explore its neighbors next
+                                // Add this neighbor to the queue so weï¿½ll explore its neighbors next
                                 q.Enqueue(new Vector2Int(nx, ny));
                             }
                         }
@@ -267,8 +273,42 @@ public class MapGenerator : MonoBehaviour
                         {
                             placedEnemyPositions.Add(new Vector2Int(x, y));
                             int enemyType = Random.Range(0, amountOfEnemyTypes);
-                            mapArray[x, y] = 6+enemyType;
-                            budget -= 1; 
+                            mapArray[x, y] = 6 + enemyType;
+                            budget -= 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    void placeFurnishing()
+    {
+        List<Vector2Int> placedFurnishingPositions = new List<Vector2Int>();
+        int iterations = 0; // for safety to avoid infinite loops
+        while (maxAmountFurnishing > 0 && iterations < 1000)
+        {
+            iterations++;
+            for (int x = 0; x < mapSize.x; x++)
+            {
+                for (int y = 0; y < mapSize.y; y++)
+                {
+                    if (maxAmountFurnishing <= 0)
+                        break;
+                    if (mapArray[x, y] == 1) // empty floor
+                    {
+                        // check distance to player and other enemies
+                        if (Vector2Int.Distance(new Vector2Int(x, y), playerStartPos) < minDistanceToPlayer)
+                            continue;
+                        bool tooCloseToOther = false;
+                        // if valid, place enemy and reduce budget
+                        int placeFurnishing = Random.Range(0, 100);
+                        if (placeFurnishing < 1) // 1% chance to place an enemy
+                        {
+                            placedFurnishingPositions.Add(new Vector2Int(x, y));
+                            int furnishType = Random.Range(0, amountOfFurnishingTypes);
+                            mapArray[x, y] = 3 + furnishType;
+                            maxAmountFurnishing -= 1;
                         }
                     }
                 }

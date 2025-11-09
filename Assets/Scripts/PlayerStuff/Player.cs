@@ -29,4 +29,9 @@ public class Player : MonoBehaviour
         _score += scoreIncrease;
         _ui.updateScore(_score);
     }
+
+    public void Heal(float health)
+    {
+        _health += health;
+    }
 }
