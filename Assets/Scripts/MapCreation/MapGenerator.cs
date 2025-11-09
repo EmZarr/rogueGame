@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static Unity.Collections.AllocatorManager;
@@ -16,7 +17,7 @@ public class MapGenerator : MonoBehaviour
 
     [Header("Enemies")]
     [SerializeField] int amountOfEnemyTypes;
-    [SerializeField] int budget;
+    [SerializeField] int startingBudget;
     [SerializeField] float minDistanceToPlayer;
     [SerializeField] float minDistanceBetweenEnemies;
 
@@ -30,18 +31,23 @@ public class MapGenerator : MonoBehaviour
     public InputActionReference placeObjects;   
     public InputActionReference remakeMap;
     public InputActionReference mutateMap;
+    public InputActionReference mutatePlacements;
 
     public int[,] mapArray;
     private List<(Vector3Int placement, Vector3Int size)> rooms;
+    private List<(Vector2Int placement, int type)> enemies;
     private Vector2Int playerStartPos;
     private Vector3Int outlinePlacement;
     private Vector3Int outlineSize;
+    private int budget;
 
     MapInstantiator mapInstantiator;
 
 
     void Start()
     {
+        enemies = new List<(Vector2Int, int)>();
+        budget = startingBudget;
         mapInstantiator = FindFirstObjectByType<MapInstantiator>();
         RemakeMap();
     }
@@ -51,20 +57,24 @@ public class MapGenerator : MonoBehaviour
         placeObjects.action.Enable();
         remakeMap.action.Enable();
         mutateMap.action.Enable();
+        mutatePlacements.action.Enable();
         placeObjects.action.performed += ctx => PlaceObjects();
         remakeMap.action.performed += ctx => RemakeMap();
         mutateMap.action.performed += ctx => MutateMap();
+        mutatePlacements.action.performed += ctx => MutatePlacements();
     }
 
     private void PlaceObjects()
     {
-        placeFurnishing(maxAmountFurnishing);
-        placeEnemies(budget);
+        placeFurnishing();
+        placeEnemies();
         mapInstantiator.makeMap(mapArray);
     }
 
     private void RemakeMap()
     {
+        enemies = new List<(Vector2Int, int)>();
+        budget = startingBudget;
         makeRoomGeometry();
         mapInstantiator.makeMap(mapArray);
     }
@@ -72,6 +82,12 @@ public class MapGenerator : MonoBehaviour
     private void MutateMap()
     {
         mutateGeometry();
+        mapInstantiator.makeMap(mapArray);
+    }
+
+    private void MutatePlacements()
+    {
+        mutateEnemies();
         mapInstantiator.makeMap(mapArray);
     }
 
@@ -277,50 +293,89 @@ public class MapGenerator : MonoBehaviour
     }
 
 
-    void placeEnemies(int budget)
+    void placeEnemies()
     {
-        List<Vector2Int> placedEnemyPositions = new List<Vector2Int>();
-        int iterations = 0; // for safety to avoid infinite loops
-        while (budget > 0 && iterations < 1000)
+        // collect candidate floor tiles
+        List<Vector2Int> candidates = new List<Vector2Int>();
+        for (int x = 0; x < mapSize.x; x++)
         {
-            iterations++;
-            for (int x = 0; x < mapSize.x; x++)
+            for (int y = 0; y < mapSize.y; y++)
             {
-                for (int y = 0; y < mapSize.y; y++)
+                if (mapArray[x, y] == 1) // floor
                 {
-                    if (budget <= 0)
-                        break;
-                    if (mapArray[x, y] == 1) // empty floor
-                    {
-                        // check distance to player and other enemies
-                        if (Vector2Int.Distance(new Vector2Int(x, y), playerStartPos) < minDistanceToPlayer)
-                            continue;
-                        bool tooCloseToOther = false;
-                        foreach (var p in placedEnemyPositions)
-                        {
-                            if (Vector2Int.Distance(new Vector2Int(x, y), p) < minDistanceBetweenEnemies)
-                            {
-                                tooCloseToOther = true;
-                                break;
-                            }
-                        }
-                        if (tooCloseToOther) continue;
-                        // if valid, place enemy and reduce budget
-                        int placeEnemy = Random.Range(0, 100);
-                        if (placeEnemy < 1) // 1% chance to place an enemy
-                        {
-                            placedEnemyPositions.Add(new Vector2Int(x, y));
-                            int enemyType = Random.Range(0, amountOfEnemyTypes);
-                            mapArray[x, y] = 6 + enemyType;
-                            budget -= 1;
-                        }
-                    }
+                    // skip near player
+                    if (Vector2Int.Distance(new Vector2Int(x, y), playerStartPos) < minDistanceToPlayer)
+                        continue;
+
+                    candidates.Add(new Vector2Int(x, y));
                 }
             }
         }
+
+        // shuffle candidates
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            int swapIndex = Random.Range(i, candidates.Count);
+            (candidates[i], candidates[swapIndex]) = (candidates[swapIndex], candidates[i]);
+        }
+
+        // place enemies not too close to each other
+        foreach (var pos in candidates)
+        {
+            if (budget <= 0)
+                break;
+
+            // check distance to other enemies
+            bool tooClose = false;
+            foreach (var (p, t) in enemies)
+            {
+                if (Vector2Int.Distance(pos, p) < minDistanceBetweenEnemies)
+                {
+                    tooClose = true;
+                    break;
+                }
+            }
+            if (tooClose)
+                continue;
+
+            // place enemy
+            int enemyType = Random.Range(0, amountOfEnemyTypes);
+            enemies.Add((pos, enemyType));
+            budget--;
+        }
+
+        foreach (var (p, t) in enemies)
+        {
+            mapArray[p.x, p.y] = 6 + t;
+        }
     }
-    
-    void placeFurnishing(int maxAmountFurnishing)
+
+    // Remove enemies that are no longer on floor tiles
+    void ValidateEnemiesAgainstMap()
+    {
+        int oldCount = enemies.Count;
+        var valid = new List<(Vector2Int placement, int type)>();
+
+        foreach (var (pos, type) in enemies)
+        {
+            bool inside =
+                pos.x >= 0 && pos.x < mapSize.x &&
+                pos.y >= 0 && pos.y < mapSize.y;
+
+            if (inside && mapArray[pos.x, pos.y] == 1) // still floor
+            {
+                valid.Add((pos, type));
+            }
+        }
+
+        enemies = valid;
+
+        int removed = oldCount - enemies.Count;
+        budget += removed;
+    }
+
+
+    void placeFurnishing()
     {
         List<Vector2Int> placedFurnishingPositions = new List<Vector2Int>();
         int iterations = 0; // for safety to avoid infinite loops
@@ -395,7 +450,31 @@ public class MapGenerator : MonoBehaviour
         }
         RemoveDisconnectedFloors();
         AddWallsAroundFloors();
+
+        // Remove enemies that are no longer valid, and place new ones
+        ValidateEnemiesAgainstMap();
+        placeEnemies();
     }
+
+    void mutateEnemies()
+    {
+        // no enemies to mutate
+        if (enemies == null || enemies.Count == 0)
+            return;
+
+        // pick one to remove
+        int idx = Random.Range(0, enemies.Count);
+        var (pos, type) = enemies[idx];
+        enemies.RemoveAt(idx);
+        budget++;
+
+        // clear from map
+        mapArray[pos.x, pos.y] = 1;
+
+        // add replacement
+        placeEnemies();
+    }
+
 
 
 }

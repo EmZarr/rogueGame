@@ -1022,6 +1022,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "MutatePlacements",
+                    "type": "Button",
+                    "id": "9cc3e3be-1bda-4605-b881-900867541c49",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1055,6 +1064,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "PlaceObjects",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f610c0a1-8735-48c0-b346-cf49afb189dd",
+                    "path": "<Keyboard>/4",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MutatePlacements",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
