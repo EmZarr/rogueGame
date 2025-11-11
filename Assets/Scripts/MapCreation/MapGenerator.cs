@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using Unity.Collections;
 using Unity.VisualScripting;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using static Unity.Collections.AllocatorManager;
@@ -49,6 +51,12 @@ public class MapGenerator : MonoBehaviour
     private Vector3Int outlineSize;
     private int budget;
 
+    private Vector2Int playerTest;
+
+    private bool[,] keep;
+
+    private List<(Vector2Int start, Vector2Int end)> componentConnections;
+
     private int furnishingBudget;
 
     MapInstantiator mapInstantiator;
@@ -82,7 +90,7 @@ public class MapGenerator : MonoBehaviour
     {
         placeFurnishing();
         placeEnemies();
-        mapInstantiator.makeMap(mapArray);
+        mapInstantiator.makeMap(mapArray, playerTest);
     }
 
     private void RemakeMap()
@@ -92,25 +100,26 @@ public class MapGenerator : MonoBehaviour
         budget = startingBudget;
         furnishingBudget = maxAmountFurnishing;
         makeRoomGeometry();
-        mapInstantiator.makeMap(mapArray);
+        Debug.Log("PlayerPosVal: " + mapArray[playerTest.x, playerTest.y]);
+        mapInstantiator.makeMap(mapArray, playerTest);
     }
 
     private void MutateMap()
     {
         mutateGeometry();
-        mapInstantiator.makeMap(mapArray);
+        mapInstantiator.makeMap(mapArray, playerTest);
     }
 
     private void MutateContent()
     {
         mutateFurnishing();
-        mapInstantiator.makeMap(mapArray);
+        mapInstantiator.makeMap(mapArray, playerTest);
     }
 
     private void MutatePlacements()
     {
         mutateEnemies();
-        mapInstantiator.makeMap(mapArray);
+        mapInstantiator.makeMap(mapArray, playerTest);
     }
 
 
@@ -182,7 +191,7 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
-        //RemoveDisconnectedFloors();
+        RemoveDisconnectedFloors();
         AddWallsAroundFloors();
     }
 
@@ -190,15 +199,15 @@ public class MapGenerator : MonoBehaviour
     void RemoveDisconnectedFloors()
     {
         // this will remember which tiles we have visted
-        Dictionary<int, List<Vector2Int>> components = new Dictionary<int, List<Vector2Int>>();
+        List<List<Vector2Int>> components = new List<List<Vector2Int>>();
+        componentConnections = new List<(Vector2Int, Vector2Int)>();
         bool[,] visited = new bool[mapSize.x, mapSize.y];
 
         // this will remember which tiles belong to the largest component
-        bool[,] keep = new bool[mapSize.x, mapSize.y];
+        keep = new bool[mapSize.x, mapSize.y];
+        bool playerPlaced = false;
 
         int largestSize = 0;
-
-        int componentCounter = 0;
 
         int[] dx = { 1, -1, 0, 0 };
         int[] dy = { 0, 0, 1, -1 };
@@ -210,12 +219,11 @@ public class MapGenerator : MonoBehaviour
                 // start a new component if we find an unvisited floor
                 if (mapArray[x, y] == 1 && !visited[x, y])
                 {
-                    components.Add(componentCounter, new List<Vector2Int>());
-                    componentCounter++;
                     // BFS for this component
                     Queue<Vector2Int> q = new Queue<Vector2Int
                         >();
                     List<Vector2Int> thisComponentTiles = new List<Vector2Int>();
+                    List<Vector2Int> edgeTiles = new List<Vector2Int>();
 
                     q.Enqueue(new Vector2Int(x, y));
                     visited[x, y] = true;
@@ -242,11 +250,11 @@ public class MapGenerator : MonoBehaviour
                             // Skip if we�ve already checked this tile before
                             if (visited[nx, ny])
                                 continue;
-                            
+
                             // Add floor edge tiles to handle teleporters.
-                            if (mapArray[nx, ny] == 2)
+                            if (mapArray[nx, ny] == 0)
                             {
-                                components[componentCounter].Add(cur);
+                                edgeTiles.Add(cur);
                             }
                             // If this neighbor is a floor tile (not a wall), it�s part of the same region
                             if (mapArray[nx, ny] == 1)
@@ -269,14 +277,34 @@ public class MapGenerator : MonoBehaviour
                         foreach (var tile in thisComponentTiles)
                         {
                             keep[tile.x, tile.y] = true;
+
                         }
                     }
+                    components.Add(edgeTiles);
                 }
             }
         }
-        bool playerPlaced = false;
+
+        /*Debug.Log(playerPlaced);
+        while (!playerPlaced) // Put player in first available floor tile
+        {
+            Debug.Log("Hello?");
+            int playerPosSelect = mapArray[Random.Range(0, keep.GetLength(0)), Random.Range(0, keep.GetLength(1))];
+            Vector2Int playerPos = components[0][playerPosSelect];
+            if (mapArray[playerPos.x, playerPos.y] == 1)
+            {
+                playerPlaced = true;
+                Debug.Log("Here xd");
+                mapArray[playerPos.x, playerPos.y] = 100;
+                playerTest = new Vector2Int(playerPos.x, playerPos.y);
+                Debug.Log("Testing: " + mapArray[playerPos.x, playerPos.y]);
+                Debug.Log("Player Pos: " + playerPos);
+                playerStartPos = new Vector2Int(playerPos.x, playerPos.y);
+            }
+        }
+        */
         // now remove all floor tiles that are not in the largest component
-        for (int x = 0; x < mapSize.x; x++)
+        /*for (int x = 0; x < mapSize.x; x++)
         {
             for (int y = 0; y < mapSize.y; y++)
             {
@@ -291,22 +319,100 @@ public class MapGenerator : MonoBehaviour
                     playerStartPos = new Vector2Int(x, y);
                 }
             }
-        }
+        }*/
         foreach (var component in components)
         {
-            Vector2Int teleportLocation1;
-            Vector2Int teleportLocation2;
-            foreach (var coords in component)
-            {
-                //foreach (var componentInner in components)
-                //if (Math.abs(coords- )
-            }
+            //Choose random starting point in edge tiles for a component
+            int randStart = Random.Range(0, component.Count - 1);
+            Vector2Int startingPoint = component[randStart];
+
+            //Select random component to be end point
+            int randEnd = Random.Range(0, components.Count - 1);
+            List<Vector2Int> endComponent = components[randEnd];
+            randEnd = Random.Range(0, endComponent.Count);
+            Vector2Int endPoint = endComponent[randEnd];
+
+            componentConnections.Add((startingPoint, endPoint));
+
         }
 
+        ConnectComponents();
 
     }
 
 
+    void ConnectComponents()
+    {
+        foreach (var component in componentConnections)
+        {
+            if (component.start.x < component.end.x)
+            {
+                for (int x = component.start.x; x < component.end.x; x++)
+                {
+                    mapArray[x, component.start.y] = 1;
+                    mapArray[x + 1, component.start.y] = 1;
+                }
+                if (component.start.y <= component.end.y)
+                {
+                    for (int y = component.start.y; y < component.end.y; y++)
+                    {
+                        mapArray[component.end.x, y] = 1;
+                        mapArray[component.end.x + 1, y] = 1;
+                    }
+                }
+                else
+                {
+                    for (int y = component.start.y; y > component.end.y; y--)
+                    {
+                        mapArray[component.end.x, y] = 1;
+                        mapArray[component.end.x + 1, y] = 1;
+                    }
+                }
+            }
+            if (component.start.x > component.end.x)
+            {
+                for (int x = component.start.x; x > component.end.x; x--)
+                {
+                    mapArray[x, component.start.y] = 1;
+                    mapArray[x + 1, component.start.y] = 1;
+                }
+                if (component.start.y <= component.end.y)
+                {
+                    for (int y = component.start.y; y < component.end.y; y++)
+                    {
+                        mapArray[component.end.x, y] = 1;
+                        mapArray[component.end.x + 1, y] = 1;
+                    }
+                }
+                else
+                {
+                    for (int y = component.start.y; y > component.end.y; y--)
+                    {
+                        mapArray[component.end.x, y] = 1;
+                        mapArray[component.end.x + 1, y] = 1;
+                    }
+                }
+
+            }
+        }
+        bool playerPlaced = false;
+        while (!playerPlaced) // Put player in first available floor tile
+        {
+            Debug.Log("Hello?");
+            int playerPosX = Random.Range(0, keep.GetLength(0));
+            int playerPosY = Random.Range(0, keep.GetLength(1));
+
+            int playerPosSelect = mapArray[Random.Range(0, keep.GetLength(0)), Random.Range(0, keep.GetLength(1))];
+            if (mapArray[playerPosX, playerPosY] == 1)
+            {
+                playerPlaced = true;
+                Debug.Log("Here xd");
+                mapArray[playerPosX, playerPosY] = 100;
+                playerTest = new Vector2Int(playerPosX, playerPosY);
+                playerStartPos = new Vector2Int(playerPosX, playerPosY);
+            }
+        }
+    }
 
     // Go through tiles, all floors we add walls to empty neighbors
     void AddWallsAroundFloors()
@@ -502,7 +608,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-        //RemoveDisconnectedFloors();
+        RemoveDisconnectedFloors();
         AddWallsAroundFloors();
 
         // Remove enemies that are no longer valid, and place new ones
