@@ -435,6 +435,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
   mapSize: {x: 100, y: 100, z: 0}
   maxOutLineSize: {x: 60, y: 60, z: 0}
+  maxAmountOfOutlines: 5
   maxRoomSize: {x: 15, y: 15, z: 0}
   maxRoomAmount: 30
   amountOfEnemyTypes: 2
@@ -447,6 +448,7 @@ MonoBehaviour:
   remakeMap: {fileID: 1708116293339222938, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   mutateMap: {fileID: 101673841628561707, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   mutatePlacements: {fileID: 7610372480146149514, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  mutateContent: {fileID: 1907408436137568603, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!156049354 &859900374
 Grid:
   m_ObjectHideFlags: 0

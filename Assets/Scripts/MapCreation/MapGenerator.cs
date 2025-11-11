@@ -12,6 +12,8 @@ public class MapGenerator : MonoBehaviour
     [Header("Geometry")]
     [SerializeField] Vector3Int mapSize;
     [SerializeField] Vector3Int maxOutLineSize;
+
+    [SerializeField] int maxAmountOfOutlines;
     [SerializeField] Vector3Int maxRoomSize;
     [SerializeField] int maxRoomAmount;
 
@@ -32,14 +34,22 @@ public class MapGenerator : MonoBehaviour
     public InputActionReference remakeMap;
     public InputActionReference mutateMap;
     public InputActionReference mutatePlacements;
+    public InputActionReference mutateContent;
 
     public int[,] mapArray;
     private List<(Vector3Int placement, Vector3Int size)> rooms;
+
+    private List<(Vector3Int placement, Vector3Int size)> outlines;
+
     private List<(Vector2Int placement, int type)> enemies;
+
+    private List<(Vector2Int placement, int type)> furnishing;
     private Vector2Int playerStartPos;
     private Vector3Int outlinePlacement;
     private Vector3Int outlineSize;
     private int budget;
+
+    private int furnishingBudget;
 
     MapInstantiator mapInstantiator;
 
@@ -47,7 +57,9 @@ public class MapGenerator : MonoBehaviour
     void Start()
     {
         enemies = new List<(Vector2Int, int)>();
+        furnishing = new List<(Vector2Int, int)>();
         budget = startingBudget;
+        furnishingBudget = maxAmountFurnishing;
         mapInstantiator = FindFirstObjectByType<MapInstantiator>();
         RemakeMap();
     }
@@ -58,10 +70,12 @@ public class MapGenerator : MonoBehaviour
         remakeMap.action.Enable();
         mutateMap.action.Enable();
         mutatePlacements.action.Enable();
+        mutateContent.action.Enable();
         placeObjects.action.performed += ctx => PlaceObjects();
         remakeMap.action.performed += ctx => RemakeMap();
         mutateMap.action.performed += ctx => MutateMap();
         mutatePlacements.action.performed += ctx => MutatePlacements();
+        mutateContent.action.performed += ctx => MutateContent();
     }
 
     private void PlaceObjects()
@@ -74,7 +88,9 @@ public class MapGenerator : MonoBehaviour
     private void RemakeMap()
     {
         enemies = new List<(Vector2Int, int)>();
+        new List<(Vector2Int, int)>();
         budget = startingBudget;
+        furnishingBudget = maxAmountFurnishing;
         makeRoomGeometry();
         mapInstantiator.makeMap(mapArray);
     }
@@ -82,6 +98,12 @@ public class MapGenerator : MonoBehaviour
     private void MutateMap()
     {
         mutateGeometry();
+        mapInstantiator.makeMap(mapArray);
+    }
+
+    private void MutateContent()
+    {
+        mutateFurnishing();
         mapInstantiator.makeMap(mapArray);
     }
 
@@ -96,38 +118,48 @@ public class MapGenerator : MonoBehaviour
     {
         mapArray = new int[mapSize.x, mapSize.y];
         rooms = new List<(Vector3Int, Vector3Int)>();
+        outlines = new List<(Vector3Int, Vector3Int)>();
         // outline size
-        outlineSize = new Vector3Int(
-            Random.Range(5, maxOutLineSize.x),
-            Random.Range(5, maxOutLineSize.y),
-            0
-        );
 
-        // outline placement (make sure it fits)
-        outlinePlacement = new Vector3Int(
-            Random.Range(0, mapSize.x - outlineSize.x + 1),
-            Random.Range(0, mapSize.y - outlineSize.y + 1),
-            0
-        );
+        int amountOfOutlines = Random.Range(1, maxAmountOfOutlines + 1);
 
-        int roomAmount = Random.Range(1, maxRoomAmount);
-        for (int i = 0; i < roomAmount; i++)
+        for (int o = 0; o < amountOfOutlines; o++)
         {
-            // clamp room size so it can't be bigger than the outline
-            int roomW = Random.Range(2, Mathf.Min(maxRoomSize.x, outlineSize.x) + 1);
-            int roomH = Random.Range(2, Mathf.Min(maxRoomSize.y, outlineSize.y) + 1);
-            Vector3Int roomSize = new Vector3Int(roomW, roomH, 0);
+            outlineSize = new Vector3Int(
+                Random.Range(5, maxOutLineSize.x),
+                Random.Range(5, maxOutLineSize.y),
+                0
+            );
+            // outline placement (make sure it fits)
 
-            // place room inside outline    
-            Vector3Int roomPlacement = new Vector3Int(
-                Random.Range(outlinePlacement.x, outlinePlacement.x + outlineSize.x - roomSize.x + 1),
-                Random.Range(outlinePlacement.y, outlinePlacement.y + outlineSize.y - roomSize.y + 1),
+            outlinePlacement = new Vector3Int(
+                Random.Range(0, mapSize.x - outlineSize.x + 1),
+                Random.Range(0, mapSize.y - outlineSize.y + 1),
                 0
             );
 
-            rooms.Add((roomPlacement, roomSize));
-        }
+            outlines.Add((outlinePlacement, outlineSize));
 
+            int roomAmount = Random.Range(1, maxRoomAmount);
+            for (int i = 0; i < roomAmount; i++)
+            {
+                // clamp room size so it can't be bigger than the outline
+                int roomW = Random.Range(2, Mathf.Min(maxRoomSize.x, outlineSize.x) + 1);
+                int roomH = Random.Range(2, Mathf.Min(maxRoomSize.y, outlineSize.y) + 1);
+                Vector3Int roomSize = new Vector3Int(roomW, roomH, 0);
+
+                // place room inside outline    
+                Vector3Int roomPlacement = new Vector3Int(
+                    Random.Range(outlinePlacement.x, outlinePlacement.x + outlineSize.x - roomSize.x + 1),
+                    Random.Range(outlinePlacement.y, outlinePlacement.y + outlineSize.y - roomSize.y + 1),
+                    0
+                );
+
+                rooms.Add((roomPlacement, roomSize));
+            }
+
+        }
+        
         // See outline as walls
         /*
         for (int x = outlinePlacement.x; x < outlinePlacement.x + outlineSize.x; x++)
@@ -150,7 +182,7 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
-        RemoveDisconnectedFloors();
+        //RemoveDisconnectedFloors();
         AddWallsAroundFloors();
     }
 
@@ -158,12 +190,15 @@ public class MapGenerator : MonoBehaviour
     void RemoveDisconnectedFloors()
     {
         // this will remember which tiles we have visted
+        Dictionary<int, List<Vector2Int>> components = new Dictionary<int, List<Vector2Int>>();
         bool[,] visited = new bool[mapSize.x, mapSize.y];
 
         // this will remember which tiles belong to the largest component
         bool[,] keep = new bool[mapSize.x, mapSize.y];
 
         int largestSize = 0;
+
+        int componentCounter = 0;
 
         int[] dx = { 1, -1, 0, 0 };
         int[] dy = { 0, 0, 1, -1 };
@@ -175,6 +210,8 @@ public class MapGenerator : MonoBehaviour
                 // start a new component if we find an unvisited floor
                 if (mapArray[x, y] == 1 && !visited[x, y])
                 {
+                    components.Add(componentCounter, new List<Vector2Int>());
+                    componentCounter++;
                     // BFS for this component
                     Queue<Vector2Int> q = new Queue<Vector2Int
                         >();
@@ -205,7 +242,12 @@ public class MapGenerator : MonoBehaviour
                             // Skip if we�ve already checked this tile before
                             if (visited[nx, ny])
                                 continue;
-
+                            
+                            // Add floor edge tiles to handle teleporters.
+                            if (mapArray[nx, ny] == 2)
+                            {
+                                components[componentCounter].Add(cur);
+                            }
                             // If this neighbor is a floor tile (not a wall), it�s part of the same region
                             if (mapArray[nx, ny] == 1)
                             {
@@ -217,7 +259,6 @@ public class MapGenerator : MonoBehaviour
                             }
                         }
                     }
-
                     // is this the biggest so far?
                     if (thisComponentTiles.Count > largestSize)
                     {
@@ -251,6 +292,18 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
+        foreach (var component in components)
+        {
+            Vector2Int teleportLocation1;
+            Vector2Int teleportLocation2;
+            foreach (var coords in component)
+            {
+                //foreach (var componentInner in components)
+                //if (Math.abs(coords- )
+            }
+        }
+
+
     }
 
 
@@ -379,14 +432,14 @@ public class MapGenerator : MonoBehaviour
     {
         List<Vector2Int> placedFurnishingPositions = new List<Vector2Int>();
         int iterations = 0; // for safety to avoid infinite loops
-        while (maxAmountFurnishing > 0 && iterations < 1000)
+        while (furnishingBudget > 0 && iterations < 1000)
         {
             iterations++;
             for (int x = 0; x < mapSize.x; x++)
             {
                 for (int y = 0; y < mapSize.y; y++)
                 {
-                    if (maxAmountFurnishing <= 0)
+                    if (furnishingBudget <= 0)
                         break;
                     if (mapArray[x, y] == 1) // empty floor
                     {
@@ -401,7 +454,8 @@ public class MapGenerator : MonoBehaviour
                             placedFurnishingPositions.Add(new Vector2Int(x, y));
                             int furnishType = Random.Range(0, amountOfFurnishingTypes);
                             mapArray[x, y] = 3 + furnishType;
-                            maxAmountFurnishing -= 1;
+                            furnishing.Add((new Vector2Int(x, y), 3 + furnishType));
+                            furnishingBudget -= 1;
                         }
                     }
                 }
@@ -448,7 +502,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-        RemoveDisconnectedFloors();
+        //RemoveDisconnectedFloors();
         AddWallsAroundFloors();
 
         // Remove enemies that are no longer valid, and place new ones
@@ -476,5 +530,47 @@ public class MapGenerator : MonoBehaviour
     }
 
 
+    void mutateFurnishing()
+    {
+        // no furnishing to mutate
+        if (furnishing == null || furnishing.Count == 0)
+            return;
+
+        // pick one to remove
+        int idx = Random.Range(0, furnishing.Count);
+        var (pos, type) = furnishing[idx];
+        furnishing.RemoveAt(idx);
+        furnishingBudget++;
+
+        // clear from map
+        mapArray[pos.x, pos.y] = 1;
+
+        // add replacement
+        placeFurnishing();
+    }
+
+
+    void ValidateFurnishingAgainstMap()
+    {
+        int oldCount = furnishing.Count;
+        var valid = new List<(Vector2Int placement, int type)>();
+
+        foreach (var (pos, type) in furnishing)
+        {
+            bool inside =
+                pos.x >= 0 && pos.x < mapSize.x &&
+                pos.y >= 0 && pos.y < mapSize.y;
+
+            if (inside && mapArray[pos.x, pos.y] == 1) // still floor
+            {
+                valid.Add((pos, type));
+            }
+        }
+
+        furnishing = valid;
+
+        int removed = oldCount - furnishing.Count;
+        furnishingBudget += removed;
+    }
 
 }

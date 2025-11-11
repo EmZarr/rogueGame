@@ -77,6 +77,8 @@ public class MapInstantiator : MonoBehaviour
                             Instantiate(enemyPrefabs[1], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
+                    case 8:
+                        break;
 
                     case 100:
                         tilemapGround.SetTile(cell, groundTileGrass1);
