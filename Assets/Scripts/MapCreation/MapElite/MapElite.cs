@@ -1,11 +1,11 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 public class MapElite : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] MapGeneratorElites mapGeneratorPrefab; // uses your working elites generator
-    [SerializeField] MapInstantiator mapInstantiator;       // your ORIGINAL instantiator (unchanged)
+    [SerializeField] MapGeneratorElites mapGeneratorPrefab;
+    [SerializeField] MapInstantiator mapInstantiator;
 
     [Header("MAP-Elites Parameters")]
     [SerializeField] int totalIterations = 50;       // I
@@ -28,31 +28,29 @@ public class MapElite : MonoBehaviour
 
             if (iter <= initialRandomSolutions)
             {
-                // x' <- random_solution()
+                // x'
                 candidate = GenerateRandomCandidate();
             }
             else
             {
-                // x  <- random_selection(X)
+                // x
                 MapCandidate parent = SelectParent();
 
-                // x' <- random_variation(x)
+                // x'
                 candidate = MutateFunction(parent);
             }
 
-            // b' <- feature_descriptor(x')
+            // b'
             Vector2 behavior = FeatureDescriptorFunction(candidate);
 
-            // p' <- performance(x')
+            // p'
             candidate.fitness = EvaluateFitnessFunction(candidate, behavior);
 
-            // store candidate (later this is where binning/replacement would go)
+            // store candidate
             InsertIntoArchive(candidate, behavior);
-
             Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
 
-        // Only here do we actually instantiate the map visually
         if (archive.Count > 0)
         {
             MapCandidate best = archive[0];
@@ -69,9 +67,9 @@ public class MapElite : MonoBehaviour
 
     MapCandidate GenerateRandomCandidate()
     {
-        // Instantiate a temporary generator that only builds mapArray (no visuals)
+        // Instantiate a temporary generator
         MapGeneratorElites generator = Instantiate(mapGeneratorPrefab);
-        generator.GenerateFullMap(); // your existing method on MapGeneratorElites
+        generator.GenerateFullMap();
         MapCandidate candidate = new MapCandidate(generator.mapArray);
         Destroy(generator.gameObject);
         return candidate;
@@ -80,7 +78,7 @@ public class MapElite : MonoBehaviour
     MapCandidate SelectParent()
     {
         if (archive.Count == 0)
-            return GenerateRandomCandidate();
+            return GenerateRandomCandidate(); //this may not be necessary
 
         int index = Random.Range(0, archive.Count);
         return archive[index];
@@ -100,8 +98,8 @@ public class MapElite : MonoBehaviour
             {
                 int val = candidate.mapData[x, y];
 
-                // according to your MapInstantiator:
-                // 3–5 = furnishing, 6–7 = enemies
+                // according to MapInstantiator:
+                // 3â€“5 = furn, 6â€“7 hahahah
                 if (val >= 6 && val <= 7)
                     enemyCount++;
                 else if (val >= 3 && val <= 5)
@@ -124,7 +122,7 @@ public class MapElite : MonoBehaviour
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
     {
-        // Simple placeholder: prefer more enemies, a bit of furnishing
+        // placeholder
         float enemyCount = behavior.x;
         float furnishingCount = behavior.y;
         return enemyCount + furnishingCount * 0.25f;
@@ -132,7 +130,7 @@ public class MapElite : MonoBehaviour
 
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
     {
-        // Later: use `behavior` to choose bins and keep only best per bin
+        // behavior here
         archive.Add(candidate);
     }
 }
