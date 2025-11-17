@@ -1,4 +1,5 @@
 using NavMeshPlus.Components;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -94,6 +95,13 @@ public class MapInstantiator : MonoBehaviour
             }
         }
 
+        StartCoroutine(BuildNavmeshNextFrame());
+    }
+
+    IEnumerator BuildNavmeshNextFrame()
+    {
+        
+        yield return null; // need to wait a frame for the tilemaps to update
         surface.BuildNavMesh();
     }
 
