@@ -1031,6 +1031,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "MutateContent",
+                    "type": "Button",
+                    "id": "0633e883-8a54-4fb9-a5f3-fb71c28a2edc",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1075,6 +1084,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "MutatePlacements",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "789eba8a-e894-48f9-bd03-3c39066657b9",
+                    "path": "<Keyboard>/5",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MutateContent",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
