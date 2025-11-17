@@ -82,13 +82,13 @@ public class MapGeneratorElites : MonoBehaviour
         mapInstantiator.makeMap(mapArray);
     }
 
-    private void MutateMap()
+    public void MutateMap(MapInfo map)
     {
-        mutateGeometry();
+        mutateGeometry(map);
         mapInstantiator.makeMap(mapArray);
     }
 
-    private void MutatePlacements()
+    public void MutatePlacements()
     {
         mutateEnemies();
         mapInstantiator.makeMap(mapArray);
@@ -158,7 +158,7 @@ public class MapGeneratorElites : MonoBehaviour
     }
 
 
-    void RemoveDisconnectedFloors()
+    public void RemoveDisconnectedFloors(MapInfo map)
     {
         // this will remember which tiles we have visted
         bool[,] visited = new bool[mapSize.x, mapSize.y];
@@ -176,7 +176,7 @@ public class MapGeneratorElites : MonoBehaviour
             for (int y = 0; y < mapSize.y; y++)
             {
                 // start a new component if we find an unvisited floor
-                if (mapArray[x, y] == 1 && !visited[x, y])
+                if (map.mapArray[x, y] == 1 && !visited[x, y])
                 {
                     // BFS for this component
                     Queue<Vector2Int> q = new Queue<Vector2Int
@@ -242,15 +242,15 @@ public class MapGeneratorElites : MonoBehaviour
         {
             for (int y = 0; y < mapSize.y; y++)
             {
-                if (mapArray[x, y] == 1 && !keep[x, y])
+                if (map.mapArray[x, y] == 1 && !keep[x, y])
                 {
-                    mapArray[x, y] = 0;
+                    map.mapArray[x, y] = 0;
                 }
                 if (!playerPlaced && keep[x, y]) // Put player in first available floor tile
                 {
                     playerPlaced = true;
-                    mapArray[x, y] = 100;
-                    playerStartPos = new Vector2Int(x, y);
+                    map.mapArray[x, y] = 100;
+                    map.playerStartPos = new Vector2Int(x, y);
                 }
             }
         }
@@ -412,12 +412,12 @@ public class MapGeneratorElites : MonoBehaviour
         }
     }
 
-    void mutateGeometry()
+    MapInfo mutateGeometry(MapInfo map)
     {
 
         // Remove a random existing room
-        int removeIndex = Random.Range(0, rooms.Count);
-        rooms.RemoveAt(removeIndex);
+        int removeIndex = Random.Range(0, map.rooms.Count);
+        map.rooms.RemoveAt(removeIndex);
 
         // Add new room
         int roomW = Random.Range(2, Mathf.Min(maxRoomSize.x, outlineSize.x) + 1);
@@ -429,25 +429,25 @@ public class MapGeneratorElites : MonoBehaviour
             0
         );
 
-        rooms.Add((roomPlacement, roomSize));
+        map.rooms.Add((roomPlacement, roomSize));
 
         // Clear the map
         for (int x = 0; x < mapSize.x; x++)
         {
             for (int y = 0; y < mapSize.y; y++)
             {
-                mapArray[x, y] = 0;
+                map.mapArray[x, y] = 0;
             }
         }
 
         // Repaint rooms
-        foreach (var room in rooms)
+        foreach (var room in map.rooms)
         {
-            for (int x = room.placement.x; x < room.placement.x + room.size.x; x++)
+            for (int x = map.room.placement.x; x < map.room.placement.x + map.room.size.x; x++)
             {
-                for (int y = room.placement.y; y < room.placement.y + room.size.y; y++)
+                for (int y = map.room.placement.y; y < map.room.placement.y + map.room.size.y; y++)
                 {
-                    mapArray[x, y] = 1;
+                    map.mapArray[x, y] = 1;
                 }
             }
         }
@@ -457,6 +457,7 @@ public class MapGeneratorElites : MonoBehaviour
         // Remove enemies that are no longer valid, and place new ones
         ValidateEnemiesAgainstMap();
         placeEnemies();
+        return map;
     }
 
     void mutateEnemies()
@@ -476,6 +477,17 @@ public class MapGeneratorElites : MonoBehaviour
 
         // add replacement
         placeEnemies();
+    }
+
+    public struct MapInfo
+    {
+        public int[,] mapArray;
+        public List<(Vector3Int placement, Vector3Int size)> rooms;
+        public List<(Vector2Int placement, int type)> enemies;
+        public Vector2Int playerStartPos;
+        public Vector3Int outlinePlacement;
+        public Vector3Int outlineSize;
+        public int budget;
     }
 
 
