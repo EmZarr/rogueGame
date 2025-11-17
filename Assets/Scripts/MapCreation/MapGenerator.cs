@@ -51,6 +51,9 @@ public class MapGenerator : MonoBehaviour
     {
         enemies = new List<(Vector2Int, int)>();
         budget = startingBudget;
+        furnishing = new List<(Vector2Int, int)>();
+        furnishingBudget = maxAmountFurnishing;
+        mapInstantiator = FindFirstObjectByType<MapInstantiator>();
         RemakeMap();
     }
 
