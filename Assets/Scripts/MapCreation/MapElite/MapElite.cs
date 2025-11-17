@@ -11,7 +11,9 @@ public class MapElite : MonoBehaviour
     [SerializeField] int totalIterations = 50;       // I
     [SerializeField] int initialRandomSolutions = 20; // G
 
-    private List<MapCandidate> archive = new List<MapCandidate>();
+    //private List<MapCandidate> archive = new List<MapCandidate>();
+
+    private Dictionary<Vector2, MapCandidate> archive = new Dictionary<Vector2, MapCandidate>();
 
     void Start()
     {
@@ -47,14 +49,17 @@ public class MapElite : MonoBehaviour
             candidate.fitness = EvaluateFitnessFunction(candidate, behavior);
 
             // store candidate
-            InsertIntoArchive(candidate, behavior);
+            if (archive[behavior] == null || archive[behavior].fitness < candidate.fitness)
+            {
+                InsertIntoArchive(candidate, behavior);
+            }
             Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
 
         if (archive.Count > 0)
         {
             MapCandidate best = archive[0];
-            for (int i = 1; i < archive.Count; i++)
+            for (int i = 1; i < archive.Count; i++) 
             {
                 if (archive[i].fitness > best.fitness)
                     best = archive[i];
@@ -112,12 +117,14 @@ public class MapElite : MonoBehaviour
 
     MapCandidate MutateFunction(MapCandidate parent)
     {
-        // Mutate map layout here
+        MapGeneratorElites.mutateMap();
+        MapGeneratorElites.mutateEnemies();
+        //Mutate map layout here
         // Mutate enemies here
         // Mutate furnishing here
 
         // For now, just create a new random candidate as a placeholder
-        return GenerateRandomCandidate();
+        //return GenerateRandomCandidate();
     }
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
@@ -131,7 +138,7 @@ public class MapElite : MonoBehaviour
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
     {
         // behavior here
-        archive.Add(candidate);
+        archive.Add(behavior, candidate);
     }
 }
 
@@ -145,4 +152,9 @@ public class MapCandidate
         mapData = map;
         fitness = 0f;
     }
+}
+
+public struct Behavior
+{
+    int temp;
 }
