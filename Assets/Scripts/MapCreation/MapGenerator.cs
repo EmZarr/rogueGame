@@ -209,6 +209,8 @@ public class MapGenerator : MonoBehaviour
         List<List<Vector2Int>> components = new List<List<Vector2Int>>();
         map.componentConnections = new List<(Vector2Int, Vector2Int)>();
         bool[,] visited = new bool[mapSize.x, mapSize.y];
+        map.walkableTiles = 0;
+        map.WallTiles = 0;
 
         // this will remember which tiles belong to the largest component
         keep = new bool[mapSize.x, mapSize.y];
@@ -243,6 +245,7 @@ public class MapGenerator : MonoBehaviour
 
                         // Add it to this component's list � it�s part of the connected floor area we�re exploring
                         thisComponentTiles.Add(cur);
+                        map.walkableTiles++;
 
                         // Loop over all 4 directions: right, left, up, down
                         for (int i = 0; i < 4; i++)
@@ -359,6 +362,7 @@ public class MapGenerator : MonoBehaviour
                 {
                     map.mapArray[x, component.start.y] = 1;
                     map.mapArray[x + 1, component.start.y] = 1;
+                    map.walkableTiles += 2;
                 }
                 if (component.start.y <= component.end.y)
                 {
@@ -366,6 +370,7 @@ public class MapGenerator : MonoBehaviour
                     {
                         map.mapArray[component.end.x, y] = 1;
                         map.mapArray[component.end.x + 1, y] = 1;
+                        map.walkableTiles += 2;
                     }
                 }
                 else
@@ -374,6 +379,7 @@ public class MapGenerator : MonoBehaviour
                     {
                         map.mapArray[component.end.x, y] = 1;
                         map.mapArray[component.end.x + 1, y] = 1;
+                        map.walkableTiles += 2;
                     }
                 }
             }
@@ -383,6 +389,7 @@ public class MapGenerator : MonoBehaviour
                 {
                     map.mapArray[x, component.start.y] = 1;
                     map.mapArray[x + 1, component.start.y] = 1;
+                    map.walkableTiles += 2;
                 }
                 if (component.start.y <= component.end.y)
                 {
@@ -390,6 +397,7 @@ public class MapGenerator : MonoBehaviour
                     {
                         map.mapArray[component.end.x, y] = 1;
                         map.mapArray[component.end.x + 1, y] = 1;
+                        map.walkableTiles += 2;
                     }
                 }
                 else
@@ -398,6 +406,7 @@ public class MapGenerator : MonoBehaviour
                     {
                         map.mapArray[component.end.x, y] = 1;
                         map.mapArray[component.end.x + 1, y] = 1;
+                        map.walkableTiles += 2;
                     }
                 }
 
@@ -512,6 +521,7 @@ public class MapGenerator : MonoBehaviour
         foreach (var pos in wallsToPlace)
         {
             map.mapArray[pos.x, pos.y] = 2;
+            map.WallTiles++;
         }
         return map;
     }
@@ -780,4 +790,9 @@ public struct MapInfo
         public List<(Vector2Int placement, int type)> furnishing;
         public int furnishingBudget;
         public Vector2Int exitPos;
-}
+        public int walkableTiles;
+        public int WallTiles;
+        
+
+        
+    }

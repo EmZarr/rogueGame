@@ -33,8 +33,8 @@ public class MapElite : MonoBehaviour
 
     public void RunMapElites()
     {
+        Debug.Log("Archive size start: " + archive.Count());
         //archive.Clear();
-        Debug.Log("Test");
         for (int i = 0; i < totalIterations; i++)
         {
             MapCandidate candidate;
@@ -51,12 +51,11 @@ public class MapElite : MonoBehaviour
                 MapCandidate parent = SelectParent();
 
                 // x'
-                candidate = MutateFunction(parent);
-                Debug.Log("here");
+                candidate = new MapCandidate(MutateGeometry(parent).mapData);
             }
 
             // b'
-            Vector2 behavior = FeatureDescriptorFunction(candidate);
+            Vector2 behavior = GeometryBehavior(candidate);
 
             // p'
             candidate.fitness = EvaluateFitnessFunction(candidate, behavior);
@@ -66,21 +65,24 @@ public class MapElite : MonoBehaviour
             {
                 InsertIntoArchive(candidate, behavior);
             }
-            Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
+            //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
-
         if (archive.Count > 0)
         {
+
+
             var vals = archive.Values.ToList();
             MapCandidate best = vals[0];
-            foreach (var candidate in vals)
+            foreach (var check in vals)
             {
-                if (candidate.fitness > best.fitness) {
-                    best = candidate;
+                if (check.fitness > best.fitness)
+                {
+                    best = check;
                 }
             }
 
-            Debug.Log("Spawning best map via original MapInstantiator.");
+            Debug.Log("Best fitness: " + best.fitness);
+            //Debug.Log("Spawning best map via original MapInstantiator.");
             mapInstantiator.makeMap(best.mapData.mapArray);
         }
     }
@@ -128,33 +130,79 @@ public class MapElite : MonoBehaviour
         return new Vector2(enemyCount, furnishingCount);
     }
 
-    MapCandidate MutateFunction(MapCandidate parent)
+
+    Vector2 GeometryBehavior(MapCandidate candidate)
+    {
+        int val = candidate.mapData.rooms.Count();
+        int key;
+        if (val <= 3)
+        {
+            key = 1;
+        }
+        else if (val > 3 && val <= 6)
+        {
+            key = 2;
+        }
+        else if (val > 6 && val <= 9)
+        {
+            key = 3;
+        }
+        else if (val > 9 && val <= 12)
+        {
+            key = 4;
+        }
+        else
+        {
+            key = 5;
+        }
+        return new Vector2(key, 0);
+    }
+
+    MapCandidate MutateGeometry(MapCandidate parent)
     {
         parent.mapData = mapGenerator.MutateMap(parent.mapData);
-        parent.mapData = mapGenerator.MutateContent(parent.mapData);
-        parent.mapData = mapGenerator.MutatePlacements(parent.mapData);
-       
-        //Mutate map layout here
-        // Mutate enemies here
-        // Mutate furnishing here
-
         return parent;
-        // For now, just create a new random candidate as a placeholder
-        //return GenerateRandomCandidate();
+    }
+
+    MapCandidate MutateFurnishing(MapCandidate parent)
+    {
+        parent.mapData = mapGenerator.MutateContent(parent.mapData);
+        return parent;
+    }
+    
+     MapCandidate MutateEnemies(MapCandidate parent)
+    {
+        parent.mapData = mapGenerator.MutatePlacements(parent.mapData);
+        return parent;
     }
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
     {
-        // placeholder
-        float enemyCount = behavior.x;
-        float furnishingCount = behavior.y;
-        return enemyCount + furnishingCount * 0.25f;
+        return candidate.mapData.walkableTiles * 0.1f;
     }
 
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
     {
         // behavior here
-        archive.Add(behavior, candidate);
+        if (!archive.ContainsKey(behavior))
+        {
+            archive.Add(behavior, candidate);
+        }
+        else
+        {
+            archive[behavior] = candidate;
+        }
+
+    }
+    
+    public List<int[,]> mapArrayList()
+    {
+        List<int[,]> list = new List<int[,]>();
+        foreach (var map in archive.Values.ToList())
+        {
+            list.Add(map.mapData.mapArray);
+        }
+        return list;
     }
 }
 
@@ -177,17 +225,3 @@ public struct Behavior
     int temp;
 }
 
-/*public struct MapInfo
-    {
-        public int[,] mapArray;
-        public List<(Vector3Int placement, Vector3Int size)> rooms;
-        public List<(Vector2Int placement, int type)> enemies;
-        public Vector2Int playerStartPos;
-        public Vector3Int outlinePlacement;
-        public Vector3Int outlineSize;
-        public List<(Vector2Int start, Vector2Int end)> componentConnections;
-        public int budget;
-        public List<(Vector2Int placement, int type)> furnishing;
-        public int furnishingBudget;
-    }
-    */
