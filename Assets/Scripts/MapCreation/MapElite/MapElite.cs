@@ -1,30 +1,41 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using UnityEngine.InputSystem;
 
 public class MapElite : MonoBehaviour
 {
-    [Header("References")]
-    [SerializeField] MapGeneratorElites mapGeneratorPrefab;
     [SerializeField] MapInstantiator mapInstantiator;
 
     [Header("MAP-Elites Parameters")]
     [SerializeField] int totalIterations = 50;       // I
     [SerializeField] int initialRandomSolutions = 20; // G
 
+
+    [Header("Controls")]
+    public InputActionReference runElites; 
+    MapGenerator mapGenerator;
     //private List<MapCandidate> archive = new List<MapCandidate>();
 
     private Dictionary<Vector2, MapCandidate> archive = new Dictionary<Vector2, MapCandidate>();
 
+    private int iter;
+
     void Start()
     {
+        runElites.action.Enable();
+        runElites.action.performed += ctx => RunMapElites();
+        mapGenerator = GetComponent<MapGenerator>();
+        iter = 0;
         RunMapElites();
     }
 
-    void RunMapElites()
-    {
-        archive.Clear();
 
-        for (int iter = 1; iter <= totalIterations; iter++)
+    public void RunMapElites()
+    {
+        //archive.Clear();
+        Debug.Log("Test");
+        for (int i = 0; i < totalIterations; i++)
         {
             MapCandidate candidate;
 
@@ -32,6 +43,7 @@ public class MapElite : MonoBehaviour
             {
                 // x'
                 candidate = GenerateRandomCandidate();
+                iter++;
             }
             else
             {
@@ -40,6 +52,7 @@ public class MapElite : MonoBehaviour
 
                 // x'
                 candidate = MutateFunction(parent);
+                Debug.Log("here");
             }
 
             // b'
@@ -49,7 +62,7 @@ public class MapElite : MonoBehaviour
             candidate.fitness = EvaluateFitnessFunction(candidate, behavior);
 
             // store candidate
-            if (archive[behavior] == null || archive[behavior].fitness < candidate.fitness)
+            if (!archive.ContainsKey(behavior) || archive[behavior].fitness < candidate.fitness)
             {
                 InsertIntoArchive(candidate, behavior);
             }
@@ -58,25 +71,25 @@ public class MapElite : MonoBehaviour
 
         if (archive.Count > 0)
         {
-            MapCandidate best = archive[0];
-            for (int i = 1; i < archive.Count; i++) 
+            var vals = archive.Values.ToList();
+            MapCandidate best = vals[0];
+            foreach (var candidate in vals)
             {
-                if (archive[i].fitness > best.fitness)
-                    best = archive[i];
+                if (candidate.fitness > best.fitness) {
+                    best = candidate;
+                }
             }
 
             Debug.Log("Spawning best map via original MapInstantiator.");
-            mapInstantiator.makeMap(best.mapData);
+            mapInstantiator.makeMap(best.mapData.mapArray);
         }
     }
 
     MapCandidate GenerateRandomCandidate()
     {
         // Instantiate a temporary generator
-        MapGeneratorElites generator = Instantiate(mapGeneratorPrefab);
-        generator.GenerateFullMap();
-        MapCandidate candidate = new MapCandidate(generator.mapArray);
-        Destroy(generator.gameObject);
+        mapGenerator.RemakeMap();
+        MapCandidate candidate = new MapCandidate(mapGenerator.currentMap);
         return candidate;
     }
 
@@ -85,8 +98,8 @@ public class MapElite : MonoBehaviour
         if (archive.Count == 0)
             return GenerateRandomCandidate(); //this may not be necessary
 
-        int index = Random.Range(0, archive.Count);
-        return archive[index];
+        //Return random solution in the archive
+        return archive.Values.ToList()[Random.Range(0, archive.Count)];
     }
 
     Vector2 FeatureDescriptorFunction(MapCandidate candidate)
@@ -94,14 +107,14 @@ public class MapElite : MonoBehaviour
         int enemyCount = 0;
         int furnishingCount = 0;
 
-        int width = candidate.mapData.GetLength(0);
-        int height = candidate.mapData.GetLength(1);
+        int width = candidate.mapData.mapArray.GetLength(0);
+        int height = candidate.mapData.mapArray.GetLength(1);
 
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                int val = candidate.mapData[x, y];
+                int val = candidate.mapData.mapArray[x, y];
 
                 // according to MapInstantiator:
                 // 3–5 = furn, 6–7 hahahah
@@ -117,12 +130,15 @@ public class MapElite : MonoBehaviour
 
     MapCandidate MutateFunction(MapCandidate parent)
     {
-        MapGeneratorElites.mutateMap();
-        MapGeneratorElites.mutateEnemies();
+        parent.mapData = mapGenerator.MutateMap(parent.mapData);
+        parent.mapData = mapGenerator.MutateContent(parent.mapData);
+        parent.mapData = mapGenerator.MutatePlacements(parent.mapData);
+       
         //Mutate map layout here
         // Mutate enemies here
         // Mutate furnishing here
 
+        return parent;
         // For now, just create a new random candidate as a placeholder
         //return GenerateRandomCandidate();
     }
@@ -144,10 +160,12 @@ public class MapElite : MonoBehaviour
 
 public class MapCandidate
 {
-    public int[,] mapData;
+    //public int[,] mapData;
     public float fitness;
 
-    public MapCandidate(int[,] map)
+    public MapInfo mapData;
+
+    public MapCandidate(MapInfo map)
     {
         mapData = map;
         fitness = 0f;
@@ -158,3 +176,18 @@ public struct Behavior
 {
     int temp;
 }
+
+/*public struct MapInfo
+    {
+        public int[,] mapArray;
+        public List<(Vector3Int placement, Vector3Int size)> rooms;
+        public List<(Vector2Int placement, int type)> enemies;
+        public Vector2Int playerStartPos;
+        public Vector3Int outlinePlacement;
+        public Vector3Int outlineSize;
+        public List<(Vector2Int start, Vector2Int end)> componentConnections;
+        public int budget;
+        public List<(Vector2Int placement, int type)> furnishing;
+        public int furnishingBudget;
+    }
+    */

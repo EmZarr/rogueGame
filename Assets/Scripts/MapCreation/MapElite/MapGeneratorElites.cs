@@ -41,6 +41,8 @@ public class MapGeneratorElites : MonoBehaviour
     private Vector3Int outlineSize;
     private int budget;
 
+    public MapInfo currentMap;
+
     MapInstantiator mapInstantiator;
 
    //just so i dont have two maps genereated
@@ -63,7 +65,7 @@ public class MapGeneratorElites : MonoBehaviour
         mutatePlacements.action.Enable();
         placeObjects.action.performed += ctx => PlaceObjects();
         remakeMap.action.performed += ctx => RemakeMap();
-        mutateMap.action.performed += ctx => MutateMap();
+        mutateMap.action.performed += ctx => MutateMap(currentMap);
         mutatePlacements.action.performed += ctx => MutatePlacements();
     }
 
@@ -153,7 +155,7 @@ public class MapGeneratorElites : MonoBehaviour
             }
         }
 
-        RemoveDisconnectedFloors();
+        //RemoveDisconnectedFloors(map);
         AddWallsAroundFloors();
     }
 
@@ -443,15 +445,15 @@ public class MapGeneratorElites : MonoBehaviour
         // Repaint rooms
         foreach (var room in map.rooms)
         {
-            for (int x = map.room.placement.x; x < map.room.placement.x + map.room.size.x; x++)
+            for (int x = room.placement.x; x < room.placement.x + room.size.x; x++)
             {
-                for (int y = map.room.placement.y; y < map.room.placement.y + map.room.size.y; y++)
+                for (int y = room.placement.y; y < room.placement.y + room.size.y; y++)
                 {
                     map.mapArray[x, y] = 1;
                 }
             }
         }
-        RemoveDisconnectedFloors();
+        RemoveDisconnectedFloors(map);
         AddWallsAroundFloors();
 
         // Remove enemies that are no longer valid, and place new ones
