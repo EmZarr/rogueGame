@@ -21,12 +21,10 @@ public class MapInstantiator : MonoBehaviour
     // keep references to everything we spawn so we can delete them later
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
-    public void makeMap(int[,] map, Vector2Int playerTest)
+    public void makeMap(int[,] map)
     {
         ClearPreviousMap();
 
-
-        Debug.Log("Player Test: " + map[playerTest.x, playerTest.y]);
         for (int x = 0; x < map.GetLength(0); x++)
         {
             for (int y = 0; y < map.GetLength(1); y++)
@@ -34,7 +32,6 @@ public class MapInstantiator : MonoBehaviour
                 var cell = new Vector3Int(x, y, 0);
                 if (map[x, y] == 100)
                 {
-                    Debug.Log("Fuck you! " + map[x, y]);
                 }
                 switch (map[x, y])
                 {
@@ -85,7 +82,6 @@ public class MapInstantiator : MonoBehaviour
                         );
                         break;
                     case 100:
-                        Debug.Log("Player is placed");
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         spawnedObjects.Add(
                             Instantiate(playerPrefab, tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)

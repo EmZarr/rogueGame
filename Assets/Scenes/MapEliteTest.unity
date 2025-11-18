@@ -388,8 +388,8 @@ GameObject:
   - component: {fileID: 859900375}
   - component: {fileID: 859900374}
   - component: {fileID: 859900372}
-  - component: {fileID: 859900376}
   - component: {fileID: 859900377}
+  - component: {fileID: 859900378}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -451,32 +451,6 @@ Transform:
   - {fileID: 180224427}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &859900376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 859900371}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 225c3a4d72276af4ca77fe5915e02ed7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MapGeneratorElites
-  mapSize: {x: 100, y: 100, z: 0}
-  maxOutLineSize: {x: 60, y: 60, z: 0}
-  maxRoomSize: {x: 15, y: 15, z: 0}
-  maxRoomAmount: 30
-  amountOfEnemyTypes: 2
-  startingBudget: 6
-  minDistanceToPlayer: 10
-  minDistanceBetweenEnemies: 2
-  maxAmountFurnishing: 7
-  amountOfFurnishingTypes: 3
-  placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  remakeMap: {fileID: 1708116293339222938, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  mutateMap: {fileID: 101673841628561707, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  mutatePlacements: {fileID: 7610372480146149514, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &859900377
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -489,10 +463,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4f6ae296224daa4cb4507d17a2c05b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
-  mapGeneratorPrefab: {fileID: 859900376}
   mapInstantiator: {fileID: 859900372}
   totalIterations: 50
   initialRandomSolutions: 20
+  runElites: {fileID: 4630370472947771425, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+--- !u!114 &859900378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859900371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3582bdd61dfe9ce49a96fce7c8fe67b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
+  mapSize: {x: 100, y: 100, z: 0}
+  maxOutLineSize: {x: 40, y: 40, z: 0}
+  maxAmountOfOutlines: 5
+  maxRoomSize: {x: 15, y: 15, z: 0}
+  maxRoomAmount: 15
+  amountOfEnemyTypes: 2
+  startingBudget: 6
+  minDistanceToPlayer: 10
+  minDistanceBetweenEnemies: 2
+  maxAmountFurnishing: 20
+  amountOfFurnishingTypes: 3
+  placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  remakeMap: {fileID: 1708116293339222938, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  mutateMap: {fileID: 101673841628561707, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  mutatePlacements: {fileID: 7610372480146149514, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  mutateContent: {fileID: 1907408436137568603, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!1 &1085453243
 GameObject:
   m_ObjectHideFlags: 0
