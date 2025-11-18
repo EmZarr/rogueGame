@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
+using System.IO;
 using System.Linq;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class MapElite : MonoBehaviour
@@ -85,6 +86,8 @@ public class MapElite : MonoBehaviour
             //Debug.Log("Spawning best map via original MapInstantiator.");
             mapInstantiator.makeMap(best.mapData.mapArray);
         }
+
+        ExportArchiveToJson();
     }
 
     MapCandidate GenerateRandomCandidate()
@@ -194,17 +197,123 @@ public class MapElite : MonoBehaviour
         }
 
     }
-    
-    public List<int[,]> mapArrayList()
+
+    // Export json here baby ahahahs
+    public void ExportArchiveToJson(string filename = "archive_maps.json")
     {
-        List<int[,]> list = new List<int[,]>();
-        foreach (var map in archive.Values.ToList())
+        var collection = new MapCollection();
+        collection.maps = new List<MapDTO>();
+
+        foreach (var kv in archive)
         {
-            list.Add(map.mapData.mapArray);
+            Vector2 behavior = kv.Key;
+            MapCandidate candidate = kv.Value;
+            var map = candidate.mapData;
+
+            int width = map.mapArray?.GetLength(0) ?? 0;
+            int height = map.mapArray?.GetLength(1) ?? 0;
+
+            MapDTO dto = new MapDTO
+            {
+                width = width,
+                height = height,
+                tiles = map.mapArray != null ? ConvertMapArrayToNestedList(map.mapArray) : new List<List<int>>(),
+                flatTiles = map.mapArray != null ? FlattenMapArray(map.mapArray) : new List<int>(),
+                fitness = candidate.fitness,
+                behavior = ConvertBehaviorToList(behavior),
+
+                // Summary metrics
+                roomsCount = map.rooms?.Count ?? 0,
+                enemiesCount = map.enemies?.Count ?? 0,
+                furnishingCount = map.furnishing?.Count ?? 0,
+                budget = map.budget,
+                furnishingBudget = map.furnishingBudget,
+                walkableTiles = map.walkableTiles,
+                wallTiles = map.WallTiles
+            };
+
+            collection.maps.Add(dto);
         }
-        return list;
+
+        string json = JsonUtility.ToJson(collection, true);
+        string path = Path.Combine(Application.dataPath, filename);
+        File.WriteAllText(path, json);
+        Debug.Log($"Archive exported to {path} ({collection.maps.Count} maps)");
+    }
+
+    List<int> FlattenMapArray(int[,] mapArray)
+    {
+        int width = mapArray.GetLength(0);
+        int height = mapArray.GetLength(1);
+
+        var flat = new List<int>(width * height);
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                flat.Add(mapArray[x, y]);
+            }
+        }
+        return flat;
+    }
+
+    List<List<int>> ConvertMapArrayToNestedList(int[,] mapArray)
+    {
+        int width = mapArray.GetLength(0);
+        int height = mapArray.GetLength(1);
+
+        var rows = new List<List<int>>(height);
+        for (int y = 0; y < height; y++)
+        {
+            var row = new List<int>(width);
+            for (int x = 0; x < width; x++)
+            {
+                row.Add(mapArray[x, y]);
+            }
+            rows.Add(row);
+        }
+        return rows;
+    }
+
+    List<float> ConvertBehaviorToList(Vector2 behavior)
+    {
+        return new List<float> { behavior.x, behavior.y };
+    }
+
+    [System.Serializable]
+    public class MapDTO
+    {
+        public int width;
+        public int height;
+        public List<List<int>> tiles; // tiles[y][x]
+
+        // flattened row-major list: length == width * height
+        public List<int> flatTiles;
+
+        public float fitness;
+        public List<float> behavior; // scalable behavior vector components
+
+        // Summary metrics
+        public int roomsCount;
+        public int enemiesCount;
+        public int furnishingCount;
+        public int budget;
+        public int furnishingBudget;
+        public int walkableTiles;
+        public int wallTiles;
+    }
+
+    [System.Serializable]
+    public class MapCollection
+    {
+        public List<MapDTO> maps;
     }
 }
+
+
+
+
+
 
 public class MapCandidate
 {
