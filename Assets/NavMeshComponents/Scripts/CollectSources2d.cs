@@ -48,8 +48,8 @@ namespace NavMeshPlus.Extensions
                 bounds.Encapsulate(lbounds);
                 if (!surface.hideEditorLogs)
                 {
-                    Debug.Log($"From Local Bounds [{tilemap.name}]: {tilemap.localBounds}");
-                    Debug.Log($"To World Bounds: {bounds}");
+                    //Debug.Log($"From Local Bounds [{tilemap.name}]: {tilemap.localBounds}");
+                    //Debug.Log($"To World Bounds: {bounds}");
                 }
             }
             return bounds;
@@ -61,13 +61,13 @@ namespace NavMeshPlus.Extensions
             {
                 if (!Mathf.Approximately(transform.eulerAngles.x, 270f))
                 {
-                    Debug.LogWarning("NavMeshSurface is not rotated respectively to (x-90;y0;z0). Apply rotation unless intended.");
+                    //Debug.LogWarning("NavMeshSurface is not rotated respectively to (x-90;y0;z0). Apply rotation unless intended.");
                 }
                 if (Application.isPlaying)
                 {
                     if (surface.useGeometry == NavMeshCollectGeometry.PhysicsColliders && Time.frameCount <= 1)
                     {
-                        Debug.LogWarning("Use Geometry - Physics Colliders option in NavMeshSurface may cause inaccurate mesh bake if executed before Physics update.");
+                        //Debug.LogWarning("Use Geometry - Physics Colliders option in NavMeshSurface may cause inaccurate mesh bake if executed before Physics update.");
                     }
                 }
             }
