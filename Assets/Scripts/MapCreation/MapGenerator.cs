@@ -22,7 +22,7 @@ public class MapGenerator : MonoBehaviour
 
 
     [Header("Controls")]
-    public InputActionReference placeObjects;   
+    public InputActionReference placeObjects;
     public InputActionReference remakeMap;
     public InputActionReference mutateMap;
     public InputActionReference mutatePlacements;
@@ -74,7 +74,7 @@ public class MapGenerator : MonoBehaviour
             enemiesBudget = startingBudget,
             furnishingBudget = maxAmountFurnishing,
             distFromPlayerToEnd = 0,
-};
+        };
         currentMap = makeRoomGeometry(currentMap);
         mapInstantiator.makeMap(currentMap.mapArray);
     }
@@ -103,7 +103,7 @@ public class MapGenerator : MonoBehaviour
 
     MapInfo makeRoomGeometry(MapInfo map)
     {
-        map.components = new List <FloorComponent>();
+        map.components = new List<FloorComponent>();
         int roomAmount = Random.Range(1, maxRoomAmount);
         for (int i = 0; i < roomAmount; i++)
         {
@@ -114,12 +114,12 @@ public class MapGenerator : MonoBehaviour
     }
 
     MapInfo buildMapFromComponents(MapInfo map)
-    {         
+    {
         // clear map
         map.mapArray = new int[mapSize.x, mapSize.y];
         map.floorTiles = new List<Vector2Int>();
         map.playerStartPos = null;
-        map.endPos = Vector2Int.zero;      
+        map.endPos = Vector2Int.zero;
         map.distFromPlayerToEnd = 0f;
 
         // paint 
@@ -459,7 +459,7 @@ public class MapGenerator : MonoBehaviour
             return;
 
         // Set floor and if not floor before, add to floor list
-        if (map.mapArray[x, y] != 1 && map.mapArray[x, y] != 100 && map.mapArray[x, y] != 99) 
+        if (map.mapArray[x, y] != 1 && map.mapArray[x, y] != 100 && map.mapArray[x, y] != 99)
         {
             // if player not set yet, place player.
             if (!map.playerStartPos.HasValue)
@@ -511,22 +511,22 @@ public class MapGenerator : MonoBehaviour
 }
 
 public class MapInfo
-    {
-        public int[,] mapArray;
-        public List<FloorComponent> components;
-        public List<Vector2Int> floorTiles;
-        public List<(Vector2Int placement, int type)> enemies;
-        public List<(Vector2Int placement, int type)> furnishing;
-        public Vector2Int? playerStartPos;
-        public Vector2Int? endPos;
-        public List<Vector2Int> shortestPath;
-        public float distFromPlayerToEnd;
-        public Vector3Int outlinePlacement;
-        public Vector3Int outlineSize;
-        public List<(Vector2Int start, Vector2Int end)> componentConnections;
-        public int enemiesBudget;
-        public int furnishingBudget;
-    }
+{
+    public int[,] mapArray;
+    public List<FloorComponent> components;
+    public List<Vector2Int> floorTiles;
+    public List<(Vector2Int placement, int type)> enemies;
+    public List<(Vector2Int placement, int type)> furnishing;
+    public Vector2Int? playerStartPos;
+    public Vector2Int? endPos;
+    public List<Vector2Int> shortestPath;
+    public float distFromPlayerToEnd;
+    public Vector3Int outlinePlacement;
+    public Vector3Int outlineSize;
+    public List<(Vector2Int start, Vector2Int end)> componentConnections;
+    public int enemiesBudget;
+    public int furnishingBudget;
+}
 
 public class FloorComponent
 {
@@ -546,7 +546,7 @@ public class FloorComponent
     {
         // inclusive bounds
         bool xOverlap =
-            a.XMin <= b.XMax + 1 && a.XMax + 1 >= b.XMin; 
+            a.XMin <= b.XMax + 1 && a.XMax + 1 >= b.XMin;
         bool yOverlap =
             a.YMin <= b.YMax + 1 && a.YMax + 1 >= b.YMin;
 
@@ -564,5 +564,4 @@ public struct Room
     public int XMax => placement.x + size.x - 1;
     public int YMax => placement.y + size.y - 1;
 }
-
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
+using System.IO;
 using System.Linq;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class MapElite : MonoBehaviour
@@ -37,8 +38,8 @@ public class MapElite : MonoBehaviour
 
     public void RunMapElites()
     {
+        Debug.Log("Archive size start: " + archive.Count());
         //archive.Clear();
-        Debug.Log("Test");
         for (int i = 0; i < totalIterations; i++)
         {
             MapCandidate candidate;
@@ -55,12 +56,11 @@ public class MapElite : MonoBehaviour
                 MapCandidate parent = SelectParent();
 
                 // x'
-                candidate = MutateFunction(parent);
-                Debug.Log("here");
+                candidate = new MapCandidate(MutateGeometry(parent).mapData);
             }
 
             // b'
-            Vector2 behavior = FeatureDescriptorFunction(candidate);
+            Vector2 behavior = GeometryBehavior(candidate);
 
             // p'
             candidate.fitness = EvaluateFitnessFunction(candidate, behavior);
@@ -70,23 +70,28 @@ public class MapElite : MonoBehaviour
             {
                 InsertIntoArchive(candidate, behavior);
             }
-            Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
+            //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
-
         if (archive.Count > 0)
         {
+
+
             var vals = archive.Values.ToList();
             MapCandidate best = vals[0];
-            foreach (var candidate in vals)
+            foreach (var check in vals)
             {
-                if (candidate.fitness > best.fitness) {
-                    best = candidate;
+                if (check.fitness > best.fitness)
+                {
+                    best = check;
                 }
             }
 
-            Debug.Log("Spawning best map via original MapInstantiator.");
+            Debug.Log("Best fitness: " + best.fitness);
+            //Debug.Log("Spawning best map via original MapInstantiator.");
             mapInstantiator.makeMap(best.mapData.mapArray);
         }
+
+        ExportArchiveToJson();
     }
 
     MapCandidate GenerateRandomCandidate()
@@ -132,35 +137,186 @@ public class MapElite : MonoBehaviour
         return new Vector2(enemyCount, furnishingCount);
     }
 
-    MapCandidate MutateFunction(MapCandidate parent)
+
+    Vector2 GeometryBehavior(MapCandidate candidate)
+    {
+        int val = candidate.mapData.components.Count();
+        int key;
+        if (val <= 3)
+        {
+            key = 1;
+        }
+        else if (val > 3 && val <= 6)
+        {
+            key = 2;
+        }
+        else if (val > 6 && val <= 9)
+        {
+            key = 3;
+        }
+        else if (val > 9 && val <= 12)
+        {
+            key = 4;
+        }
+        else
+        {
+            key = 5;
+        }
+        return new Vector2(key, 0);
+    }
+
+    MapCandidate MutateGeometry(MapCandidate parent)
     {
         parent.mapData = mapGenerator.MutateMap(parent.mapData);
-        parent.mapData = mapGenerator.MutateContent(parent.mapData);
-        parent.mapData = mapGenerator.MutatePlacements(parent.mapData);
-       
-        //Mutate map layout here
-        // Mutate enemies here
-        // Mutate furnishing here
-
         return parent;
-        // For now, just create a new random candidate as a placeholder
-        //return GenerateRandomCandidate();
+    }
+
+    MapCandidate MutateFurnishing(MapCandidate parent)
+    {
+        parent.mapData = mapGenerator.MutateContent(parent.mapData);
+        return parent;
+    }
+    
+     MapCandidate MutateEnemies(MapCandidate parent)
+    {
+        parent.mapData = mapGenerator.MutatePlacements(parent.mapData);
+        return parent;
     }
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
     {
-        // placeholder
-        float enemyCount = behavior.x;
-        float furnishingCount = behavior.y;
-        return enemyCount + furnishingCount * 0.25f;
+        return candidate.mapData.floorTiles.Count * 0.1f;
     }
 
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
     {
         // behavior here
-        archive.Add(behavior, candidate);
+        if (!archive.ContainsKey(behavior))
+        {
+            archive.Add(behavior, candidate);
+        }
+        else
+        {
+            archive[behavior] = candidate;
+        }
+
+    }
+
+    // Export json here baby ahahahs
+    public void ExportArchiveToJson(string filename = "archive_maps.json")
+    {
+        var collection = new MapCollection();
+        collection.maps = new List<MapDTO>();
+
+        foreach (var kv in archive)
+        {
+            Vector2 behavior = kv.Key;
+            MapCandidate candidate = kv.Value;
+            var map = candidate.mapData;
+
+            int width = map.mapArray?.GetLength(0) ?? 0;
+            int height = map.mapArray?.GetLength(1) ?? 0;
+
+            MapDTO dto = new MapDTO
+            {
+                width = width,
+                height = height,
+                tiles = map.mapArray != null ? ConvertMapArrayToNestedList(map.mapArray) : new List<List<int>>(),
+                flatTiles = map.mapArray != null ? FlattenMapArray(map.mapArray) : new List<int>(),
+                fitness = candidate.fitness,
+                behavior = ConvertBehaviorToList(behavior),
+
+                // Summary metrics
+                roomsCount = map.components?.Count ?? 0,
+                enemiesCount = map.enemies?.Count ?? 0,
+                furnishingCount = map.furnishing?.Count ?? 0,
+                budget = map.enemiesBudget,
+                furnishingBudget = map.furnishingBudget,
+                walkableTiles = map.floorTiles.Count,
+            };
+
+            collection.maps.Add(dto);
+        }
+
+        string json = JsonUtility.ToJson(collection, true);
+        string path = Path.Combine(Application.dataPath, filename);
+        File.WriteAllText(path, json);
+        Debug.Log($"Archive exported to {path} ({collection.maps.Count} maps)");
+    }
+
+    List<int> FlattenMapArray(int[,] mapArray)
+    {
+        int width = mapArray.GetLength(0);
+        int height = mapArray.GetLength(1);
+
+        var flat = new List<int>(width * height);
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                flat.Add(mapArray[x, y]);
+            }
+        }
+        return flat;
+    }
+
+    List<List<int>> ConvertMapArrayToNestedList(int[,] mapArray)
+    {
+        int width = mapArray.GetLength(0);
+        int height = mapArray.GetLength(1);
+
+        var rows = new List<List<int>>(height);
+        for (int y = 0; y < height; y++)
+        {
+            var row = new List<int>(width);
+            for (int x = 0; x < width; x++)
+            {
+                row.Add(mapArray[x, y]);
+            }
+            rows.Add(row);
+        }
+        return rows;
+    }
+
+    List<float> ConvertBehaviorToList(Vector2 behavior)
+    {
+        return new List<float> { behavior.x, behavior.y };
+    }
+
+    [System.Serializable]
+    public class MapDTO
+    {
+        public int width;
+        public int height;
+        public List<List<int>> tiles; // tiles[y][x]
+
+        // flattened row-major list: length == width * height
+        public List<int> flatTiles;
+
+        public float fitness;
+        public List<float> behavior; // scalable behavior vector components
+
+        // Summary metrics
+        public int roomsCount;
+        public int enemiesCount;
+        public int furnishingCount;
+        public int budget;
+        public int furnishingBudget;
+        public int walkableTiles;
+        public int wallTiles;
+    }
+
+    [System.Serializable]
+    public class MapCollection
+    {
+        public List<MapDTO> maps;
     }
 }
+
+
+
+
+
 
 public class MapCandidate
 {
@@ -181,17 +337,3 @@ public struct Behavior
     int temp;
 }
 
-/*public struct MapInfo
-    {
-        public int[,] mapArray;
-        public List<(Vector3Int placement, Vector3Int size)> rooms;
-        public List<(Vector2Int placement, int type)> enemies;
-        public Vector2Int playerStartPos;
-        public Vector3Int outlinePlacement;
-        public Vector3Int outlineSize;
-        public List<(Vector2Int start, Vector2Int end)> componentConnections;
-        public int budget;
-        public List<(Vector2Int placement, int type)> furnishing;
-        public int furnishingBudget;
-    }
-    */
