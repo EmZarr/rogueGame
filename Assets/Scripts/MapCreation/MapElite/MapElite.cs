@@ -20,9 +20,13 @@ public class MapElite : MonoBehaviour
     private Dictionary<Vector2, MapCandidate> archive = new Dictionary<Vector2, MapCandidate>();
 
     private int iter;
-
+    private void Awake()
+    {
+        Debug.unityLogger.logEnabled = false;
+    }
     void Start()
     {
+
         runElites.action.Enable();
         runElites.action.performed += ctx => RunMapElites();
         mapGenerator = GetComponent<MapGenerator>();
