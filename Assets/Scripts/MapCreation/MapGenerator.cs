@@ -73,7 +73,8 @@ public class MapGenerator : MonoBehaviour
             floorTiles = new List<Vector2Int>(),
             enemiesBudget = startingBudget,
             furnishingBudget = maxAmountFurnishing,
-        };
+            distFromPlayerToEnd = 0,
+};
         currentMap = makeRoomGeometry(currentMap);
         mapInstantiator.makeMap(currentMap.mapArray);
     }
@@ -117,6 +118,9 @@ public class MapGenerator : MonoBehaviour
         // clear map
         map.mapArray = new int[mapSize.x, mapSize.y];
         map.floorTiles = new List<Vector2Int>();
+        map.playerStartPos = null;
+        map.endPos = Vector2Int.zero;      
+        map.distFromPlayerToEnd = 0f;
 
         // paint 
         foreach (var component in map.components)
@@ -150,14 +154,14 @@ public class MapGenerator : MonoBehaviour
             // now this becomes the previous
             previousConnectionTile = connectionTile;
         }
-
+        Debug.Log("Endpos: " + map.endPos);
         return map;
     }
 
     MapInfo placeRandomRoom(MapInfo map)
     {
         Vector2Int roomSize = new Vector2Int(Random.Range(4, maxRoomSize.x), Random.Range(4, maxRoomSize.y));
-        Vector2Int roomPlacement = new Vector2Int(Random.Range(0, mapSize.x - roomSize.x), Random.Range(0, mapSize.y - roomSize.y));
+        Vector2Int roomPlacement = new Vector2Int(Random.Range(1, mapSize.x - roomSize.x), Random.Range(1, mapSize.y - roomSize.y));
         Room room = new Room
         {
             placement = roomPlacement,
@@ -455,10 +459,36 @@ public class MapGenerator : MonoBehaviour
             return;
 
         // Set floor and if not floor before, add to floor list
-        if (map.mapArray[x, y] != 1) 
+        if (map.mapArray[x, y] != 1 && map.mapArray[x, y] != 100 && map.mapArray[x, y] != 99) 
         {
-            map.mapArray[x, y] = 1;
-            if (!corridor) map.floorTiles.Add(new Vector2Int(x, y));
+            // if player not set yet, place player.
+            if (!map.playerStartPos.HasValue)
+            {
+                map.playerStartPos = new Vector2Int(x, y);
+                map.mapArray[x, y] = 100;
+            }
+            else
+            {
+                var pos = new Vector2Int(x, y);
+                float dist = Vector2Int.Distance(pos, map.playerStartPos.Value);
+                if (dist > map.distFromPlayerToEnd)
+                {
+                    if (map.endPos.HasValue)
+                    {
+                        var oldExit = map.endPos.Value;
+                        map.mapArray[oldExit.x, oldExit.y] = 1;
+                        if (!corridor) map.floorTiles.Add(oldExit);
+                    }
+                    map.endPos = pos;
+                    map.mapArray[x, y] = 99;
+                    map.distFromPlayerToEnd = dist;
+                }
+                else
+                {
+                    map.mapArray[x, y] = 1;
+                    if (!corridor) map.floorTiles.Add(pos);
+                }
+            }
         }
 
         // 4-neighbor walls
@@ -480,16 +510,17 @@ public class MapGenerator : MonoBehaviour
 
 }
 
-public struct MapInfo
+public class MapInfo
     {
         public int[,] mapArray;
         public List<FloorComponent> components;
         public List<Vector2Int> floorTiles;
         public List<(Vector2Int placement, int type)> enemies;
         public List<(Vector2Int placement, int type)> furnishing;
-        public Vector2Int playerStartPos;
-        public Vector2Int endPos;
+        public Vector2Int? playerStartPos;
+        public Vector2Int? endPos;
         public List<Vector2Int> shortestPath;
+        public float distFromPlayerToEnd;
         public Vector3Int outlinePlacement;
         public Vector3Int outlineSize;
         public List<(Vector2Int start, Vector2Int end)> componentConnections;
