@@ -465,8 +465,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
   mapInstantiator: {fileID: 859900372}
-  totalIterations: 100
-  initialRandomSolutions: 20
+  totalIterations: 1000
+  initialRandomSolutions: 200
   runElites: {fileID: 4630370472947771425, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &859900378
 MonoBehaviour:
@@ -481,14 +481,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
   mapSize: {x: 100, y: 100, z: 0}
-  maxOutLineSize: {x: 40, y: 40, z: 0}
-  maxAmountOfOutlines: 5
   maxRoomSize: {x: 15, y: 15, z: 0}
   maxRoomAmount: 15
   amountOfEnemyTypes: 2
   startingBudget: 6
-  minDistanceToPlayer: 10
-  minDistanceBetweenEnemies: 2
   maxAmountFurnishing: 20
   amountOfFurnishingTypes: 3
   placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}

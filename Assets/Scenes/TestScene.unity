@@ -421,6 +421,7 @@ MonoBehaviour:
   - {fileID: 6425840253016552175, guid: af9da458c414f0e4bb1ae36e70b80304, type: 3}
   - {fileID: 688636583817786477, guid: 118df840cb0a31942800394f8d291676, type: 3}
   - {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
+  exitPrefab: {fileID: 5086782275875845498, guid: a4c484221cae8f04d9401634381b97ba, type: 3}
 --- !u!114 &859900373
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -434,14 +435,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapGenerator
   mapSize: {x: 100, y: 100, z: 0}
-  maxOutLineSize: {x: 60, y: 60, z: 0}
-  maxAmountOfOutlines: 0
-  maxRoomSize: {x: 15, y: 15, z: 0}
-  maxRoomAmount: 30
+  maxRoomSize: {x: 20, y: 20, z: 0}
+  maxRoomAmount: 50
   amountOfEnemyTypes: 2
   startingBudget: 6
-  minDistanceToPlayer: 10
-  minDistanceBetweenEnemies: 2
   maxAmountFurnishing: 7
   amountOfFurnishingTypes: 3
   placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}

@@ -21,9 +21,13 @@ public class MapElite : MonoBehaviour
     private Dictionary<Vector2, MapCandidate> archive = new Dictionary<Vector2, MapCandidate>();
 
     private int iter;
-
+    private void Awake()
+    {
+        Debug.unityLogger.logEnabled = false;
+    }
     void Start()
     {
+
         runElites.action.Enable();
         runElites.action.performed += ctx => RunMapElites();
         mapGenerator = GetComponent<MapGenerator>();
@@ -136,7 +140,7 @@ public class MapElite : MonoBehaviour
 
     Vector2 GeometryBehavior(MapCandidate candidate)
     {
-        int val = candidate.mapData.rooms.Count();
+        int val = candidate.mapData.components.Count();
         int key;
         if (val <= 3)
         {
@@ -181,7 +185,7 @@ public class MapElite : MonoBehaviour
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
     {
-        return candidate.mapData.walkableTiles * 0.1f;
+        return candidate.mapData.floorTiles.Count * 0.1f;
     }
 
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
@@ -223,13 +227,12 @@ public class MapElite : MonoBehaviour
                 behavior = ConvertBehaviorToList(behavior),
 
                 // Summary metrics
-                roomsCount = map.rooms?.Count ?? 0,
+                roomsCount = map.components?.Count ?? 0,
                 enemiesCount = map.enemies?.Count ?? 0,
                 furnishingCount = map.furnishing?.Count ?? 0,
-                budget = map.budget,
+                budget = map.enemiesBudget,
                 furnishingBudget = map.furnishingBudget,
-                walkableTiles = map.walkableTiles,
-                wallTiles = map.WallTiles
+                walkableTiles = map.floorTiles.Count,
             };
 
             collection.maps.Add(dto);

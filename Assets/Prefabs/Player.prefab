@@ -325,7 +325,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 0.44654083, g: 0.44654083, b: 0.44654083, a: 1}
   m_FlipX: 0
@@ -473,7 +473,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
   _health: 100
-  _ui: {fileID: 0}
 --- !u!114 &7220147792132035545
 MonoBehaviour:
   m_ObjectHideFlags: 0

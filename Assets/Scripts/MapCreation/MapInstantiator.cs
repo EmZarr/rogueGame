@@ -83,7 +83,7 @@ public class MapInstantiator : MonoBehaviour
                             Instantiate(enemyPrefabs[1], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
-                    case 8:
+                    case 99:
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         tilemapWall.SetTile(cell, null); //remove wall tile
 
