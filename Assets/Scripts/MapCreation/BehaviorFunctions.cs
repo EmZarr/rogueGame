@@ -4,7 +4,91 @@ using Unity.Mathematics;
 
 public class BehaviorFunctions : MonoBehaviour
 {
-    
+
+    static float LocalOpennessAt(int opennessRadius, int posX, int posY, int[,] mapArray)
+    {
+        int floorCount = 0;
+        int total = 0;
+
+        // For each tile in R radius square, how many are floor?
+        for (int dx = -opennessRadius; dx <= opennessRadius; dx++)
+        {
+            for (int dy = -opennessRadius; dy <= opennessRadius; dy++)
+            {
+                int x = posX + dx;
+                int y = posY + dy;
+                if (x < 0 || y < 0 || x >= mapArray.GetLength(0) || y >= mapArray.GetLength(1))
+                    continue;
+
+                total++;
+                if (mapArray[x, y] != 2 && mapArray[x, y] != 0)
+                    floorCount++;
+            }
+        }
+        // Return percentage of floor tiles in radius
+        if (total == 0) return 0f;
+        return (float)floorCount / total;   // 0..1
+    }
+
+
+    static float ComputeOpenness(int[,] mapArray)
+    {
+        float opennessScoreSum = 0f;
+        float amountOfTiles = 0f;
+
+        for (int x = 0; x < mapArray.GetLength(0); x++)
+        {
+            for (int y = 0; y < mapArray.GetLength(1); y++)
+            {
+                if (mapArray[x, y] != 0 && mapArray[x, y] != 2)
+                {
+                    opennessScoreSum += LocalOpennessAt(3, x, y, mapArray);
+                    amountOfTiles += 1f;
+                }
+            }
+        }
+        return opennessScoreSum / amountOfTiles;  // 0..1
+    }
+
+    public static int GetMapOpennessBehavior(MapCandidate candidate)
+    {
+        float openness = ComputeOpenness(candidate.mapData.mapArray);
+
+        return GetBehaviorRange(0.5, 0.8, openness);
+    }
+
+    //
+    static float ComputeWindingness(float shortestPathLength, Vector2Int start, Vector2Int end)
+    {
+
+        float straight =
+            Mathf.Abs(start.x - end.x) +
+            Mathf.Abs(start.y - end.y);
+
+        float ratio = shortestPathLength / straight;
+
+        float maxRatio = 3.0f;
+        float windingness = (ratio - 1f) / (maxRatio - 1f);
+
+        return Mathf.Clamp01(windingness);
+    }
+
+    public static int GetWindingnessBehavior(MapCandidate candidate)
+    {
+        float wind = ComputeWindingness(candidate.mapData.shortestPath.Count, candidate.mapData.playerStartPos.Value, candidate.mapData.endPos.Value);
+        return GetBehaviorRange(0.3, 0.7, wind);
+    }
+
+
+    static int GetBehaviorRange(double cutoff1, double cutoff2, double value)
+    {
+        if (value < cutoff1)
+            return 1;
+        else if (value < cutoff2)
+            return 2;
+        else
+            return 3;
+    }
 
     //Simple version for now, could be change to check for each room and do some sort of pseudo hashing clamped to intervals later
     public Vector2 EnemyCombatMix(List<(Vector2Int placement, int type)> enemies)
