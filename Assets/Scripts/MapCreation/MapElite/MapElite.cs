@@ -21,9 +21,11 @@ public class MapElite : MonoBehaviour
     private Dictionary<Vector2, MapCandidate> archive = new Dictionary<Vector2, MapCandidate>();
 
     private int iter;
+
+    FitnessFunctions fitnessFunctions;
     private void Awake()
     {
-        Debug.unityLogger.logEnabled = false;
+        //Debug.unityLogger.logEnabled = false;
     }
     void Start()
     {
@@ -31,6 +33,7 @@ public class MapElite : MonoBehaviour
         runElites.action.Enable();
         runElites.action.performed += ctx => RunMapElites();
         mapGenerator = GetComponent<MapGenerator>();
+        fitnessFunctions = GetComponent<FitnessFunctions>();
         iter = 0;
         RunMapElites();
     }
@@ -38,7 +41,7 @@ public class MapElite : MonoBehaviour
 
     public void RunMapElites()
     {
-        Debug.Log("Archive size start: " + archive.Count());
+        //Debug.Log("Archive size start: " + archive.Count());
         //archive.Clear();
         for (int i = 0; i < totalIterations; i++)
         {
@@ -86,7 +89,7 @@ public class MapElite : MonoBehaviour
                 }
             }
 
-            Debug.Log("Best fitness: " + best.fitness);
+            //Debug.Log("Best fitness: " + best.fitness);
             //Debug.Log("Spawning best map via original MapInstantiator.");
             mapInstantiator.makeMap(best.mapData.mapArray);
         }
@@ -185,7 +188,8 @@ public class MapElite : MonoBehaviour
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
     {
-        return candidate.mapData.floorTiles.Count * 0.1f;
+        Debug.Log("Fitness: " +  fitnessFunctions.TrapPlacementFitnessTotal(candidate.mapData));
+        return candidate.mapData.floorTiles.Count * 0.1f + fitnessFunctions.TrapPlacementFitnessTotal(candidate.mapData);
     }
 
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
