@@ -177,7 +177,7 @@ public class MapGenerator : MonoBehaviour
             }
         }*/
         
-        foreach (var component in map.components) {
+        /*foreach (var component in map.components) {
             if (component.onMainPath)
             {
                 if (component.onMainPath)
@@ -186,7 +186,7 @@ public class MapGenerator : MonoBehaviour
                     if (map.mapArray[component.entryTile.Value.x, component.entryTile.Value.y] == 1) map.mapArray[component.exitTile.Value.x, component.exitTile.Value.y] = 98;
                 }
             }
-        }
+        }*/
         return map;
     }
 
