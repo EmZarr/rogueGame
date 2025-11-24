@@ -119,7 +119,7 @@ public class MapGenerator : MonoBehaviour
         map.mapArray = new int[mapSize.x, mapSize.y];
         map.floorTiles = new List<Vector2Int>();
         map.playerStartPos = null;
-        map.endPos = Vector2Int.zero;
+        map.endPos = null;
         map.distFromPlayerToEnd = 0f;
 
         // paint 
@@ -154,7 +154,18 @@ public class MapGenerator : MonoBehaviour
             // now this becomes the previous
             previousConnectionTile = connectionTile;
         }
-        Debug.Log("Endpos: " + map.endPos);
+
+        // compute shortest path once the map geometry is ready
+        if (map.playerStartPos.HasValue && map.endPos.HasValue)
+        {
+            map.shortestPath = FindPathAStar(map, map.playerStartPos.Value, map.endPos.Value);
+
+            if (map.shortestPath == null)
+            {
+                Debug.LogWarning("No path found between player start and end!");
+            }
+        }
+
         return map;
     }
 
@@ -471,7 +482,7 @@ public class MapGenerator : MonoBehaviour
             {
                 var pos = new Vector2Int(x, y);
                 float dist = Vector2Int.Distance(pos, map.playerStartPos.Value);
-                if (dist > map.distFromPlayerToEnd)
+                if (!map.endPos.HasValue || dist > map.distFromPlayerToEnd)
                 {
                     if (map.endPos.HasValue)
                     {
@@ -507,7 +518,106 @@ public class MapGenerator : MonoBehaviour
             map.mapArray[x, y] = 2;
     }
 
+    IEnumerable<Vector2Int> GetNeighbors(Vector2Int p)
+    {
+        // 4-directional grid movement (no diagonals)
+        yield return new Vector2Int(p.x + 1, p.y);
+        yield return new Vector2Int(p.x - 1, p.y);
+        yield return new Vector2Int(p.x, p.y + 1);
+        yield return new Vector2Int(p.x, p.y - 1);
+    }
 
+    List<Vector2Int> FindPathAStar(MapInfo map, Vector2Int start, Vector2Int goal)
+    {
+        // Open set: nodes to be evaluated
+        var openSet = new HashSet<Vector2Int>();
+        var cameFrom = new Dictionary<Vector2Int, Vector2Int>();
+
+        // Cost from start to a node
+        var gScore = new Dictionary<Vector2Int, int>();
+        // Estimated total cost (g + heuristic)
+        var fScore = new Dictionary<Vector2Int, int>();
+
+        openSet.Add(start);
+        gScore[start] = 0;
+        fScore[start] = Heuristic(start, goal);
+
+        while (openSet.Count > 0)
+        {
+            // Node in openSet with lowest fScore
+            Vector2Int current = GetLowestFScore(openSet, fScore);
+
+            // Reached goal
+            if (current == goal)
+            {
+                return ReconstructPath(cameFrom, current);
+            }
+
+            openSet.Remove(current);
+
+            foreach (var neighbor in GetNeighbors(current))
+            {
+                if (map.mapArray[neighbor.x, neighbor.y] == 2)
+                    continue;
+
+                int tentativeG = gScore[current] + 1; // cost between neighbors is 1
+
+                if (!gScore.TryGetValue(neighbor, out int existingG) || tentativeG < existingG)
+                {
+                    cameFrom[neighbor] = current;
+                    gScore[neighbor] = tentativeG;
+                    fScore[neighbor] = tentativeG + Heuristic(neighbor, goal);
+                    if (!openSet.Contains(neighbor))
+                        openSet.Add(neighbor);
+                }
+            }
+        }
+
+        // No path
+        return null;
+    }
+
+    int Heuristic(Vector2Int a, Vector2Int b)
+    {
+        // Manhattan distance works well on 4-directional grids
+        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
+    }
+
+    Vector2Int GetLowestFScore(HashSet<Vector2Int> openSet, Dictionary<Vector2Int, int> fScore)
+    {
+        Vector2Int best = default;
+        int bestScore = int.MaxValue;
+        bool first = true;
+
+        foreach (var node in openSet)
+        {
+            if (!fScore.TryGetValue(node, out int score))
+                score = int.MaxValue;
+
+            if (first || score < bestScore)
+            {
+                best = node;
+                bestScore = score;
+                first = false;
+            }
+        }
+
+        return best;
+    }
+
+    List<Vector2Int> ReconstructPath(Dictionary<Vector2Int, Vector2Int> cameFrom, Vector2Int current)
+    {
+        var totalPath = new List<Vector2Int> { current };
+
+        while (cameFrom.TryGetValue(current, out Vector2Int prev))
+        {
+            current = prev;
+            totalPath.Add(current);
+        }
+
+        totalPath.Reverse();
+        return totalPath;
+    }
 }
 
 public class MapInfo

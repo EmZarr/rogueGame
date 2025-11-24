@@ -11,6 +11,7 @@ public class MapInstantiator : MonoBehaviour
 
     [SerializeField] TileBase groundTileGrass1;
     [SerializeField] TileBase wallTile;
+    [SerializeField] TileBase testTile;
 
     [SerializeField] NavMeshSurface surface;
 
@@ -93,6 +94,12 @@ public class MapInstantiator : MonoBehaviour
                         break;
                     case 100:
                         tilemapGround.SetTile(cell, groundTileGrass1);
+                        spawnedObjects.Add(
+                            Instantiate(playerPrefab, tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                        );
+                        break;
+                    case 98:
+                        tilemapGround.SetTile(cell, testTile);
                         spawnedObjects.Add(
                             Instantiate(playerPrefab, tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );

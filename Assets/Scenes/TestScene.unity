@@ -412,6 +412,7 @@ MonoBehaviour:
   tilemapWall: {fileID: 180224430}
   groundTileGrass1: {fileID: 11400000, guid: 15b6972f7cfb521429db087609cb86b0, type: 2}
   wallTile: {fileID: 11400000, guid: c61893fb968c5f548a30f1e535036592, type: 2}
+  testTile: {fileID: 11400000, guid: 469d344fa1d980a41b98e04a2b5c0739, type: 2}
   surface: {fileID: 1085453245}
   playerPrefab: {fileID: 7550404422414327367, guid: e9d91d9f7bab5f04cb88ef13f2d5ff43, type: 3}
   enemyPrefabs:

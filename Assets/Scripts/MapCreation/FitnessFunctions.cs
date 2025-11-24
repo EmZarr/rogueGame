@@ -51,5 +51,23 @@ public class FitnessFunctions
         return opennessScoreSum / amountOfTiles;  // 0..1
     }
 
+    int GetMapOpennessBehavior(MapCandidate candidate)
+    {
+        float openness = ComputeOpenness(candidate.mapData.mapArray);
+
+        return GetBehaviorRange(0.5, 0.8, openness);
+    }
+
+    public int GetBehaviorRange(double cutoff1, double cutoff2, double value)
+    {
+        if (value < cutoff1)
+            return 1;
+        else if (value < cutoff2)
+            return 2;
+        else
+            return 3;
+    }
+
+
 
 }
