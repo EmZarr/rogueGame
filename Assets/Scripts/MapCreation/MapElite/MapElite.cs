@@ -188,8 +188,8 @@ public class MapElite : MonoBehaviour
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
     {
-        Debug.Log("Fitness: " +  fitnessFunctions.TrapPlacementFitnessTotal(candidate.mapData));
-        return candidate.mapData.floorTiles.Count * 0.1f + fitnessFunctions.TrapPlacementFitnessTotal(candidate.mapData);
+        Debug.Log("Fitness: " +  fitnessFunctions.RoomFitnessTotal(candidate.mapData));
+        return candidate.mapData.floorTiles.Count * 0.1f + fitnessFunctions.RoomFitnessTotal(candidate.mapData);
     }
 
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
