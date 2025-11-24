@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -78,8 +79,8 @@ public class MapGenerator : MonoBehaviour
             distFromPlayerToEnd = 0,
         };
         currentMap = makeRoomGeometry(currentMap);
-        currentMap = PlaceObjects(currentMap);
-        //mapInstantiator.makeMap(currentMap.mapArray);
+        //currentMap = PlaceObjects(currentMap);
+        mapInstantiator.makeMap(currentMap.mapArray);
     }
 
     public MapInfo MutateMap(MapInfo map)
@@ -125,6 +126,7 @@ public class MapGenerator : MonoBehaviour
         map.playerStartPos = null;
         map.endPos = null;
         map.distFromPlayerToEnd = 0f;
+        map.mapSize = 0;
 
         // paint 
         foreach (var component in map.components)
@@ -137,27 +139,14 @@ public class MapGenerator : MonoBehaviour
                     for (int y = room.placement.y; y < room.placement.y + room.size.y; y++)
                     {
                         SetFloorAndAutoWalls(map, x, y, false);
+                        map.mapSize++;
                     }
                 }
             }
         }
 
         // paint and make corridors
-        Vector2Int? previousConnectionTile = null;
-
-        foreach (var component in map.components)
-        {
-            // pick a random tile in this component
-            Vector2Int connectionTile = GetRandomTileInComponent(component);
-
-            // if we have a previous component, connect them now
-            if (previousConnectionTile.HasValue)
-            {
-                DigCorridor(map, previousConnectionTile.Value, connectionTile);
-            }
-            // now this becomes the previous
-            previousConnectionTile = connectionTile;
-        }
+        ConnectComponentsByNearest(map);
         // compute shortest path once the map geometry is ready
         if (map.playerStartPos.HasValue && map.endPos.HasValue)
         {
@@ -168,38 +157,91 @@ public class MapGenerator : MonoBehaviour
                 Debug.LogWarning("No path found between player start and end!");
             }
         }
+
+
+        /*foreach (var component in map.components)
+        {
+            // paint this component's rooms
+            foreach (var room in component.rooms)
+            {
+                for (int x = room.placement.x; x < room.placement.x + room.size.x; x++)
+                {
+                    for (int y = room.placement.y; y < room.placement.y + room.size.y; y++)
+                    {
+                        if (component.onMainPath)
+                        {
+                            if (map.mapArray[x, y] == 1) map.mapArray[x,y] = 98;
+                        }
+                    }
+                }
+            }
+        }*/
+        
+        foreach (var component in map.components) {
+            if (component.onMainPath)
+            {
+                if (component.onMainPath)
+                {
+                    if (map.mapArray[component.entryTile.Value.x, component.entryTile.Value.y] == 1) map.mapArray[component.entryTile.Value.x, component.entryTile.Value.y] = 98;
+                    if (map.mapArray[component.entryTile.Value.x, component.entryTile.Value.y] == 1) map.mapArray[component.exitTile.Value.x, component.exitTile.Value.y] = 98;
+                }
+            }
+        }
         return map;
     }
 
     MapInfo placeRandomRoom(MapInfo map)
     {
-        Vector2Int roomSize = new Vector2Int(Random.Range(4, maxRoomSize.x), Random.Range(4, maxRoomSize.y));
-        Vector2Int roomPlacement = new Vector2Int(Random.Range(1, mapSize.x - roomSize.x), Random.Range(1, mapSize.y - roomSize.y));
+        Vector2Int roomSize = new Vector2Int(
+            Random.Range(4, maxRoomSize.x),
+            Random.Range(4, maxRoomSize.y)
+        );
+
+        Vector2Int roomPlacement = new Vector2Int(
+            Random.Range(1, mapSize.x - roomSize.x),
+            Random.Range(1, mapSize.y - roomSize.y)
+        );
+
         Room room = new Room
         {
             placement = roomPlacement,
             size = roomSize
         };
 
-        bool wasInExistingComponent = false;
-        foreach (FloorComponent component in map.components)
+        // Find ALL components this room touches
+        var touchingComponents = new List<FloorComponent>();
+        foreach (var component in map.components)
         {
             if (component.isRoomInComponent(room))
             {
-                component.rooms.Add(room);
-                wasInExistingComponent = true;
-                break;
+                touchingComponents.Add(component);
             }
         }
-        if (!wasInExistingComponent)
+
+        if (touchingComponents.Count == 0)
         {
-            FloorComponent newComponent = new FloorComponent();
+            // New isolated component
+            var newComponent = new FloorComponent();
             newComponent.rooms.Add(room);
             map.components.Add(newComponent);
+        }
+        else
+        {
+            // Merge all touching components into the first one
+            var main = touchingComponents[0];
+            main.rooms.Add(room);
+
+            for (int i = 1; i < touchingComponents.Count; i++)
+            {
+                var other = touchingComponents[i];
+                main.rooms.AddRange(other.rooms);
+                map.components.Remove(other);
+            }
         }
 
         return map;
     }
+
 
     MapInfo placeEnemies(MapInfo map)
     {
@@ -433,7 +475,7 @@ public class MapGenerator : MonoBehaviour
         int x = from.x;
         int y = from.y;
 
-        bool horizontalFirst = Random.value < 0.5f;
+        bool horizontalFirst = Mathf.Abs(to.x - from.x) > Mathf.Abs(to.y - from.y);
 
         if (horizontalFirst)
         {
@@ -552,7 +594,7 @@ public class MapGenerator : MonoBehaviour
             // Reached goal
             if (current == goal)
             {
-                return ReconstructPath(cameFrom, current);
+                return ReconstructPathAndMarkComponents(map, cameFrom, current);
             }
 
             openSet.Remove(current);
@@ -606,36 +648,187 @@ public class MapGenerator : MonoBehaviour
 
         return best;
     }
-
-    List<Vector2Int> ReconstructPath(Dictionary<Vector2Int, Vector2Int> cameFrom, Vector2Int current)
+    List<Vector2Int> ReconstructPathAndMarkComponents(
+    MapInfo map,
+    Dictionary<Vector2Int, Vector2Int> cameFrom,
+    Vector2Int current)
     {
-        var totalPath = new List<Vector2Int> { current };
+        // Build the path from goal back to start
+        var pathReversed = new List<Vector2Int> { current };
 
         while (cameFrom.TryGetValue(current, out Vector2Int prev))
         {
             current = prev;
-            totalPath.Add(current);
+            pathReversed.Add(current);
         }
 
-        totalPath.Reverse();
-        return totalPath;
+        pathReversed.Reverse(); // now it’s start -> goal
+        var path = pathReversed;
+
+        // Reset component flags
+        foreach (var comp in map.components)
+        {
+            comp.onMainPath = false;
+            comp.entryTile = null;
+            comp.exitTile = null;
+        }
+
+        // Walk the path once and mark components
+        FloorComponent currentComp = null;
+        Vector2Int previousTile = default;
+        bool hasPreviousTile = false;
+
+        foreach (var tile in path)
+        {
+            FloorComponent tileComp = GetComponentForTile(map, tile);
+
+            if (tileComp != currentComp)
+            {
+                // leaving previous component
+                if (currentComp != null && hasPreviousTile)
+                {
+                    currentComp.onMainPath = true;
+                    currentComp.exitTile = previousTile;
+                }
+
+                // entering new component
+                currentComp = tileComp;
+                if (currentComp != null && !currentComp.entryTile.HasValue)
+                {
+                    currentComp.onMainPath = true;
+                    currentComp.entryTile = tile;
+                }
+            }
+
+            previousTile = tile;
+            hasPreviousTile = true;
+        }
+
+        // close last component
+        if (currentComp != null && hasPreviousTile)
+        {
+            currentComp.onMainPath = true;
+            currentComp.exitTile = previousTile;
+        }
+
+        return path;
     }
+
+
+    FloorComponent GetComponentForTile(MapInfo map, Vector2Int tile)
+    {
+        foreach (var comp in map.components)
+        {
+            if (comp.ContainsTile(tile))
+                return comp;
+        }
+        return null; // corridors / outside rooms
+    }
+
+    (float dist, Vector2Int from, Vector2Int to) FindClosestTiles(FloorComponent a, FloorComponent b)
+    {
+        float bestDist = float.MaxValue;
+        Vector2Int bestA = default;
+        Vector2Int bestB = default;
+
+        foreach (var ra in a.rooms)
+        {
+            for (int ax = ra.XMin; ax <= ra.XMax; ax++)
+            {
+                for (int ay = ra.YMin; ay <= ra.YMax; ay++)
+                {
+                    var tileA = new Vector2Int(ax, ay);
+
+                    foreach (var rb in b.rooms)
+                    {
+                        for (int bx = rb.XMin; bx <= rb.XMax; bx++)
+                        {
+                            for (int by = rb.YMin; by <= rb.YMax; by++)
+                            {
+                                var tileB = new Vector2Int(bx, by);
+
+                                float d = Mathf.Abs(tileA.x - tileB.x) + Mathf.Abs(tileA.y - tileB.y); // manhattan
+
+                                if (d < bestDist)
+                                {
+                                    bestDist = d;
+                                    bestA = tileA;
+                                    bestB = tileB;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return (bestDist, bestA, bestB);
+    }
+
+    void ConnectComponentsByNearest(MapInfo map)
+    {
+        var comps = map.components;
+        if (comps == null || comps.Count < 2)
+            return;
+
+        // Prim-style MST: grow a connected set by adding the closest remaining component.
+        var connected = new HashSet<FloorComponent>();
+        var remaining = new HashSet<FloorComponent>(comps);
+
+        // Start from an arbitrary component
+        var start = comps[0];
+        connected.Add(start);
+        remaining.Remove(start);
+
+        while (remaining.Count > 0)
+        {
+            float bestDist = float.MaxValue;
+            FloorComponent bestFromComp = null;
+            FloorComponent bestToComp = null;
+            Vector2Int bestFromTile = default;
+            Vector2Int bestToTile = default;
+
+            // Look at every edge between connected and remaining sets, pick the shortest
+            foreach (var fromComp in connected)
+            {
+                foreach (var toComp in remaining)
+                {
+                    var (dist, fromTile, toTile) = FindClosestTiles(fromComp, toComp);
+
+                    if (dist < bestDist)
+                    {
+                        bestDist = dist;
+                        bestFromComp = fromComp;
+                        bestToComp = toComp;
+                        bestFromTile = fromTile;
+                        bestToTile = toTile;
+                    }
+                }
+            }
+
+            // Dig the corridor along that best edge
+            DigCorridor(map, bestFromTile, bestToTile);
+
+            // Mark this component as now connected
+            connected.Add(bestToComp);
+            remaining.Remove(bestToComp);
+        }
+    }
+
 }
 
 public class MapInfo
 {
     public int[,] mapArray;
+    public int mapSize;
     public List<FloorComponent> components;
     public List<Vector2Int> floorTiles;
     public List<(Vector2Int placement, int type)> enemies;
     public List<(Vector2Int placement, int type)> furnishing;
     public Vector2Int? playerStartPos;
     public Vector2Int? endPos;
-    public List<Vector2Int> shortestPath;
     public float distFromPlayerToEnd;
-    public Vector3Int outlinePlacement;
-    public Vector3Int outlineSize;
-    public List<(Vector2Int start, Vector2Int end)> componentConnections;
+    public List<Vector2Int> shortestPath;
     public int enemiesBudget;
     public int furnishingBudget;
 }
@@ -644,6 +837,10 @@ public class FloorComponent
 {
     // Rooms
     public List<Room> rooms = new List<Room>();
+
+    public bool onMainPath = false;
+    public Vector2Int? entryTile;
+    public Vector2Int? exitTile;
     public bool isRoomInComponent(Room room)
     {
         foreach (var r in rooms)
@@ -658,11 +855,22 @@ public class FloorComponent
     {
         // inclusive bounds
         bool xOverlap =
-            a.XMin <= b.XMax + 1 && a.XMax + 1 >= b.XMin;
+            a.XMin <= b.XMax && a.XMax >= b.XMin;
         bool yOverlap =
-            a.YMin <= b.YMax + 1 && a.YMax + 1 >= b.YMin;
+            a.YMin <= b.YMax && a.YMax >= b.YMin;
 
         return xOverlap && yOverlap;
+    }
+
+    public bool ContainsTile(Vector2Int p)
+    {
+        foreach (var r in rooms)
+        {
+            if (p.x >= r.XMin && p.x <= r.XMax &&
+                p.y >= r.YMin && p.y <= r.YMax)
+                return true;
+        }
+        return false;
     }
 }
 

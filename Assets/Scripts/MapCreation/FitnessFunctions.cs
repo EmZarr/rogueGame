@@ -59,6 +59,29 @@ public class FitnessFunctions : MonoBehaviour
         return GetBehaviorRange(0.5, 0.8, openness);
     }
 
+    //
+    float ComputeWindingness(float shortestPathLength, Vector2Int start, Vector2Int end)
+    {
+
+        float straight =
+            Mathf.Abs(start.x - end.x) +
+            Mathf.Abs(start.y - end.y);
+
+        float ratio = shortestPathLength / straight;
+
+        float maxRatio = 3.0f;
+        float windingness = (ratio - 1f) / (maxRatio - 1f);
+
+        return Mathf.Clamp01(windingness);
+    }
+
+    int GetLabyrinthBehavior(MapCandidate candidate, Vector2Int start, Vector2Int end)
+    {
+        float wind = ComputeWindingness(candidate.mapData.shortestPath.Count, start, end);
+        return GetBehaviorRange(0.3, 0.7, wind);
+    }
+
+
     public int GetBehaviorRange(double cutoff1, double cutoff2, double value)
     {
         if (value < cutoff1)
@@ -68,7 +91,61 @@ public class FitnessFunctions : MonoBehaviour
         else
             return 3;
     }
-    
+
+    public float GetGeometryFitness(MapCandidate candidate, (int min, int max, float weight) optimalPathLength, (int min, int max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount)
+    {
+        float pathLengthScore = ScoreInterval(candidate.mapData.shortestPath.Count, optimalPathLength.min, optimalPathLength.max);
+
+        (int mainCount, int optionalCount) mainAndOptionalCount = (0, 0);
+        foreach (var component in candidate.mapData.components)
+        {
+            if (component.onMainPath)
+            {
+                mainAndOptionalCount.mainCount++;
+            }
+            else
+            {
+                mainAndOptionalCount.optionalCount++;
+            }
+        }
+        float optimalToMainScore = ScoreInterval(mainAndOptionalCount.mainCount/mainAndOptionalCount.optionalCount, optimalMainToOptionalComponents.min, optimalMainToOptionalComponents.max);
+
+        float optimalMapSizeScore = ScoreInterval(candidate.mapData.mapSize, optimalMapSize.min, optimalMapSize.max);
+
+        float optimalComponentAmountScore = ScoreInterval(candidate.mapData.components.Count, optimalComponentAmount.min, optimalComponentAmount.max);
+
+
+        return pathLengthScore * optimalPathLength.weight + optimalToMainScore * optimalMainToOptionalComponents.weight + optimalMapSizeScore * optimalMapSize.weight + optimalComponentAmountScore * optimalComponentAmount.weight;
+    }
+
+    float ScoreInterval(float value, int min, int max)
+    {
+        if (min > max)
+        {
+            int tmp = min;
+            min = max;
+            max = tmp;
+        }
+
+        if (value <= 0f)
+            return 0f;
+
+        if (value < min)
+        {
+            // 0..1 as we approach min from below
+            return Mathf.Clamp01(value / min);
+        }
+
+        if (value > max)
+        {
+            // 1..0 as we exceed max
+            return Mathf.Clamp01(max / value);
+        }
+
+        // perfect if inside [min, max]
+        return 1f;
+    }
+
     float TrapPlacementScoreRoom(Room room, int[,] mapArray)
     {
         bool hasTrap = false;
