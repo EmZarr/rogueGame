@@ -390,6 +390,7 @@ GameObject:
   - component: {fileID: 859900372}
   - component: {fileID: 859900377}
   - component: {fileID: 859900378}
+  - component: {fileID: 859900379}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -465,8 +466,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
   mapInstantiator: {fileID: 859900372}
-  totalIterations: 1000
-  initialRandomSolutions: 200
+  totalIterations: 50
+  initialRandomSolutions: 10
   runElites: {fileID: 4630370472947771425, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &859900378
 MonoBehaviour:
@@ -492,6 +493,20 @@ MonoBehaviour:
   mutateMap: {fileID: 101673841628561707, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   mutatePlacements: {fileID: 7610372480146149514, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   mutateContent: {fileID: 1907408436137568603, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+--- !u!114 &859900379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859900371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66801131bce964e4db542a7f4fe0f719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FitnessFunctions
+  opennessRadius: 3
+  minimumPathLength: 10
 --- !u!1 &1085453243
 GameObject:
   m_ObjectHideFlags: 0
