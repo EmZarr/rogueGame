@@ -91,7 +91,7 @@ public class BehaviorFunctions : MonoBehaviour
     }
 
     //Simple version for now, could be change to check for each room and do some sort of pseudo hashing clamped to intervals later
-    public Vector2 EnemyCombatMix(List<(Vector2Int placement, int type)> enemies)
+    public Vector2 EnemyCombatMix(List<(Vector2Int placement, int type)> enemies, Vector2 behavior)
     {
         float RangedCount = 0;
         float MeleeCount = 0;
@@ -107,46 +107,23 @@ public class BehaviorFunctions : MonoBehaviour
                 RangedCount++;
             }
         }
-        if (RangedCount/MeleeCount <= 0.2)
+        if (RangedCount/MeleeCount <= 0.5)
         {
-            return new Vector2(0, 0);
-        }
-        else if (RangedCount/MeleeCount <= 0.4)
-        {
-            return new Vector2(1, 0);
-        }
-        else if (RangedCount/MeleeCount <= 0.6)
-        {
-            return new Vector2(2, 0);
-        }
-        else if (RangedCount/MeleeCount <= 0.8)
-        {
-            return new Vector2(3, 0);
+            return new Vector2(0, behavior.y);
         }
         else if (RangedCount/MeleeCount <= 1.0)
         {
-            return new Vector2(4, 0);
+            return new Vector2(1, behavior.y);
         }
-        else if (RangedCount/MeleeCount <= 1.2)
+        else 
         {
-            return new Vector2(5, 0);
+            return new Vector2(2, behavior.y);
         }
-        else if (RangedCount/MeleeCount <= 1.4)
-        {
-            return new Vector2(6, 0);
-        }
-        else if (RangedCount/MeleeCount <= 1.6)
-        {
-            return new Vector2(7, 0);
-        }
-        else
-        {
-            return new Vector2(8, 0);
-        }
+        
     }
 
 
-    public Vector2 EnemyClusterBehavior(MapInfo map)
+    public Vector2 EnemyClusterBehavior(MapInfo map, Vector2 behavior)
     {
         float averageClusterSize = 0;
         float clusterAmount = 0;
@@ -174,43 +151,19 @@ public class BehaviorFunctions : MonoBehaviour
         averageClusterSize = averageClusterSize/clusterAmount;
         if (averageClusterSize <= 2)
         {
-            return new Vector2(0, 0);
-        }
-        else if (averageClusterSize <= 2.5)
-        {
-            return new Vector2(1, 0);
+            return new Vector2(behavior.x, 0);
         }
         else if (averageClusterSize <= 3)
         {
-            return new Vector2(2, 0);
-        }
-        else if (averageClusterSize <= 3.5)
-        {
-            return new Vector2(3, 0);
-        }
-        else if (averageClusterSize <= 4)
-        {
-            return new Vector2(4, 0);
-        }
-        else if (averageClusterSize <= 4.5)
-        {
-            return new Vector2(5, 0);
-        }
-        else if (averageClusterSize <= 5)
-        {
-            return new Vector2(6, 0);
-        }
-        else if (averageClusterSize <= 5.5)
-        {
-            return new Vector2(7, 0);
+            return new Vector2(behavior.x, 1);
         }
         else
         {
-            return new Vector2(8, 0);
+            return new Vector2(behavior.x, 2);
         }
     }
 
-    public Vector2 FurnishingBehavior(MapInfo map)
+    public Vector2 FurnishingBehaviorPickupDanger(MapInfo map, Vector2 behavior)
     {
         float averageDistance = 0;
         int counter = 0;
@@ -245,40 +198,55 @@ public class BehaviorFunctions : MonoBehaviour
         averageDistance = averageDistance/counter;
         if (averageDistance <= 2)
         {
-            return new Vector2(0, 0);
-        }
-        else if (averageDistance <= 2.5)
-        {
-            return new Vector2(1, 0);
-        }
-        else if (averageDistance <= 3)
-        {
-            return new Vector2(2, 0);
-        }
-        else if (averageDistance <= 3.5)
-        {
-            return new Vector2(3, 0);
+            return new Vector2(0, behavior.y);
         }
         else if (averageDistance <= 4)
         {
-            return new Vector2(4, 0);
-        }
-        else if (averageDistance <= 4.5)
-        {
-            return new Vector2(5, 0);
-        }
-        else if (averageDistance <= 5)
-        {
-            return new Vector2(6, 0);
-        }
-        else if (averageDistance <= 5.5)
-        {
-            return new Vector2(7, 0);
+            return new Vector2(1, behavior.y);
         }
         else
         {
-            return new Vector2(8, 0);
+            return new Vector2(2, behavior.y);
         }
     }
 
+    public Vector2 FurnishingBehaviorExploration(MapInfo map, Vector2 behavior)
+    {
+        float lootCountOnMain = 0;
+        float lootCountOptional = 0;
+        foreach (var loot in map.furnishing)
+        {
+            if (loot.type != 5)
+            {
+                foreach (var component in map.components)
+                {
+                    if (component.ContainsTile(loot.placement))
+                    {
+                        if (component.onMainPath)
+                        {
+                            lootCountOnMain++;
+                        }
+                        else
+                        {
+                            lootCountOptional++;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        float ratio = lootCountOnMain/lootCountOptional;
+        if (ratio <= 0.6f)
+        {
+            return new Vector2(behavior.x, 0);
+        }
+        else if (ratio <= 1.1f)
+        {
+            return new Vector2(behavior.x, 1);
+        }
+        else
+        {
+            return new Vector2(behavior.x, 2);
+        }
+    }
 }

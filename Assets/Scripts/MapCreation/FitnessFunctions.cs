@@ -155,6 +155,61 @@ public class FitnessFunctions : MonoBehaviour
         return scoreTotal/map.components.Count;
     }
 
+    public float LootAtEndFitness(MapInfo map)
+    {
+        float distance = 0;
+        foreach (var loot in map.furnishing)
+        {
+            if (loot.type != 5)
+            {
+                foreach (var component in map.components)
+                {
+                    if (component.ContainsTile(loot.placement))
+                    {
+                        Vector2 fix = component.entryTile.HasValue? (Vector2)component.entryTile.Value : new Vector2(5000, 5000);
+                        if (fix.x != 5000)
+                        {
+                            distance += (fix - loot.placement).sqrMagnitude;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        distance = distance/map.furnishing.Count;
+        return 1/map.furnishing.Count * distance;
+    }
+
+    public float EnemyNotAtStartFitness(MapInfo map)
+    {
+        float distance = 0;
+        foreach (var enemy in map.enemies)
+        {
+            foreach (var component in map.components)
+            {
+                if (component.ContainsTile(enemy.placement))
+                {
+                    Vector2 fix = component.entryTile.HasValue? (Vector2)component.entryTile.Value : new Vector2(5000, 5000);
+                    if (fix.x != 5000)
+                    {
+                        float check = (fix - enemy.placement).sqrMagnitude;
+                        //We just don't want enemies too close to the entrance, we're not interested in forcing them to the back of a component. Check values might need to be changed.
+                        if (check > (fix - new Vector2(fix.x+4, fix.y + 4)).sqrMagnitude)
+                        {
+                            check = (fix - new Vector2(fix.x+4, fix.y + 4)).sqrMagnitude;
+                        }
+                        distance += check;
+                        break;
+                    }
+                    
+                    
+                }
+            }
+        }
+        distance = distance/map.enemies.Count;
+        return 1/map.enemies.Count * distance;
+    }
+
 
     //Moved old functions to bottom in case something breaks can be deleted soon if no issues.
     /*public float EnemiesClosenessToWallFitness(Room room, MapInfo map)

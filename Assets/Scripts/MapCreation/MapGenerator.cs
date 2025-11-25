@@ -662,7 +662,7 @@ public class MapGenerator : MonoBehaviour
             pathReversed.Add(current);
         }
 
-        pathReversed.Reverse(); // now it’s start -> goal
+        pathReversed.Reverse(); // now itï¿½s start -> goal
         var path = pathReversed;
 
         // Reset component flags
