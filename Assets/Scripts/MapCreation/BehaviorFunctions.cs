@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
 
-public class BehaviorFunctions : MonoBehaviour
+public class BehaviorFunctions : MonoBehaviour 
 {
 
     static float LocalOpennessAt(int opennessRadius, int posX, int posY, int[,] mapArray)
@@ -42,7 +42,7 @@ public class BehaviorFunctions : MonoBehaviour
             {
                 if (mapArray[x, y] != 0 && mapArray[x, y] != 2)
                 {
-                    opennessScoreSum += LocalOpennessAt(3, x, y, mapArray);
+                    opennessScoreSum += LocalOpennessAt(5, x, y, mapArray);
                     amountOfTiles += 1f;
                 }
             }
@@ -54,7 +54,7 @@ public class BehaviorFunctions : MonoBehaviour
     {
         float openness = ComputeOpenness(candidate.mapData.mapArray);
 
-        return GetBehaviorRange(0.5, 0.8, openness);
+        return GetBehaviorRange(0.35, 0.7, openness);
     }
 
     //
@@ -75,7 +75,8 @@ public class BehaviorFunctions : MonoBehaviour
 
     public static int GetWindingnessBehavior(MapCandidate candidate)
     {
-        float wind = ComputeWindingness(candidate.mapData.shortestPath.Count, candidate.mapData.playerStartPos.Value, candidate.mapData.endPos.Value);
+        int pathCount = candidate.mapData.shortestPath?.Count ?? 0;
+        float wind = ComputeWindingness(pathCount, candidate.mapData.playerStartPos.Value, candidate.mapData.endPos.Value);
         return GetBehaviorRange(0.3, 0.7, wind);
     }
 
