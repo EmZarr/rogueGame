@@ -2,13 +2,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
 
-public class FitnessFunctions : MonoBehaviour
+public class FitnessFunctions : MonoBehaviour 
 {
-    public float GetGeometryFitness(MapCandidate candidate, (int min, int max, float weight) optimalPathLength, (int min, int max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount)
+    public static float GetGeometryFitness(MapCandidate candidate, (int min, int max, float weight) optimalPathLength, (float min, float max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount)
     {
-        float pathLengthScore = ScoreInterval(candidate.mapData.shortestPath.Count, optimalPathLength.min, optimalPathLength.max);
+        int pathCount = 0;
+        if (candidate.mapData.shortestPath != null)
+        {
+            pathCount = candidate.mapData.shortestPath.Count;
+        }
+        float pathLengthScore = ScoreInterval(pathCount, optimalPathLength.min, optimalPathLength.max);
 
-        (int mainCount, int optionalCount) mainAndOptionalCount = (0, 0);
+        (int mainCount, int optionalCount) mainAndOptionalCount = (1, 1);
         foreach (var component in candidate.mapData.components)
         {
             if (component.onMainPath)
@@ -30,14 +35,8 @@ public class FitnessFunctions : MonoBehaviour
         return pathLengthScore * optimalPathLength.weight + optimalToMainScore * optimalMainToOptionalComponents.weight + optimalMapSizeScore * optimalMapSize.weight + optimalComponentAmountScore * optimalComponentAmount.weight;
     }
 
-    float ScoreInterval(float value, int min, int max)
+    static float ScoreInterval(float value, float min, float max)
     {
-        if (min > max)
-        {
-            int tmp = min;
-            min = max;
-            max = tmp;
-        }
 
         if (value <= 0f)
             return 0f;
@@ -58,7 +57,7 @@ public class FitnessFunctions : MonoBehaviour
         return 1f;
     }
     
-    float RoomFitnessFurEne(Room room, MapInfo map)
+    static float RoomFitnessFurEne(Room room, MapInfo map)
     {
         bool hasTrap = false;
         bool hasEnemy = false;
@@ -140,7 +139,7 @@ public class FitnessFunctions : MonoBehaviour
     }
 
 
-    public float RoomFitnessTotal(MapInfo map)
+    public static float RoomFitnessTotal(MapInfo map)
     {
         float scoreTotal = 0;
         foreach (var component in map.components)

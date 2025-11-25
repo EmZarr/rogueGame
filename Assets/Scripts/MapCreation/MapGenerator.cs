@@ -80,13 +80,13 @@ public class MapGenerator : MonoBehaviour
         };
         currentMap = makeRoomGeometry(currentMap);
         //currentMap = PlaceObjects(currentMap);
-        mapInstantiator.makeMap(currentMap.mapArray);
+        //mapInstantiator.makeMap(currentMap.mapArray);
     }
 
     public MapInfo MutateMap(MapInfo map)
     {
         map = mutateGeometry(map);
-        map = PlaceObjects(map);
+        //map = PlaceObjects(map);
         //mapInstantiator.makeMap(map.mapArray);
         return map;
     }
@@ -152,10 +152,10 @@ public class MapGenerator : MonoBehaviour
         {
             map.shortestPath = FindPathAStar(map, map.playerStartPos.Value, map.endPos.Value);
 
-            if (map.shortestPath == null)
+            /*if (map.shortestPath == null)
             {
-                Debug.LogWarning("No path found between player start and end!");
-            }
+                Debug.Log("No path found between player start and end!");
+            }*/
         }
 
 
@@ -387,7 +387,7 @@ public class MapGenerator : MonoBehaviour
         foreach (var c in map.components)
             totalRooms += c.rooms.Count;
         // randomly decide to add or remove a room
-        bool addRoom = totalRooms == 0 || Random.value < 0.5f;
+        bool addRoom = totalRooms == 1 || Random.value < 0.5f;
 
         if (addRoom)
         {
@@ -415,8 +415,8 @@ public class MapGenerator : MonoBehaviour
         // rebuild map
         map = buildMapFromComponents(map);
         // validate existing enemies and furnishing
-        map = ValidateEnemiesAgainstMap(map);
-        map = ValidateFurnishingAgainstMap(map);
+        //map = ValidateEnemiesAgainstMap(map);
+        //map = ValidateFurnishingAgainstMap(map);
         return map;
     }
 
@@ -831,7 +831,62 @@ public class MapInfo
     public List<Vector2Int> shortestPath;
     public int enemiesBudget;
     public int furnishingBudget;
+
+    // Copy constructor
+    public MapInfo(MapInfo other)
+    {
+        mapSize = other.mapSize;
+        distFromPlayerToEnd = other.distFromPlayerToEnd;
+        enemiesBudget = other.enemiesBudget;
+        furnishingBudget = other.furnishingBudget;
+        playerStartPos = other.playerStartPos;
+        endPos = other.endPos;
+
+        // copy array
+        if (other.mapArray != null)
+        {
+            int w = other.mapArray.GetLength(0);
+            int h = other.mapArray.GetLength(1);
+            mapArray = new int[w, h];
+            System.Array.Copy(other.mapArray, mapArray, other.mapArray.Length);
+        }
+
+        // copy lists
+        floorTiles = other.floorTiles != null ? new List<Vector2Int>(other.floorTiles) : new List<Vector2Int>();
+        enemies = other.enemies != null ? new List<(Vector2Int, int)>(other.enemies) : new List<(Vector2Int, int)>();
+        furnishing = other.furnishing != null ? new List<(Vector2Int, int)>(other.furnishing) : new List<(Vector2Int, int)>();
+        shortestPath = other.shortestPath != null ? new List<Vector2Int>(other.shortestPath) : null;
+
+        // deep-copy components (because FloorComponent is a class)
+        if (other.components != null)
+        {
+            components = new List<FloorComponent>(other.components.Count);
+            foreach (var c in other.components)
+            {
+                components.Add(new FloorComponent
+                {
+                    rooms = c.rooms != null ? new List<Room>(c.rooms) : new List<Room>(),
+                    onMainPath = c.onMainPath,
+                    entryTile = c.entryTile,
+                    exitTile = c.exitTile
+                });
+            }
+        }
+        else
+        {
+            components = new List<FloorComponent>();
+        }
+    }
+
+    public MapInfo()
+    { 
+    
+    }
+
+    // optional convenience method
+    public MapInfo Clone() => new MapInfo(this);
 }
+
 
 public class FloorComponent
 {

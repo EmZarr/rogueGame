@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,8 +22,6 @@ public class MapElite : MonoBehaviour
     private Dictionary<Vector2, MapCandidate> archive = new Dictionary<Vector2, MapCandidate>();
 
     private int iter;
-
-    FitnessFunctions fitnessFunctions;
     private void Awake()
     {
         //Debug.unityLogger.logEnabled = false;
@@ -33,7 +32,6 @@ public class MapElite : MonoBehaviour
         runElites.action.Enable();
         runElites.action.performed += ctx => RunMapElites();
         mapGenerator = GetComponent<MapGenerator>();
-        fitnessFunctions = GetComponent<FitnessFunctions>();
         iter = 0;
         RunMapElites();
     }
@@ -59,19 +57,20 @@ public class MapElite : MonoBehaviour
                 MapCandidate parent = SelectParent();
 
                 // x'
-                candidate = new MapCandidate(MutateGeometry(parent).mapData);
+                candidate = new MapCandidate(parent.mapData.Clone());
+                candidate = MutateGeometry(candidate);
             }
 
             // b'
-            Vector2 behavior = GeometryBehavior(candidate);
+            candidate.behavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
 
             // p'
-            candidate.fitness = EvaluateFitnessFunction(candidate, behavior);
+            candidate.fitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f));
 
             // store candidate
-            if (!archive.ContainsKey(behavior) || archive[behavior].fitness < candidate.fitness)
+            if (!archive.ContainsKey(candidate.behavior) || archive[candidate.behavior].fitness < candidate.fitness)
             {
-                InsertIntoArchive(candidate, behavior);
+                InsertIntoArchive(candidate, candidate.behavior);
             }
             //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
@@ -79,18 +78,22 @@ public class MapElite : MonoBehaviour
         {
 
 
-            var vals = archive.Values.ToList();
-            MapCandidate best = vals[0];
-            foreach (var check in vals)
+            var keys = archive.Keys.ToList();
+            Vector2 bestKey = keys[0];
+            foreach (var check in keys)
             {
-                if (check.fitness > best.fitness)
+                if (check.y == 3)
                 {
-                    best = check;
+                    bestKey = check;
+                    break;
                 }
             }
 
-            //Debug.Log("Best fitness: " + best.fitness);
-            //Debug.Log("Spawning best map via original MapInstantiator.");
+            var best = archive[bestKey];
+            Debug.Log("Behavior: " + best.behavior);
+            Debug.Log("Fitness: " + best.fitness);
+            int pathCount = best.mapData.shortestPath?.Count ?? 0;
+            Debug.Log("Path count " + pathCount);
             mapInstantiator.makeMap(best.mapData.mapArray);
         }
 
@@ -188,8 +191,8 @@ public class MapElite : MonoBehaviour
 
     float EvaluateFitnessFunction(MapCandidate candidate, Vector2 behavior)
     {
-        Debug.Log("Fitness: " +  fitnessFunctions.RoomFitnessTotal(candidate.mapData));
-        return candidate.mapData.floorTiles.Count * 0.1f + fitnessFunctions.RoomFitnessTotal(candidate.mapData);
+        Debug.Log("Fitness: " +  FitnessFunctions.RoomFitnessTotal(candidate.mapData));
+        return candidate.mapData.floorTiles.Count * 0.1f + FitnessFunctions.RoomFitnessTotal(candidate.mapData);
     }
 
     void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
@@ -327,17 +330,16 @@ public class MapCandidate
     //public int[,] mapData;
     public float fitness;
 
+    public Vector2 behavior;
+
     public MapInfo mapData;
 
     public MapCandidate(MapInfo map)
     {
         mapData = map;
         fitness = 0f;
+        behavior = new Vector2();
     }
 }
 
-public struct Behavior
-{
-    int temp;
-}
 
