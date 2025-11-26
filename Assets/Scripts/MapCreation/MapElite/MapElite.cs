@@ -62,10 +62,12 @@ public class MapElite : MonoBehaviour
             }
 
             // b'
-            candidate.behavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
+            //candidate.behavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
+            candidate.behavior = BehaviorFunctions.EnemyClusterBehavior(candidate.mapData, BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, new Vector2(0, 0)));
 
             // p'
-            candidate.fitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f));
+            //candidate.fitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f));
+            candidate.fitness = FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
 
             // store candidate
             if (!archive.ContainsKey(candidate.behavior) || archive[candidate.behavior].fitness < candidate.fitness)
@@ -82,7 +84,7 @@ public class MapElite : MonoBehaviour
             Vector2 bestKey = keys[0];
             foreach (var check in keys)
             {
-                if (check.y == 3)
+                if (check.y == 2)
                 {
                     bestKey = check;
                     break;
@@ -97,7 +99,7 @@ public class MapElite : MonoBehaviour
             mapInstantiator.makeMap(best.mapData.mapArray);
         }
 
-        ExportArchiveToJson();
+        //ExportArchiveToJson();
     }
 
     MapCandidate GenerateRandomCandidate()

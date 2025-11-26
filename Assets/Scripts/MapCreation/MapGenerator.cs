@@ -79,14 +79,14 @@ public class MapGenerator : MonoBehaviour
             distFromPlayerToEnd = 0,
         };
         currentMap = makeRoomGeometry(currentMap);
-        //currentMap = PlaceObjects(currentMap);
+        currentMap = PlaceObjects(currentMap);
         //mapInstantiator.makeMap(currentMap.mapArray);
     }
 
     public MapInfo MutateMap(MapInfo map)
     {
         map = mutateGeometry(map);
-        //map = PlaceObjects(map);
+        map = PlaceObjects(map);
         //mapInstantiator.makeMap(map.mapArray);
         return map;
     }
