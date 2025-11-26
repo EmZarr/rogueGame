@@ -18,6 +18,6 @@ public class ExitTrigger : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
         // Trigger new run
-        mapGenerator?.RemakeMap();
+        mapGenerator?.MakeMap();
     }
 }

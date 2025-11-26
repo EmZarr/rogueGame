@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using NUnit.Framework.Internal;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Unity.VisualScripting;
@@ -20,7 +21,8 @@ public class MapElite : MonoBehaviour
 
     private Dictionary<Vector2, MapCandidate> geoArchive = new Dictionary<Vector2, MapCandidate>();
     private Dictionary<Vector2, MapCandidate> furnArchive = new Dictionary<Vector2, MapCandidate>();
-    private Dictionary<Vector2, MapCandidate> EnemArchive = new Dictionary<Vector2, MapCandidate>();
+    private Dictionary<Vector2, MapCandidate> enemArchive = new Dictionary<Vector2, MapCandidate>();
+    private Dictionary<(Vector2, Vector2, Vector2), MapCandidate> combinedArchive = new Dictionary<(Vector2, Vector2, Vector2), MapCandidate>();
 
     private void Awake()
     {
@@ -33,6 +35,42 @@ public class MapElite : MonoBehaviour
         runElites.action.performed += ctx => RunMapElitesGeometry();
         mapGenerator = GetComponent<MapGenerator>();
         RunMapElitesGeometry();
+        RunMapElitesFurnishing();
+        RunMapElitesEnemies();
+        //RunMapElitesCombined();
+        if (enemArchive.Count > 0)
+        {
+            var keys = enemArchive.Keys.ToList();
+            Vector2 bestKey = keys[0];
+            foreach (var check in keys)
+            {
+                if (check.y == 2)
+                {
+                    bestKey = check;
+                    break;
+                }
+            }
+
+            var best = enemArchive[bestKey];
+            Debug.Log("Behavior: " + best.enemyBehavior);
+            Debug.Log("Fitness: " + best.fitness);
+            mapInstantiator.makeMap(best.mapData.mapArray);
+        }
+
+        /*
+        if (combinedArchive.Count > 0)
+        {
+            var best = combinedArchive.Values
+                                      .OrderByDescending(c => c.fitness)
+                                      .First();
+
+            Debug.Log("Geo:  " + best.geoBehavior);
+            Debug.Log("Furn: " + best.furnBehavior);
+            Debug.Log("Enemy:" + best.enemyBehavior);
+            Debug.Log("Fitness: " + best.fitness);
+
+            mapInstantiator.makeMap(best.mapData.mapArray);
+        }*/
     }
 
 
@@ -53,51 +91,27 @@ public class MapElite : MonoBehaviour
             else
             {
                 // x
-                MapCandidate parent = SelectRandomParent();
+                MapCandidate parent = SelectRandomGeometry();
 
                 // x'
                 candidate = MutateGeometry(parent);
             }
 
             // b'
-            //candidate.behavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
-            candidate.behavior = BehaviorFunctions.EnemyClusterBehavior(candidate.mapData, BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, new Vector2(0, 0)));
+            candidate.geoBehavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
 
             // p'
-            //candidate.fitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f));
-            candidate.fitness = FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
+            candidate.fitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f));
 
             // store candidate
-            if (!geoArchive.ContainsKey(candidate.behavior) || geoArchive[candidate.behavior].fitness < candidate.fitness)
+            if (!geoArchive.ContainsKey(candidate.geoBehavior) || geoArchive[candidate.geoBehavior].fitness < candidate.fitness)
             {
-                InsertIntoArchive(candidate, candidate.behavior);
+                geoArchive[candidate.geoBehavior] = candidate;
             }
             //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
-        if (geoArchive.Count > 0)
-        {
-
-
-            var keys = geoArchive.Keys.ToList();
-            Vector2 bestKey = keys[0];
-            foreach (var check in keys)
-            {
-                if (check.y == 2)
-                {
-                    bestKey = check;
-                    break;
-                }
-            }
-
-            var best = geoArchive[bestKey];
-            Debug.Log("Behavior: " + best.behavior);
-            Debug.Log("Fitness: " + best.fitness);
-            int pathCount = best.mapData.shortestPath?.Count ?? 0;
-            Debug.Log("Path count " + pathCount);
-            mapInstantiator.makeMap(best.mapData.mapArray);
-        }
     }
-    /*
+ 
     public void RunMapElitesFurnishing()
     {
         int iter = 0;
@@ -109,28 +123,27 @@ public class MapElite : MonoBehaviour
             if (iter <= initialRandomSolutions)
             {
                 // x'
-                candidate = GenerateRandomGeometry();
+                candidate = GenerateRandomFurnishing(SelectRandomGeometry());
                 iter++;
             }
             else
             {
                 // x
-                MapCandidate parent = SelectRandomParent();
+                MapCandidate parent = SelectRandomFurnishing();
 
                 // x'
-                candidate = MutateGeometry(parent);
+                candidate = MutateFurnishing(parent);
             }
 
             // b'
-            candidate.behavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
+            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(candidate.mapData, BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, new Vector2(0, 0)));
 
             // p'
-            candidate.fitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f));
-
+            candidate.fitness = FitnessFunctions.LootAtEndFitness(candidate.mapData);
             // store candidate
-            if (!geoArchive.ContainsKey(candidate.behavior) || geoArchive[candidate.behavior].fitness < candidate.fitness)
+            if (!furnArchive.ContainsKey(candidate.furnBehavior) || furnArchive[candidate.furnBehavior].fitness < candidate.fitness)
             {
-                InsertIntoArchive(candidate, candidate.behavior);
+                furnArchive[candidate.furnBehavior] = candidate;
             }
             //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
@@ -148,32 +161,73 @@ public class MapElite : MonoBehaviour
             if (iter <= initialRandomSolutions)
             {
                 // x'
-                candidate = GenerateRandomGeometry();
+                candidate = GenerateRandomEnemies(SelectRandomFurnishing());
                 iter++;
             }
             else
             {
                 // x
-                MapCandidate parent = SelectRandomParent();
+                MapCandidate parent = SelectRandomEnemies();
 
                 // x'
-                candidate = MutateGeometry(parent);
+                candidate = MutateEnemies(parent);
             }
 
             // b'
-            candidate.behavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
+            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(candidate.mapData, BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, new Vector2(0, 0)));
 
             // p'
-            candidate.fitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f));
+            candidate.fitness = FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
 
             // store candidate
-            if (!geoArchive.ContainsKey(candidate.behavior) || geoArchive[candidate.behavior].fitness < candidate.fitness)
+            if (!enemArchive.ContainsKey(candidate.enemyBehavior) || enemArchive[candidate.enemyBehavior].fitness < candidate.fitness)
             {
-                InsertIntoArchive(candidate, candidate.behavior);
+                enemArchive[candidate.enemyBehavior] = candidate;
             }
             //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
-    }*/
+    }
+
+    public void RunMapElitesCombined()
+    {
+        int iter = 0;
+
+        for (int i = 0; i < totalIterations; i++)
+        {
+            MapCandidate candidate;
+
+            if (iter <= initialRandomSolutions)
+            {
+                candidate = GenerateRandomEnemies(GenerateRandomFurnishing(GenerateRandomGeometry()));
+                iter++;
+            }
+            else
+            {
+                MapCandidate parent = SelectRandomCombined();
+                candidate = MutateEnemies(MutateFurnishing(MutateGeometry(parent)));
+            }
+
+            candidate.geoBehavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate), BehaviorFunctions.GetWindingnessBehavior(candidate));
+
+            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(candidate.mapData, BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, Vector2.zero));
+
+            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(candidate.mapData, BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, Vector2.zero));
+
+            var key = candidate.CombinedBehavior;
+
+            // fitness = sum of sub-fitnesses
+            candidate.fitness =
+                FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.3f), (0.5f, 2f, 0.1f), (1000, 10000, 0.3f), (2, 40, 0.3f))
+              + FitnessFunctions.LootAtEndFitness(candidate.mapData)
+              + FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
+
+            if (!combinedArchive.ContainsKey(key) || combinedArchive[key].fitness < candidate.fitness)
+            {
+                combinedArchive[key] = candidate;
+            }
+        }
+    }
+
 
     MapCandidate GenerateRandomGeometry()
     {   
@@ -192,10 +246,28 @@ public class MapElite : MonoBehaviour
         var mapCopy = mapGenerator.placeEnemies(oldCandidate.mapData.Clone());
         return new MapCandidate(mapCopy);
     }
-    MapCandidate SelectRandomParent()
+    MapCandidate SelectRandomGeometry()
     {
         //Return random solution in the archive
-        return archive.Values.ToList()[Random.Range(0, archive.Count)];
+        return geoArchive.Values.ToList()[Random.Range(0, geoArchive.Count)];
+    }
+
+    MapCandidate SelectRandomFurnishing()
+    {
+        //Return random solution in the archive
+        return furnArchive.Values.ToList()[Random.Range(0, furnArchive.Count)];
+    }
+
+    MapCandidate SelectRandomEnemies()
+    {
+        //Return random solution in the archive
+        return enemArchive.Values.ToList()[Random.Range(0, enemArchive.Count)];
+    }
+
+    MapCandidate SelectRandomCombined()
+    {
+        //Return random solution in the archive
+        return combinedArchive.Values.ToList()[Random.Range(0, combinedArchive.Count)];
     }
 
     MapCandidate MutateGeometry(MapCandidate parent)
@@ -218,37 +290,31 @@ public class MapElite : MonoBehaviour
         child.mapData = mapGenerator.mutateEnemies(child.mapData);
         return child;
     }
-
-    void InsertIntoArchive(MapCandidate candidate, Vector2 behavior)
-    {
-        // behavior here
-        if (!archive.ContainsKey(behavior))
-        {
-            archive.Add(behavior, candidate);
-        }
-        else
-        {
-            archive[behavior] = candidate;
-        }
-
-    }
 }
 
 public class MapCandidate
 {
-    //public int[,] mapData;
     public float fitness;
-
-    public Vector2 behavior;
-
     public MapInfo mapData;
+
+    // Behavior slices
+    public Vector2 geoBehavior;
+    public Vector2 furnBehavior;
+    public Vector2 enemyBehavior;
+
+    // Combined key
+    public (Vector2 geo, Vector2 furn, Vector2 enemy) CombinedBehavior
+        => (geoBehavior, furnBehavior, enemyBehavior);
 
     public MapCandidate(MapInfo map)
     {
         mapData = map;
         fitness = 0f;
-        behavior = new Vector2();
+        geoBehavior = new Vector2() ;
+        furnBehavior = new Vector2();
+        enemyBehavior = new Vector2();
     }
 }
+
 
 

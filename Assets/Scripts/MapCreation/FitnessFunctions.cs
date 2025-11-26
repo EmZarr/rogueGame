@@ -171,7 +171,7 @@ public class FitnessFunctions : MonoBehaviour
         return scoreTotal/map.components.Count;
     }
 
-    public float LootAtEndFitness(MapInfo map)
+    public static float LootAtEndFitness(MapInfo map)
     {
         float distance = 0;
         foreach (var loot in map.furnishing)

@@ -164,7 +164,7 @@ public class BehaviorFunctions : MonoBehaviour
         }
     }
 
-    public Vector2 FurnishingBehaviorPickupDanger(MapInfo map, Vector2 behavior)
+    public static Vector2 FurnishingBehaviorPickupDanger(MapInfo map, Vector2 behavior)
     {
         float averageDistance = 0;
         int counter = 0;
@@ -211,7 +211,7 @@ public class BehaviorFunctions : MonoBehaviour
         }
     }
 
-    public Vector2 FurnishingBehaviorExploration(MapInfo map, Vector2 behavior)
+    public static Vector2 FurnishingBehaviorExploration(MapInfo map, Vector2 behavior)
     {
         float lootCountOnMain = 0;
         float lootCountOptional = 0;

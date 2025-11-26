@@ -42,7 +42,7 @@ public class MapGenerator : MonoBehaviour
     {
         //Debug.Log("Helo?");
         mapInstantiator = FindFirstObjectByType<MapInstantiator>();
-        RemakeMap();
+        MakeMap();
     }
 
     void OnEnable()
