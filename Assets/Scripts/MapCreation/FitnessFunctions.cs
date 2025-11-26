@@ -139,6 +139,23 @@ public class FitnessFunctions : MonoBehaviour
     }
 
 
+    public static float EnemyFitnessTotal(MapInfo map, float EneNotStartWeight, float EneCloseWallWeight)
+    {
+        float scoreWallCloseness = 0;
+        float scoreNotStart = EnemyNotAtStartFitness(map);
+        float tmpScore = 0;
+        List<Vector2Int> checkedEnemies = new List<Vector2Int>();
+        foreach (var component in map.components)
+        {
+            foreach (var room in component.rooms){
+                (tmpScore, checkedEnemies) = EnemiesClosenessToWallFitness(room, map, checkedEnemies);
+                scoreWallCloseness += tmpScore;
+            }
+        }
+        scoreWallCloseness = scoreWallCloseness/map.enemies.Count;
+        return scoreNotStart * EneNotStartWeight + scoreWallCloseness * EneCloseWallWeight;
+    }
+
     public static float RoomFitnessTotal(MapInfo map)
     {
         float scoreTotal = 0;
@@ -179,7 +196,7 @@ public class FitnessFunctions : MonoBehaviour
         return 1/map.furnishing.Count * distance;
     }
 
-    public float EnemyNotAtStartFitness(MapInfo map)
+    public static float EnemyNotAtStartFitness(MapInfo map)
     {
         float distance = 0;
         foreach (var enemy in map.enemies)
@@ -206,12 +223,10 @@ public class FitnessFunctions : MonoBehaviour
             }
         }
         distance = distance/map.enemies.Count;
-        return 1/map.enemies.Count * distance;
+        return ScoreInterval(distance, 32f, 32f);
     }
 
-
-    //Moved old functions to bottom in case something breaks can be deleted soon if no issues.
-    /*public float EnemiesClosenessToWallFitness(Room room, MapInfo map)
+    public static (float, List<Vector2Int>) EnemiesClosenessToWallFitness(Room room, MapInfo map, List<Vector2Int> checkedEnemies)
     {
         float score = 0;
         List<Vector2Int> enemyPlacement = new List<Vector2Int>();
@@ -219,9 +234,10 @@ public class FitnessFunctions : MonoBehaviour
         {
             for (int b = room.YMin; b <=room.YMax; b++)
             {
-                if (map.mapArray[a, b] == 6 || map.mapArray[a, b] == 7)
+                if ((map.mapArray[a, b] == 6 || map.mapArray[a, b] == 7) && !checkedEnemies.Contains(new Vector2Int(a,b)))
                 {
                     enemyPlacement.Add(new Vector2Int(a,b));
+                    checkedEnemies.Add(new Vector2Int(a,b));
                 }
             }
             }
@@ -258,20 +274,20 @@ public class FitnessFunctions : MonoBehaviour
                 }
                 if (map.mapArray[enemy.x, enemy.y] == 6)
                 {
-                    score += (1/xDif + 1/yDif)*0.5f;
+                    score += 1/xDif + 1/yDif;
                 }
                 else
                 {
-                    score += (1/(room.size.x * 0.5f) * xDif + 1/(room.size.y * 0.5f) * yDif) * 0.5f;
+                    //I think this makes it at most 1, asked chat but chat is retard at math understanding so yolo.
+                    score += (1/(room.size.x * 0.5f )* xDif + 1/(room.size.y * 0.5f) * yDif) * 0.5f;
+                    if((1/(room.size.x * 0.5f )* xDif + 1/(room.size.y * 0.5f) * yDif) * 0.5f > 1);
+                    
                 }
              
             }
         }
-        //Debug.Log("Score: " + score);
-        return score; 
+        return (score, checkedEnemies); 
     }
-
-
 
     public float LootPlacementFitnessRoom(Room room, MapInfo map)
     {
@@ -318,5 +334,5 @@ public class FitnessFunctions : MonoBehaviour
             }
             } 
         return score;
-    }*/
+    }
 }

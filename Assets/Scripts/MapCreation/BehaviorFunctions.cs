@@ -92,7 +92,7 @@ public class BehaviorFunctions : MonoBehaviour
     }
 
     //Simple version for now, could be change to check for each room and do some sort of pseudo hashing clamped to intervals later
-    public Vector2 EnemyCombatMix(List<(Vector2Int placement, int type)> enemies, Vector2 behavior)
+    public static Vector2 EnemyCombatMix(List<(Vector2Int placement, int type)> enemies, Vector2 behavior)
     {
         float RangedCount = 0;
         float MeleeCount = 0;
@@ -124,7 +124,7 @@ public class BehaviorFunctions : MonoBehaviour
     }
 
 
-    public Vector2 EnemyClusterBehavior(MapInfo map, Vector2 behavior)
+    public static Vector2 EnemyClusterBehavior(MapInfo map, Vector2 behavior)
     {
         float averageClusterSize = 0;
         float clusterAmount = 0;
