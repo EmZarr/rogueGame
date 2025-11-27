@@ -50,11 +50,11 @@ public class BehaviorFunctions : MonoBehaviour
         return opennessScoreSum / amountOfTiles;  // 0..1
     }
 
-    public static int GetMapOpennessBehavior(MapCandidate candidate)
+    public static int GetMapOpennessBehavior(MapCandidate candidate, int resolution)
     {
         float openness = ComputeOpenness(candidate.mapData.mapArray);
 
-        return GetBehaviorRange(0.35, 0.7, openness);
+        return GetBehaviorRange(resolution, openness);
     }
 
     //
@@ -67,28 +67,28 @@ public class BehaviorFunctions : MonoBehaviour
 
         float ratio = shortestPathLength / straight;
 
-        float maxRatio = 3.0f;
+        float maxRatio = 2.5f;
         float windingness = (ratio - 1f) / (maxRatio - 1f);
 
         return Mathf.Clamp01(windingness);
     }
 
-    public static int GetWindingnessBehavior(MapCandidate candidate)
+    public static int GetWindingnessBehavior(MapCandidate candidate, int resolution)
     {
         int pathCount = candidate.mapData.shortestPath?.Count ?? 0;
         float wind = ComputeWindingness(pathCount, candidate.mapData.playerStartPos.Value, candidate.mapData.endPos.Value);
-        return GetBehaviorRange(0.3, 0.7, wind);
+        return GetBehaviorRange(resolution, wind);
     }
 
 
-    static int GetBehaviorRange(double cutoff1, double cutoff2, double value)
+    static int GetBehaviorRange(int resolution, double value)
     {
-        if (value < cutoff1)
-            return 1;
-        else if (value < cutoff2)
-            return 2;
-        else
-            return 3;
+        int bin = (int)(value * resolution);
+
+        if (bin >= resolution)
+            bin = resolution - 1;
+
+        return bin;
     }
 
     //Simple version for now, could be change to check for each room and do some sort of pseudo hashing clamped to intervals later

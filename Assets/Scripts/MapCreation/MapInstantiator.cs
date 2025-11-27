@@ -19,7 +19,7 @@ public class MapInstantiator : MonoBehaviour
     [SerializeField] List<GameObject> enemyPrefabs;
     [SerializeField] List<GameObject> furnishingPrefabs;
 
-    [SerializeField] GameObject exitPrefab;
+    [SerializeField] GameObject levelManager;
 
     // keep references to everything we spawn so we can delete them later
     private List<GameObject> spawnedObjects = new List<GameObject>();
@@ -88,9 +88,7 @@ public class MapInstantiator : MonoBehaviour
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         tilemapWall.SetTile(cell, null); //remove wall tile
 
-                        spawnedObjects.Add(
-                            Instantiate(exitPrefab, tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
-                        );
+                        levelManager.transform.position = tilemapGround.GetCellCenterWorld(cell);
                         break;
                     case 100:
                         tilemapGround.SetTile(cell, groundTileGrass1);

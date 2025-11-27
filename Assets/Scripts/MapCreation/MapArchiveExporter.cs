@@ -15,7 +15,11 @@ public static class MapArchiveExporter
         public List<int> flatTiles;
 
         public float fitness;
-        public List<float> behavior; // scalable behavior vector components
+
+        // All three behavior axes
+        public List<float> geoBehavior;   // [x, y]
+        public List<float> enemyBehavior; // [x, y]
+        public List<float> furnBehavior;  // [x, y]
 
         // Summary metrics
         public int roomsCount;
@@ -27,6 +31,7 @@ public static class MapArchiveExporter
         public int wallTiles;
     }
 
+
     [System.Serializable]
     public class MapCollection
     {
@@ -34,16 +39,14 @@ public static class MapArchiveExporter
     }
 
     public static void ExportArchiveToJson(
-        Dictionary<Vector2, MapCandidate> archive,
-        string filename = "archive_maps.json")
+    IEnumerable<MapCandidate> candidates,
+    string filename = "archive_maps.json")
     {
         var collection = new MapCollection();
         collection.maps = new List<MapDTO>();
 
-        foreach (var kv in archive)
+        foreach (var candidate in candidates)
         {
-            Vector2 behavior = kv.Key;
-            MapCandidate candidate = kv.Value;
             var map = candidate.mapData;
 
             int width = map.mapArray?.GetLength(0) ?? 0;
@@ -55,8 +58,11 @@ public static class MapArchiveExporter
                 height = height,
                 tiles = map.mapArray != null ? ConvertMapArrayToNestedList(map.mapArray) : new List<List<int>>(),
                 flatTiles = map.mapArray != null ? FlattenMapArray(map.mapArray) : new List<int>(),
-                fitness = candidate.fitness,
-                behavior = ConvertBehaviorToList(behavior),
+                fitness = candidate.CombinedFitness,
+
+                geoBehavior = ConvertBehaviorToList(candidate.geoBehavior),
+                enemyBehavior = ConvertBehaviorToList(candidate.enemyBehavior),
+                furnBehavior = ConvertBehaviorToList(candidate.furnBehavior),
 
                 roomsCount = map.components?.Count ?? 0,
                 enemiesCount = map.enemies?.Count ?? 0,
@@ -64,17 +70,20 @@ public static class MapArchiveExporter
                 budget = map.enemiesBudget,
                 furnishingBudget = map.furnishingBudget,
                 walkableTiles = map.floorTiles.Count,
-                // wallTiles = ??? // fill if you have this data on MapInfo
+                // wallTiles = ... if you have it
             };
 
             collection.maps.Add(dto);
         }
 
         string json = JsonUtility.ToJson(collection, true);
+
+        // consider Application.persistentDataPath if you want this in builds
         string path = Path.Combine(Application.dataPath, filename);
         File.WriteAllText(path, json);
         Debug.Log($"Archive exported to {path} ({collection.maps.Count} maps)");
     }
+
 
     // --- helper methods ---
 
@@ -116,5 +125,36 @@ public static class MapArchiveExporter
     {
         return new List<float> { behavior.x, behavior.y };
     }
+
+    public static MapCollection LoadArchiveFromJson(string filename = "archive_maps.json")
+    {
+        string path = Path.Combine(Application.dataPath, filename);
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning($"Archive file not found: {path}");
+            return new MapCollection { maps = new List<MapDTO>() };
+        }
+
+        string json = File.ReadAllText(path);
+        var collection = JsonUtility.FromJson<MapCollection>(json);
+        return collection;
+    }
+
+    public static int[,] MapFromDto(MapDTO dto)
+    {
+        // create int[,] from dto.tiles or dto.flatTiles
+        var arr = new int[dto.width, dto.height];
+        int i = 0;
+        for (int y = 0; y < dto.height; y++)
+        {
+            for (int x = 0; x < dto.width; x++)
+            {
+                arr[x, y] = dto.flatTiles[i++];
+            }
+        }
+
+        return arr;
+    }
+
 }
 

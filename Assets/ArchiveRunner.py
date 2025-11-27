@@ -114,7 +114,7 @@ def render_map(arr, dto, out_path):
                 markers.append((cx, cy, COLORS["enemy0"]))
             elif t == 7:
                 markers.append((cx, cy, COLORS["enemy1"]))
-            elif t == 8:
+            elif t == 99:
                 markers.append((cx, cy, COLORS["exit"]))
             elif t == 100:
                 markers.append((cx, cy, COLORS["player"]))

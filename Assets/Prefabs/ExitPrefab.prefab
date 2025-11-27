@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5753273998248703736}
   - component: {fileID: 6411068157435617285}
   - component: {fileID: -5925752765989673675}
-  - component: {fileID: -8702078723686851607}
+  - component: {fileID: 3989338526430456795}
   m_Layer: 0
   m_Name: ExitPrefab
   m_TagString: Untagged
@@ -128,7 +128,7 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
---- !u!114 &-8702078723686851607
+--- !u!114 &3989338526430456795
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -137,7 +137,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5086782275875845498}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3e9b94b6d3761e4d94e68bc6ac4fb6d, type: 3}
+  m_Script: {fileID: 11500000, guid: 8cb6a7053f7b53a4090c7247019d8c48, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ExitTrigger
-  mapGenerator: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::LevelManager
+  mapInstantiator: {fileID: 0}

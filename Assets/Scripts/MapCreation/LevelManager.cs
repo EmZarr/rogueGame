@@ -1,0 +1,65 @@
+using NUnit.Framework;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class LevelManager : MonoBehaviour
+{
+
+    [SerializeField] MapInstantiator mapInstantiator;
+    public Queue<MapArchiveExporter.MapDTO> finalMaps;
+    private List<Vector2> takenGeoBehaviors;
+    private List<Vector2> takenEnemBehaviors;
+    private List<Vector2> takenFurnBehaviors;
+
+
+    void Awake()
+    {
+        if (mapInstantiator == null)
+            mapInstantiator = FindFirstObjectByType<MapInstantiator>();
+
+        // ensure collider is a trigger so OnTriggerEnter2D fires
+        var c = GetComponent<Collider2D>();
+        if (c != null) c.isTrigger = true;
+
+    }
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        //var archive = MapArchiveExporter.LoadArchiveFromJson("furnArchive_maps.json");
+        var archive = MapArchiveExporter.LoadArchiveFromJson("combArchive_maps.json");
+        finalMaps = new Queue<MapArchiveExporter.MapDTO>();
+        takenGeoBehaviors = new List<Vector2>();
+        takenEnemBehaviors = new List<Vector2>();
+        takenFurnBehaviors = new List<Vector2>();
+        foreach (var map in archive.maps)
+        {
+            if (finalMaps.Count < 5)
+            {
+                Vector2 geoBehavior = new Vector2(map.geoBehavior[0], map.geoBehavior[1]);
+                Vector2 enemBehavior = new Vector2(map.enemyBehavior[0], map.enemyBehavior[1]);
+                Vector2 furnBehavior = new Vector2(map.furnBehavior[0], map.furnBehavior[1]);
+                if (map.fitness > 1f && !takenGeoBehaviors.Contains(geoBehavior) && !takenEnemBehaviors.Contains(enemBehavior) && !takenFurnBehaviors.Contains(furnBehavior))
+                {
+
+                    finalMaps.Enqueue(map);
+                    takenGeoBehaviors.Add(geoBehavior);
+                    takenEnemBehaviors.Add(enemBehavior);
+                    takenFurnBehaviors.Add(furnBehavior);
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (!other.CompareTag("Player")) return;
+        // Trigger new run
+        mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
+    }
+}

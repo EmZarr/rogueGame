@@ -4,7 +4,7 @@ using Unity.Mathematics;
 
 public class FitnessFunctions : MonoBehaviour 
 {
-    public static float GetGeometryFitness(MapCandidate candidate, (int min, int max, float weight) optimalPathLength, (float min, float max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount)
+    public static float GetGeometryFitness(MapCandidate candidate, (int min, int max, float weight) optimalPathLength, (float min, float max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount, (float min, float max, float weight) optimalCorridorRatio)
     {
         int pathCount = 0;
         if (candidate.mapData.shortestPath != null)
@@ -25,14 +25,15 @@ public class FitnessFunctions : MonoBehaviour
                 mainAndOptionalCount.optionalCount++;
             }
         }
-        float optimalToMainScore = ScoreInterval(mainAndOptionalCount.mainCount/mainAndOptionalCount.optionalCount, optimalMainToOptionalComponents.min, optimalMainToOptionalComponents.max);
+        float optimalToMainScore = ScoreInterval((float)mainAndOptionalCount.mainCount/mainAndOptionalCount.optionalCount, optimalMainToOptionalComponents.min, optimalMainToOptionalComponents.max);
 
         float optimalMapSizeScore = ScoreInterval(candidate.mapData.mapSize, optimalMapSize.min, optimalMapSize.max);
 
         float optimalComponentAmountScore = ScoreInterval(candidate.mapData.components.Count, optimalComponentAmount.min, optimalComponentAmount.max);
 
+        float optimalCorridorRatioScore = ScoreInterval((float)candidate.mapData.corridorTileCount/candidate.mapData.floorTiles.Count, optimalCorridorRatio.min, optimalCorridorRatio.max);
 
-        return pathLengthScore * optimalPathLength.weight + optimalToMainScore * optimalMainToOptionalComponents.weight + optimalMapSizeScore * optimalMapSize.weight + optimalComponentAmountScore * optimalComponentAmount.weight;
+        return pathLengthScore * optimalPathLength.weight + optimalToMainScore * optimalMainToOptionalComponents.weight + optimalMapSizeScore * optimalMapSize.weight + optimalComponentAmountScore * optimalComponentAmount.weight + optimalCorridorRatioScore * optimalCorridorRatio.weight;
     }
 
     static float ScoreInterval(float value, float min, float max)

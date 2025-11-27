@@ -145,7 +145,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-
+        map.corridorTileCount = 0;
         // paint and make corridors
         ConnectComponentsByNearest(map);
         // compute shortest path once the map geometry is ready
@@ -388,27 +388,34 @@ public class MapGenerator : MonoBehaviour
         foreach (var c in map.components)
             totalRooms += c.rooms.Count;
         // randomly decide to add or remove a room
-        bool addRoom = totalRooms == 1 || Random.value < 0.5f;
+        int maxMutations = Mathf.Max(1, Mathf.RoundToInt(totalRooms * 0.10f));
 
-        if (addRoom)
+        int amountOfMutations = Random.Range(1, maxMutations);
+
+        for (int i = 0; i < amountOfMutations; i++)
         {
-            map = placeRandomRoom(map);
-        }
-        else
-        {
-            // remove a random room from a random component
-            if (map.components.Count > 0)
+            bool addRoom = totalRooms == 1 || Random.value < 0.5f;
+
+            if (addRoom)
             {
-                int compIdx = Random.Range(0, map.components.Count);
-                FloorComponent comp = map.components[compIdx];
-                if (comp.rooms.Count > 0)
+                map = placeRandomRoom(map);
+            }
+            else
+            {
+                // remove a random room from a random component
+                if (map.components.Count > 0)
                 {
-                    int roomIdx = Random.Range(0, comp.rooms.Count);
-                    comp.rooms.RemoveAt(roomIdx);
-                    // if component has no more rooms, remove it
-                    if (comp.rooms.Count == 0)
+                    int compIdx = Random.Range(0, map.components.Count);
+                    FloorComponent comp = map.components[compIdx];
+                    if (comp.rooms.Count > 0)
                     {
-                        map.components.RemoveAt(compIdx);
+                        int roomIdx = Random.Range(0, comp.rooms.Count);
+                        comp.rooms.RemoveAt(roomIdx);
+                        // if component has no more rooms, remove it
+                        if (comp.rooms.Count == 0)
+                        {
+                            map.components.RemoveAt(compIdx);
+                        }
                     }
                 }
             }
@@ -543,6 +550,7 @@ public class MapGenerator : MonoBehaviour
                 {
                     map.mapArray[x, y] = 1;
                     if (!corridor) map.floorTiles.Add(pos);
+                    else map.corridorTileCount++; 
                 }
             }
         }
@@ -824,6 +832,7 @@ public class MapInfo
     public int mapSize;
     public List<FloorComponent> components;
     public List<Vector2Int> floorTiles;
+    public int corridorTileCount;
     public List<(Vector2Int placement, int type)> enemies;
     public List<(Vector2Int placement, int type)> furnishing;
     public Vector2Int? playerStartPos;
@@ -880,8 +889,8 @@ public class MapInfo
     }
 
     public MapInfo()
-    { 
-    
+    {
+
     }
 
     // optional convenience method
