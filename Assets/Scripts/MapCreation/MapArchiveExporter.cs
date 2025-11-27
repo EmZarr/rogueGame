@@ -61,7 +61,7 @@ public static class MapArchiveExporter
                 roomsCount = map.components?.Count ?? 0,
                 enemiesCount = map.enemies?.Count ?? 0,
                 furnishingCount = map.furnishing?.Count ?? 0,
-                budget = map.enemiesBudget,
+                budget = map.enemyBudget,
                 furnishingBudget = map.furnishingBudget,
                 walkableTiles = map.floorTiles.Count,
                 // wallTiles = ??? // fill if you have this data on MapInfo

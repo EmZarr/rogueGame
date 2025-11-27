@@ -5,6 +5,7 @@ using System.Linq;
 
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using Unity.Mathematics;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -74,8 +75,12 @@ public class MapGenerator : MonoBehaviour
             enemies = new List<(Vector2Int, int)>(),
             furnishing = new List<(Vector2Int, int)>(),
             floorTiles = new List<Vector2Int>(),
-            enemiesBudget = startingBudget,
-            furnishingBudget = maxAmountFurnishing,
+            enemyBudgetMin = 0,
+            enemyBudgetMax = 0,
+            enemyBudget = 0,
+            furnishingBudgetMin = 0,
+            furnishingBudgetMax = 0,
+            furnishingBudget = 0,
             distFromPlayerToEnd = 0,
         };
         return makeRoomGeometry(newMap);
@@ -110,7 +115,7 @@ public class MapGenerator : MonoBehaviour
     MapInfo makeRoomGeometry(MapInfo map)
     {
         map.components = new List<FloorComponent>();
-        int roomAmount = Random.Range(1, maxRoomAmount);
+        int roomAmount = UnityEngine.Random.Range(1, maxRoomAmount);
         for (int i = 0; i < roomAmount; i++)
         {
             map = placeRandomRoom(map);
@@ -188,19 +193,27 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }*/
+        
+        map.enemyBudgetMin = (int)(map.floorTiles.Count * 0.01f);
+        map.enemyBudgetMax = (int)(map.floorTiles.Count * 0.05f);
+        map.enemyBudget = UnityEngine.Random.Range(map.enemyBudgetMin, map.enemyBudgetMax+1);
+        map.furnishingBudgetMin = (int)(map.floorTiles.Count * 0.02f);
+        map.furnishingBudgetMax = (int)(map.floorTiles.Count * 0.07f);
+        map.furnishingBudget = UnityEngine.Random.Range(map.furnishingBudgetMin, map.furnishingBudgetMax+1);
+    
         return map;
     }
 
     MapInfo placeRandomRoom(MapInfo map)
     {
         Vector2Int roomSize = new Vector2Int(
-            Random.Range(4, maxRoomSize.x),
-            Random.Range(4, maxRoomSize.y)
+            UnityEngine.Random.Range(4, maxRoomSize.x),
+            UnityEngine.Random.Range(4, maxRoomSize.y)
         );
 
         Vector2Int roomPlacement = new Vector2Int(
-            Random.Range(1, mapSize.x - roomSize.x),
-            Random.Range(1, mapSize.y - roomSize.y)
+            UnityEngine.Random.Range(1, mapSize.x - roomSize.x),
+            UnityEngine.Random.Range(1, mapSize.y - roomSize.y)
         );
 
         Room room = new Room
@@ -252,7 +265,7 @@ public class MapGenerator : MonoBehaviour
         // shuffle candidates
         for (int i = 0; i < candidates.Count; i++)
         {
-            int swapIndex = Random.Range(i, candidates.Count);
+            int swapIndex = UnityEngine.Random.Range(i, candidates.Count);
             (candidates[i], candidates[swapIndex]) = (candidates[swapIndex], candidates[i]);
         }
 
@@ -263,7 +276,7 @@ public class MapGenerator : MonoBehaviour
         // place enemies not too close to each other
         foreach (var pos in candidates)
         {
-            if (map.enemiesBudget <= 0)
+            if (map.enemies.Count >= map.enemyBudget)
                 break;
             // check distance to enemies and furnishing
             bool tooClose = false;
@@ -279,14 +292,13 @@ public class MapGenerator : MonoBehaviour
                 continue;
 
             // place enemy
-            int enemyType = Random.Range(0, amountOfEnemyTypes);
-            map.enemies.Add((pos, enemyType));
-            map.enemiesBudget--;
+            int enemyType = UnityEngine.Random.Range(0, amountOfEnemyTypes);
+            map.enemies.Add((pos, 6+enemyType));
         }
 
         foreach (var (p, t) in map.enemies)
         {
-            map.mapArray[p.x, p.y] = 6 + t;
+            map.mapArray[p.x, p.y] = t;
         }
 
         return map;
@@ -300,7 +312,7 @@ public class MapGenerator : MonoBehaviour
         // shuffle candidates
         for (int i = 0; i < candidates.Count; i++)
         {
-            int swapIndex = Random.Range(i, candidates.Count);
+            int swapIndex = UnityEngine.Random.Range(i, candidates.Count);
             (candidates[i], candidates[swapIndex]) = (candidates[swapIndex], candidates[i]);
         }
 
@@ -310,7 +322,7 @@ public class MapGenerator : MonoBehaviour
 
         foreach (var pos in candidates)
         {
-            if (map.furnishingBudget <= 0)
+            if (map.furnishing.Count >= map.furnishingBudget)
                 break;
             // check distance to enemies and furnishing
             bool tooClose = false;
@@ -326,14 +338,13 @@ public class MapGenerator : MonoBehaviour
                 continue;
 
             // place funrnishing
-            int furnishType = Random.Range(0, amountOfFurnishingTypes);
-            map.furnishing.Add((pos, furnishType));
-            map.furnishingBudget--;
+            int furnishType = UnityEngine.Random.Range(0, amountOfFurnishingTypes);
+            map.furnishing.Add((pos, 3+furnishType));
         }
 
         foreach (var (p, t) in map.furnishing)
         {
-            map.mapArray[p.x, p.y] = 3 + t;
+            map.mapArray[p.x, p.y] = t;
         }
 
         return map;
@@ -356,7 +367,7 @@ public class MapGenerator : MonoBehaviour
         map.enemies = valid;
 
         int removed = oldCount - map.enemies.Count;
-        map.enemiesBudget += removed;
+        //map.enemyBudget += removed;
         return map;
     }
 
@@ -376,7 +387,7 @@ public class MapGenerator : MonoBehaviour
         map.furnishing = valid;
 
         int removed = oldCount - map.furnishing.Count;
-        map.furnishingBudget += removed;
+        //map.furnishingBudget += removed;
         return map;
     }
 
@@ -388,7 +399,7 @@ public class MapGenerator : MonoBehaviour
         foreach (var c in map.components)
             totalRooms += c.rooms.Count;
         // randomly decide to add or remove a room
-        bool addRoom = totalRooms == 1 || Random.value < 0.5f;
+        bool addRoom = totalRooms == 1 || UnityEngine.Random.value < 0.5f;
 
         if (addRoom)
         {
@@ -399,11 +410,11 @@ public class MapGenerator : MonoBehaviour
             // remove a random room from a random component
             if (map.components.Count > 0)
             {
-                int compIdx = Random.Range(0, map.components.Count);
+                int compIdx = UnityEngine.Random.Range(0, map.components.Count);
                 FloorComponent comp = map.components[compIdx];
                 if (comp.rooms.Count > 0)
                 {
-                    int roomIdx = Random.Range(0, comp.rooms.Count);
+                    int roomIdx = UnityEngine.Random.Range(0, comp.rooms.Count);
                     comp.rooms.RemoveAt(roomIdx);
                     // if component has no more rooms, remove it
                     if (comp.rooms.Count == 0)
@@ -427,15 +438,47 @@ public class MapGenerator : MonoBehaviour
         if (map.enemies == null || map.enemies.Count == 0)
             return map;
 
+        int mutateEnemyBudget = UnityEngine.Random.Range(0, 2);
+        if (mutateEnemyBudget == 1)
+        {
+            int mutateType = UnityEngine.Random.Range(0, 2);
+            int mutateAmount = UnityEngine.Random.Range(5, 16);
+            if (mutateType == 0)
+            {
+                map.enemyBudget = math.max(map.enemyBudgetMin, (int)(map.enemyBudget*(1-(mutateAmount*0.01f))));
+                while(map.enemies.Count > map.enemyBudget)
+                {
+                    int idx = UnityEngine.Random.Range(0, map.enemies.Count);
+                    var (pos, type) = map.enemies[idx];
+                    map.enemies.RemoveAt(idx);
+                    map.mapArray[pos.x, pos.y] = 1;
+                }
+            }
+            else
+            {
+                map.enemyBudget = math.min(map.enemyBudgetMax, (int)(map.enemyBudget*(1+(mutateAmount*0.01f))));
+            }
+    
+        }
         // pick one to remove
-        int idx = Random.Range(0, map.enemies.Count);
+        /*int idx = UnityEngine.Random.Range(0, map.enemies.Count);
         var (pos, type) = map.enemies[idx];
         map.enemies.RemoveAt(idx);
-        map.enemiesBudget++;
+        map.enemyBudget++;*/
 
         // clear from map
-        map.mapArray[pos.x, pos.y] = 1;
-
+        int removeEnemies = UnityEngine.Random.Range(0,2);
+        if (removeEnemies == 1)
+        {
+            int amountToRemove = (int)UnityEngine.Random.Range(1, map.enemyBudget*0.15f);
+            for (int i = 0; i<amountToRemove; i++)
+            {
+                int idx = UnityEngine.Random.Range(0, map.enemies.Count);
+                var (pos, type) = map.enemies[idx];
+                map.enemies.RemoveAt(idx);
+                map.mapArray[pos.x, pos.y] = 1;
+            }
+        }
         // add replacement
         map = placeEnemies(map);
         return map;
@@ -448,14 +491,41 @@ public class MapGenerator : MonoBehaviour
         if (map.furnishing == null || map.furnishing.Count == 0)
             return map;
 
-        // pick one to remove
-        int idx = Random.Range(0, map.furnishing.Count);
-        var (pos, type) = map.furnishing[idx];
-        map.furnishing.RemoveAt(idx);
-        map.furnishingBudget++;
 
-        // clear from map
-        map.mapArray[pos.x, pos.y] = 1;
+        int mutateFurnishingBudget = UnityEngine.Random.Range(0, 2);
+        if (mutateFurnishingBudget == 1)
+        {
+            int mutateType = UnityEngine.Random.Range(0, 2);
+            int mutateAmount = UnityEngine.Random.Range(5, 16);
+            if (mutateType == 0)
+            {
+                map.furnishingBudget = math.max(map.furnishingBudgetMin, (int)(map.furnishingBudget*(1-(mutateAmount*0.01f))));
+                while(map.furnishing.Count > map.furnishingBudget)
+                {
+                    int idx = UnityEngine.Random.Range(0, map.furnishing.Count);
+                    var (pos, type) = map.furnishing[idx];
+                    map.furnishing.RemoveAt(idx);
+                    map.mapArray[pos.x, pos.y] = 1;
+                }
+            }
+            else
+            {
+                map.enemyBudget = (int)(map.enemyBudget*(1+(mutateAmount*0.01f)));
+            }
+    
+        }
+        int removeFurnishing = UnityEngine.Random.Range(0,2);
+        if (removeFurnishing == 1)
+        {
+            int amountToRemove = (int)UnityEngine.Random.Range(1, map.furnishingBudget*0.15f);
+            for (int i = 0; i<amountToRemove; i++)
+            {
+                int idx = UnityEngine.Random.Range(0, map.furnishing.Count);
+                var (pos, type) = map.furnishing[idx];
+                map.furnishing.RemoveAt(idx);
+                map.mapArray[pos.x, pos.y] = 1;
+            }
+        }
 
         // add replacement
         map = placeFurnishing(map);
@@ -464,9 +534,9 @@ public class MapGenerator : MonoBehaviour
 
     Vector2Int GetRandomTileInComponent(FloorComponent comp)
     {
-        var room = comp.rooms[Random.Range(0, comp.rooms.Count)];
-        int x = Random.Range(room.XMin, room.XMax + 1);
-        int y = Random.Range(room.YMin, room.YMax + 1);
+        var room = comp.rooms[UnityEngine.Random.Range(0, comp.rooms.Count)];
+        int x = UnityEngine.Random.Range(room.XMin, room.XMax + 1);
+        int y = UnityEngine.Random.Range(room.YMin, room.YMax + 1);
         return new Vector2Int(x, y);
     }
 
@@ -830,7 +900,12 @@ public class MapInfo
     public Vector2Int? endPos;
     public float distFromPlayerToEnd;
     public List<Vector2Int> shortestPath;
-    public int enemiesBudget;
+    public int enemyBudgetMin;
+
+    public int enemyBudgetMax;
+    public int enemyBudget;
+    public int furnishingBudgetMin;
+    public int furnishingBudgetMax;
     public int furnishingBudget;
 
     // Copy constructor
@@ -838,7 +913,11 @@ public class MapInfo
     {
         mapSize = other.mapSize;
         distFromPlayerToEnd = other.distFromPlayerToEnd;
-        enemiesBudget = other.enemiesBudget;
+        enemyBudgetMin = other.enemyBudgetMin;
+        enemyBudgetMin = other.enemyBudgetMax;
+        enemyBudget = other.enemyBudget;
+        furnishingBudgetMin = other.furnishingBudgetMin;
+        furnishingBudgetMax = other.furnishingBudgetMax;
         furnishingBudget = other.furnishingBudget;
         playerStartPos = other.playerStartPos;
         endPos = other.endPos;

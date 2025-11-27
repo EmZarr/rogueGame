@@ -54,7 +54,8 @@ public class MapElite : MonoBehaviour
             var best = enemArchive[bestKey];
             Debug.Log("Behavior: " + best.enemyBehavior);
             Debug.Log("Fitness: " + best.fitness);
-            mapInstantiator.makeMap(best.mapData.mapArray);
+            //mapInstantiator.makeMap(best.mapData.mapArray);
+            MapArchiveExporter.ExportArchiveToJson(enemArchive);
         }
 
         /*

@@ -280,7 +280,6 @@ public class FitnessFunctions : MonoBehaviour
                 {
                     //I think this makes it at most 1, asked chat but chat is retard at math understanding so yolo.
                     score += (1/(room.size.x * 0.5f )* xDif + 1/(room.size.y * 0.5f) * yDif) * 0.5f;
-                    if((1/(room.size.x * 0.5f )* xDif + 1/(room.size.y * 0.5f) * yDif) * 0.5f > 1);
                     
                 }
              
