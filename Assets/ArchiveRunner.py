@@ -145,7 +145,7 @@ def render_map(arr, dto, out_path):
     text_lines = [
         f"fitness={dto.get('fitness', 0):.2f} behavior={behavior}",
         f"rooms={dto.get('roomsCount',0)} enemies={dto.get('enemiesCount',0)} furnishing={dto.get('furnishingCount',0)}",
-        f"walkable={dto.get('walkableTiles',0)} walls={dto.get('wallTiles',0)} budget={dto.get('budget',0)} furnishingBudget={dto.get('furnishingBudget',0)}"
+        f"walkable={dto.get('walkableTiles',0)} walls={dto.get('wallTiles',0)} enemyBudget={dto.get('enemyBudget',0)} furnishingBudget={dto.get('furnishingBudget',0)}"
     ]
     full_text = "   ".join(text_lines)
 
