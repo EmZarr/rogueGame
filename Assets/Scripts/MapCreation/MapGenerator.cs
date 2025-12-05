@@ -106,6 +106,7 @@ public class MapGenerator : MonoBehaviour
 
     MapInfo MutatePlacements(MapInfo map)
     {
+        //Debug.Log("Min enemes amount: " + map.enemyBudgetMin);
         map = mutateEnemies(map);
         //mapInstantiator.makeMap(map.mapArray);
         return map;
@@ -193,7 +194,6 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }*/
-        
         map.enemyBudgetMin = (int)(map.floorTiles.Count * 0.01f);
         map.enemyBudgetMax = (int)(map.floorTiles.Count * 0.05f);
         map.enemyBudget = UnityEngine.Random.Range(map.enemyBudgetMin, map.enemyBudgetMax+1);
@@ -261,7 +261,7 @@ public class MapGenerator : MonoBehaviour
     {
         // collect candidate floor tiles
         List<Vector2Int> candidates = new List<Vector2Int>(map.floorTiles);
-
+        Debug.Log("Enemy Budget: " + map.enemyBudget);
         // shuffle candidates
         for (int i = 0; i < candidates.Count; i++)
         {
@@ -510,7 +510,7 @@ public class MapGenerator : MonoBehaviour
             }
             else
             {
-                map.enemyBudget = (int)(map.enemyBudget*(1+(mutateAmount*0.01f)));
+                map.furnishingBudget = (int)(map.furnishingBudget*(1+(mutateAmount*0.01f)));
             }
     
         }
@@ -914,7 +914,7 @@ public class MapInfo
         mapSize = other.mapSize;
         distFromPlayerToEnd = other.distFromPlayerToEnd;
         enemyBudgetMin = other.enemyBudgetMin;
-        enemyBudgetMin = other.enemyBudgetMax;
+        enemyBudgetMax = other.enemyBudgetMax;
         enemyBudget = other.enemyBudget;
         furnishingBudgetMin = other.furnishingBudgetMin;
         furnishingBudgetMax = other.furnishingBudgetMax;
