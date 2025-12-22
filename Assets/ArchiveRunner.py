@@ -141,11 +141,26 @@ def render_map(arr, dto, out_path):
         draw.ellipse(bbox, fill=color)
 
     # build metadata text (single long string, then wrap to banner)
-    behavior = dto.get("behavior", [])
+    def _fmt_vec2(v):
+        if not v or len(v) < 2:
+            return "[]"
+        return f"[{v[0]:.3f}, {v[1]:.3f}]"
+
+    geo_b = dto.get("geoBehavior", [])
+    enemy_b = dto.get("enemyBehavior", [])
+    furn_b = dto.get("furnBehavior", [])
+
+    # Optional: flattened 6D behavior vector for quick copy/paste
+    combined_b = []
+    if len(geo_b) >= 2: combined_b += geo_b[:2]
+    if len(enemy_b) >= 2: combined_b += enemy_b[:2]
+    if len(furn_b) >= 2: combined_b += furn_b[:2]
+
     text_lines = [
-        f"fitness={dto.get('fitness', 0):.2f} behavior={behavior}",
+        f"fitness={dto.get('fitness', 0):.2f}  geo={_fmt_vec2(geo_b)}  enemy={_fmt_vec2(enemy_b)}  furn={_fmt_vec2(furn_b)}",
+        f"behavior6={['{:.3f}'.format(x) for x in combined_b]}",
         f"rooms={dto.get('roomsCount',0)} enemies={dto.get('enemiesCount',0)} furnishing={dto.get('furnishingCount',0)}",
-        f"walkable={dto.get('walkableTiles',0)} walls={dto.get('wallTiles',0)} enemyBudget={dto.get('enemyBudget',0)} furnishingBudget={dto.get('furnishingBudget',0)}"
+        f"walkable={dto.get('walkableTiles',0)} walls={dto.get('wallTiles',0)} enemyBudget={dto.get('enemyBudget',0)} furnishingBudget={dto.get('furnishingBudget',0)}",
     ]
     full_text = "   ".join(text_lines)
 

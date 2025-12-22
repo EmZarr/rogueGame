@@ -466,14 +466,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4f6ae296224daa4cb4507d17a2c05b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
-<<<<<<< HEAD
-  mapInstantiator: {fileID: 859900372}
-  totalIterations: 200
-  initialRandomSolutions: 20
-=======
   totalIterations: 1000
   initialRandomSolutions: 100
->>>>>>> main
   runElites: {fileID: 4630370472947771425, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &859900378
 MonoBehaviour:
@@ -491,11 +485,7 @@ MonoBehaviour:
   maxRoomSize: {x: 15, y: 15, z: 0}
   maxRoomAmount: 50
   amountOfEnemyTypes: 2
-<<<<<<< HEAD
   startingBudget: 30
-=======
-  startingBudget: 20
->>>>>>> main
   maxAmountFurnishing: 20
   amountOfFurnishingTypes: 3
   placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}
