@@ -1,6 +1,8 @@
 using System;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.Events;
+using System.Collections;
 
 public class Player : MonoBehaviour
 {
@@ -8,6 +10,8 @@ public class Player : MonoBehaviour
     UI _ui;
     float _score = 0;
     public event Action<GameObject /*killer*/> OnDied;
+    
+    bool _isRespawning;
 
     private void Start()
     {
@@ -19,7 +23,8 @@ public class Player : MonoBehaviour
         if (_health <= 0)
         {
             OnDied?.Invoke(attacker);
-            Destroy(gameObject);
+            //Destroy(gameObject);
+            StartCoroutine(RespawnRoutine());
         }
         _ui.updateHealth(_health);
     }
@@ -35,4 +40,23 @@ public class Player : MonoBehaviour
         _health += health;
         _ui.updateHealth(_health);
     }
+
+    public void TeleportTo(Vector3 worldPos)
+    {
+        transform.position = worldPos;
+    }
+    IEnumerator RespawnRoutine() {
+        _isRespawning = true;
+        var col = GetComponent<Collider2D>();
+        if (col) col.enabled = false;
+        yield return new WaitForSeconds(0.2f);
+        _health = 100;
+        _ui.updateHealth(_health);
+
+        if (col) col.enabled = true;
+        _isRespawning = false;
+    }
+
+
+
 }
