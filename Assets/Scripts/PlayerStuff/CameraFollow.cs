@@ -50,6 +50,8 @@ public class CameraFollowCinematic : MonoBehaviour
 
     void LateUpdate()
     {
+        TryReacquirePlayerAndInterruptCinematic();
+
         if (!IsValid(currentTarget) && cinematicCo == null)
         {
             currentTarget = null;
@@ -155,4 +157,32 @@ public class CameraFollowCinematic : MonoBehaviour
 
     private static float EaseOut(float x, float power) =>
         1f - Mathf.Pow(1f - Mathf.Clamp01(x), power);
+
+    private void TryReacquirePlayerAndInterruptCinematic()
+    {
+        var playerGO = GameObject.FindWithTag(playerTag);
+        if (playerGO == null) return;
+
+        // If we're already following this player, nothing to do
+        if (currentTarget != null && currentTarget.gameObject == playerGO) return;
+
+        // Interrupt cinematic immediately
+        if (cinematicCo != null)
+        {
+            StopCoroutine(cinematicCo);
+            cinematicCo = null;
+        }
+
+        // Reset zoom
+        if (camera != null)
+        {
+            if (camera.orthographic) camera.orthographicSize = defaultOrthoSize;
+            else camera.fieldOfView = defaultFov;
+        }
+
+        // Follow new player + resubscribe to death
+        currentTarget = playerGO.transform;
+        SubscribeToPlayerDeath();
+    }
+
 }

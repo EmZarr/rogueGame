@@ -11,6 +11,12 @@ public class LevelManager : MonoBehaviour
     private List<Vector2> takenEnemBehaviors;
     private List<Vector2> takenFurnBehaviors;
 
+    [SerializeField] GameObject playerPrefab;
+    Vector3 _playerSpawnPos;
+    Player _player;
+    bool _hasSpawnPos;
+
+
 
     void Awake()
     {
@@ -31,6 +37,7 @@ public class LevelManager : MonoBehaviour
         takenGeoBehaviors = new List<Vector2>();
         takenEnemBehaviors = new List<Vector2>();
         takenFurnBehaviors = new List<Vector2>();
+
         foreach (var map in archive.maps)
         {
             if (finalMaps.Count < 5)
@@ -54,6 +61,34 @@ public class LevelManager : MonoBehaviour
         }
 
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
+        _hasSpawnPos = false;
+        CacheSpawnAndHookPlayer();
+    }
+
+    void CacheSpawnAndHookPlayer()
+    {
+        _player = FindFirstObjectByType<Player>();
+
+        if (!_hasSpawnPos)
+        {
+            _playerSpawnPos = _player.transform.position;
+            _hasSpawnPos = true;
+        }
+
+        _player.OnDied -= HandlePlayerDied;
+        _player.OnDied += HandlePlayerDied;
+    }
+
+    void HandlePlayerDied(GameObject killer)
+    {
+        _player.TeleportTo(_playerSpawnPos);
+
+        var rb = _player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -61,5 +96,8 @@ public class LevelManager : MonoBehaviour
         if (!other.CompareTag("Player")) return;
         // Trigger new run
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
+
+        _hasSpawnPos = false;
+        CacheSpawnAndHookPlayer();
     }
 }
