@@ -195,7 +195,7 @@ public class MapGenerator : MonoBehaviour
             }
         }*/
         map.enemyBudgetMin = (int)(map.floorTiles.Count * 0.01f);
-        map.enemyBudgetMax = (int)(map.floorTiles.Count * 0.05f);
+        map.enemyBudgetMax = (int)(map.floorTiles.Count * 0.035f);
         map.enemyBudget = UnityEngine.Random.Range(map.enemyBudgetMin, map.enemyBudgetMax+1);
         map.furnishingBudgetMin = (int)(map.floorTiles.Count * 0.02f);
         map.furnishingBudgetMax = (int)(map.floorTiles.Count * 0.07f);
@@ -523,7 +523,7 @@ public class MapGenerator : MonoBehaviour
         int removeFurnishing = UnityEngine.Random.Range(0,2);
         if (removeFurnishing == 1)
         {
-            int amountToRemove = (int)UnityEngine.Random.Range(1, map.furnishingBudget*0.15f);
+            int amountToRemove = (int)math.min(UnityEngine.Random.Range(1, map.furnishingBudget*0.15f), map.furnishing.Count);
             for (int i = 0; i<amountToRemove; i++)
             {
                 int idx = UnityEngine.Random.Range(0, map.furnishing.Count);

@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class LevelManager : MonoBehaviour
 {
@@ -31,12 +32,15 @@ public class LevelManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        string path = Path.Combine(Application.streamingAssetsPath, "combArchive_maps.json");
+        var archive = MapArchiveExporter.LoadArchiveFromJson(path);
         //var archive = MapArchiveExporter.LoadArchiveFromJson("furnArchive_maps.json");
-        var archive = MapArchiveExporter.LoadArchiveFromJson("combArchive_maps.json");
+        //var archive = MapArchiveExporter.LoadArchiveFromJson("combArchive_maps.json");
         finalMaps = new Queue<MapArchiveExporter.MapDTO>();
         takenGeoBehaviors = new List<Vector2>();
         takenEnemBehaviors = new List<Vector2>();
         takenFurnBehaviors = new List<Vector2>();
+
 
         foreach (var map in archive.maps)
         {

@@ -5,6 +5,8 @@ using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.IO;
+using System.Text;
 
 public class MapElite : MonoBehaviour
 {
@@ -33,14 +35,14 @@ public class MapElite : MonoBehaviour
         runElites.action.Enable();
         runElites.action.performed += ctx => RunMapElitesGeometry();
         mapGenerator = GetComponent<MapGenerator>();
-        //RunMapElitesGeometry();
-        //MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
-        //RunMapElitesEnemies();
-        //MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
-        //RunMapElitesFurnishing();
-        //MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
-        RunMapElitesCombined();
-        MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
+        RunMapElitesGeometry();
+        MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
+        RunMapElitesEnemies();
+        MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
+        RunMapElitesFurnishing();
+        MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
+        //RunMapElitesCombined();
+        //MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
         
     }
 
@@ -48,10 +50,22 @@ public class MapElite : MonoBehaviour
     public void RunMapElitesGeometry()
     {
         int iter = 0;
+        float avgGeoFit = 0;
+        float counter = 0;
+        string path = Path.Combine(Application.dataPath, "GeoFitness.csv");
+        var sb = new StringBuilder();
 
         for (int i = 0; i < totalIterations; i++)
         {
             MapCandidate candidate;
+            if (i%1000 == 0)
+            {
+                avgGeoFit = avgGeoFit/counter;
+
+                sb.AppendLine(i.ToString()+ ", " + avgGeoFit.ToString());
+                avgGeoFit = 0;
+                counter=0;
+            }
 
             if (iter <= initialRandomSolutions)
             {
@@ -78,18 +92,37 @@ public class MapElite : MonoBehaviour
             if (!geoArchive.ContainsKey(candidate.geoBehavior) || geoArchive[candidate.geoBehavior].CombinedFitness < candidate.CombinedFitness)
             {
                 geoArchive[candidate.geoBehavior] = candidate;
+                if (!float.IsNaN(candidate.geoFitness))
+                {
+                    avgGeoFit += candidate.geoFitness;
+                    counter++;
+                }
+                
             }
             //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
+        File.WriteAllText(path, sb.ToString());
     }
 
     public void RunMapElitesEnemies()
     {
         int iter = 0;
+        float avgEneFit = 0;
+        float counter = 0;
+        string path = Path.Combine(Application.dataPath, "EneFitness.csv");
+        var sb = new StringBuilder();
 
         for (int i = 0; i < totalIterations; i++)
         {
             MapCandidate candidate;
+            if (i%1000 == 0)
+            {
+                avgEneFit = avgEneFit/counter;
+
+                sb.AppendLine(i.ToString()+ ", " + avgEneFit.ToString());
+                avgEneFit = 0;
+                counter=0;
+            }
 
             if (iter <= initialRandomSolutions)
             {
@@ -116,18 +149,36 @@ public class MapElite : MonoBehaviour
             if (!enemArchive.ContainsKey((candidate.geoBehavior, candidate.enemyBehavior)) || enemArchive[(candidate.geoBehavior, candidate.enemyBehavior)].CombinedFitness < candidate.CombinedFitness)
             {
                 enemArchive[(candidate.geoBehavior, candidate.enemyBehavior)] = candidate;
+                if (!float.IsNaN(candidate.enemFitness))
+                {
+                    avgEneFit += candidate.enemFitness;
+                    counter++;
+                }
             }
             //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
+        File.WriteAllText(path, sb.ToString());
     }
 
     public void RunMapElitesFurnishing()
     {
         int iter = 0;
+        float avgFurFit = 0;
+        float counter = 0;
+        string path = Path.Combine(Application.dataPath, "FurFitness.csv");
+        var sb = new StringBuilder();
 
         for (int i = 0; i < totalIterations; i++)
         {
             MapCandidate candidate;
+            if (i%1000 == 0)
+            {
+                avgFurFit = avgFurFit/counter;
+
+                sb.AppendLine(i.ToString()+ ", " + avgFurFit.ToString());
+                avgFurFit = 0;
+                counter=0;
+            }
 
             if (iter <= initialRandomSolutions)
             {
@@ -153,19 +204,46 @@ public class MapElite : MonoBehaviour
             if (!furnArchive.ContainsKey((candidate.geoBehavior, candidate.enemyBehavior, candidate.furnBehavior)) || furnArchive[(candidate.geoBehavior, candidate.enemyBehavior, candidate.furnBehavior)].CombinedFitness < candidate.CombinedFitness)
             {
                 furnArchive[(candidate.geoBehavior, candidate.enemyBehavior, candidate.furnBehavior)] = candidate;
+                if (!float.IsNaN(candidate.furnFitness))
+                {
+                    avgFurFit += candidate.furnFitness;
+                    counter++;
+                }
             }
             //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
         }
+        File.WriteAllText(path, sb.ToString());
 
     }
 
     public void RunMapElitesCombined()
     {
         int iter = 0;
-
+        float averageFitness = 0;
+        float avgGeoFit = 0;
+        float avgEneFit = 0;
+        float avgFurFit = 0;
+        float counter = 0;
+        string path = Path.Combine(Application.dataPath, "fitness.csv");
+        var sb = new StringBuilder();
+        sb.AppendLine("iterations, total fitness score, geometry fitness, furnishing fitness, enemy fitness");
         for (int i = 0; i < totalIterations; i++)
         {
             MapCandidate candidate;
+            if (i%1000 == 0)
+            {
+                float avgFit = averageFitness/counter;
+                avgGeoFit = avgGeoFit/counter;
+                avgEneFit = avgEneFit/counter;
+                avgFurFit = avgFurFit/counter;
+
+                sb.AppendLine(i.ToString()+ ", " + avgFit.ToString()+ ", "+avgGeoFit.ToString()+ ", " + avgFurFit.ToString() + ", " + avgEneFit.ToString());
+                averageFitness = 0;
+                avgGeoFit = 0;
+                avgFurFit = 0;
+                avgEneFit = 0;
+                counter=0;
+            }
 
             if (iter <= initialRandomSolutions)
             {
@@ -189,12 +267,32 @@ public class MapElite : MonoBehaviour
             candidate.geoFitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.35f), (0.5f, 2f, 0.1f), (1000, 3000, 0.35f), (2, 40, 0.1f), (0f, 0.15f, 0.1f));
             candidate.furnFitness = FitnessFunctions.FurnishingFitnessTotal(candidate.mapData, 0.34f, 0.33f, 0.33f);
             candidate.enemFitness = FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
-
+            
+            
             if (!combinedArchive.ContainsKey(key) || combinedArchive[key].CombinedFitness < candidate.CombinedFitness)
             {
                 combinedArchive[key] = candidate;
+                if (!float.IsNaN(candidate.geoFitness))
+                {
+                    avgGeoFit += candidate.geoFitness;
+                }
+                if (!float.IsNaN(candidate.furnFitness))
+                {
+                    avgFurFit += candidate.furnFitness;
+                }
+                if (!float.IsNaN(candidate.enemFitness))
+                {
+                    avgEneFit += candidate.enemFitness;
+                }
+                
+                if (!float.IsNaN(candidate.CombinedFitness))
+                {
+                    averageFitness += candidate.CombinedFitness;
+                }
+                counter++;
             }
         }
+        File.WriteAllText(path, sb.ToString());
     }
 
 
