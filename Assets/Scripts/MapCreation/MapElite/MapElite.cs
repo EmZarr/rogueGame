@@ -63,6 +63,8 @@ public class MapElite : MonoBehaviour
             if (i%1000 == 0)
             {
                 avgGeoFit = avgGeoFit/counter;
+                averageTotalFitness /= counter;
+
 
                 sb.AppendLine(i.ToString()+ ", " + avgGeoFit.ToString()+ ", " + averageTotalFitness.ToString());
                 avgGeoFit = 0;
@@ -124,6 +126,8 @@ public class MapElite : MonoBehaviour
             if (i%1000 == 0)
             {
                 avgEneFit = avgEneFit/counter;
+                averageTotalFitness /= counter;
+
 
                 sb.AppendLine(i.ToString()+ ", " + avgEneFit.ToString() + ", " + averageTotalFitness.ToString());
                 avgEneFit = 0;
@@ -184,6 +188,7 @@ public class MapElite : MonoBehaviour
             if (i%1000 == 0)
             {
                 avgFurFit = avgFurFit/counter;
+                averageTotalFitness /= counter;
 
                 sb.AppendLine(i.ToString()+ ", " + avgFurFit.ToString() + ", " + averageTotalFitness.ToString());
                 avgFurFit = 0;
