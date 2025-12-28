@@ -159,7 +159,10 @@ public class FitnessFunctions : MonoBehaviour
                 scoreWallCloseness += tmpScore;
             }
         }
-        scoreWallCloseness = scoreWallCloseness/map.enemies.Count;
+        if (map.enemies.Count > 0)
+        {
+            scoreWallCloseness = scoreWallCloseness/map.enemies.Count;
+        }
         return scoreNotStart * EneNotStartWeight + scoreWallCloseness * EneCloseWallWeight;
     }
 
@@ -222,7 +225,10 @@ public class FitnessFunctions : MonoBehaviour
                 }
             }
         }
-        distance = distance/map.furnishing.Count;
+        if (map.furnishing.Count > 0)
+        {
+            distance = distance/map.furnishing.Count;
+        }
         return ScoreInterval(distance, 6.0f, 200.0f);;
     }
 
@@ -252,7 +258,10 @@ public class FitnessFunctions : MonoBehaviour
                 }
             }
         }
-        distance = distance/map.enemies.Count;
+        if (map.enemies.Count > 0)
+        {
+            distance = distance/map.enemies.Count;
+        }
         return ScoreInterval(distance, 32f, 32f);
     }
 

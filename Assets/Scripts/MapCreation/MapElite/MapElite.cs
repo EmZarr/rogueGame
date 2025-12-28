@@ -35,14 +35,14 @@ public class MapElite : MonoBehaviour
         runElites.action.Enable();
         runElites.action.performed += ctx => RunMapElitesGeometry();
         mapGenerator = GetComponent<MapGenerator>();
-        //RunMapElitesGeometry();
-        //MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
-        //RunMapElitesEnemies();
-        //MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
-        //RunMapElitesFurnishing();
-        //MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
-        RunMapElitesCombined();
-        MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
+        RunMapElitesGeometry();
+        MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
+        RunMapElitesEnemies();
+        MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
+        RunMapElitesFurnishing();
+        MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
+        //RunMapElitesCombined();
+        //MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
         
     }
 
