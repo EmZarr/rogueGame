@@ -78,8 +78,7 @@ public static class MapArchiveExporter
 
         string json = JsonUtility.ToJson(collection, true);
 
-        // consider Application.persistentDataPath if you want this in builds
-        string path = Path.Combine(Application.streamingAssetsPath, filename);
+        string path = Path.Combine(Application.dataPath, filename);
         File.WriteAllText(path, json);
         Debug.Log($"Archive exported to {path} ({collection.maps.Count} maps)");
     }

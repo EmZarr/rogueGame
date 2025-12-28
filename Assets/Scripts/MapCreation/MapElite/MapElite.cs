@@ -35,14 +35,14 @@ public class MapElite : MonoBehaviour
         runElites.action.Enable();
         runElites.action.performed += ctx => RunMapElitesGeometry();
         mapGenerator = GetComponent<MapGenerator>();
-        RunMapElitesGeometry();
-        MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
-        RunMapElitesEnemies();
-        MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
-        RunMapElitesFurnishing();
-        MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
-        //RunMapElitesCombined();
-        //MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
+        //RunMapElitesGeometry();
+        //MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
+        //RunMapElitesEnemies();
+        //MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
+        //RunMapElitesFurnishing();
+        //MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
+        RunMapElitesCombined();
+        MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
         
     }
 
@@ -50,218 +50,273 @@ public class MapElite : MonoBehaviour
     public void RunMapElitesGeometry()
     {
         int iter = 0;
-        float avgGeoFit = 0;
-        float averageTotalFitness = 0;
-        float counter = 0;
+
+        // Delta only for replacements (overwrites), averaged per log interval
+        float sumDeltaCombined = 0f;
+        int deltaCount = 0;
+
+        const float geoThreshold = 0.8f;
+
+        const int logEvery = 500;
+
         string path = Path.Combine(Application.dataPath, "GeoFitness.csv");
         var sb = new StringBuilder();
-        sb.AppendLine("iterations, geometry fitness, total fitness");
+        sb.AppendLine("iterations, archive avg geometry fitness, archive avg total fitness, avg delta total fitness, elites total, elites geoFitness above 0.8");
 
         for (int i = 0; i < totalIterations; i++)
         {
+            // --- Generate candidate ---
             MapCandidate candidate;
-            if (i%1000 == 0)
-            {
-                avgGeoFit = avgGeoFit/counter;
-                averageTotalFitness /= counter;
-
-
-                sb.AppendLine(i.ToString()+ ", " + avgGeoFit.ToString()+ ", " + averageTotalFitness.ToString());
-                avgGeoFit = 0;
-                averageTotalFitness = 0;
-                counter=0;
-            }
-
             if (iter <= initialRandomSolutions)
             {
-                // x'
                 candidate = GenerateRandomGeometry();
                 iter++;
             }
             else
             {
-                // x
                 MapCandidate parent = SelectRandomGeometry();
-
-                // x'
                 candidate = MutateGeometry(parent);
             }
 
-            // b'
-            candidate.geoBehavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate, 10), BehaviorFunctions.GetWindingnessBehavior(candidate, 10));
+            // behavior + fitness
+            candidate.geoBehavior = new Vector2(
+                BehaviorFunctions.GetMapOpennessBehavior(candidate, 10),
+                BehaviorFunctions.GetWindingnessBehavior(candidate, 10)
+            );
 
-            // p'
-            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.35f), (0.5f, 2f, 0.1f), (1000, 3000, 0.35f), (2, 40, 0.1f), (0f, 0.15f, 0.1f));
+            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(
+                candidate,
+                (50, 10000, 0.35f),
+                (0.5f, 2f, 0.1f),
+                (1000, 3000, 0.35f),
+                (2, 40, 0.1f),
+                (0f, 0.15f, 0.1f)
+            );
 
-            // store candidate
-            if (!geoArchive.ContainsKey(candidate.geoBehavior) || geoArchive[candidate.geoBehavior].CombinedFitness < candidate.CombinedFitness)
+            // Store candidate + track delta on overwrite
+            var key = candidate.geoBehavior;
+
+            if (!geoArchive.TryGetValue(key, out var prev))
             {
-                geoArchive[candidate.geoBehavior] = candidate;
-                if (!float.IsNaN(candidate.geoFitness))
-                {
-                    avgGeoFit += candidate.geoFitness;
-                    averageTotalFitness += candidate.CombinedFitness;
-                    counter++;
-                }
-                
+                geoArchive[key] = candidate;
             }
-            //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
+            else if (candidate.CombinedFitness > prev.CombinedFitness)
+            {
+                float delta = candidate.CombinedFitness - prev.CombinedFitness;
+                geoArchive[key] = candidate;
+
+                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
+                {
+                    sumDeltaCombined += delta;
+                    deltaCount++;
+                }
+            }
+
+            // Log
+            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
+            {
+                int elitesTotal = geoArchive.Count;
+
+                float archiveAvgGeo = (elitesTotal > 0) ? geoArchive.Values.Average(e => e.geoFitness) : 0f;
+                float archiveAvgTotal = (elitesTotal > 0) ? geoArchive.Values.Average(e => e.CombinedFitness) : 0f;
+
+                int elitesAboveGeoThreshold = geoArchive.Values.Count(e => e.geoFitness > geoThreshold);
+
+                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
+
+                sb.AppendLine($"{i}, {archiveAvgGeo}, {archiveAvgTotal}, {avgDelta}, {elitesTotal}, {elitesAboveGeoThreshold}");
+
+                sumDeltaCombined = 0f;
+                deltaCount = 0;
+            }
         }
+
         File.WriteAllText(path, sb.ToString());
     }
+
 
     public void RunMapElitesEnemies()
     {
         int iter = 0;
-        float avgEneFit = 0;
-        float averageTotalFitness = 0;
-        float counter = 0;
+
+        // Delta only for replacements (overwrites), averaged per log interval
+        float sumDeltaCombined = 0f;
+        int deltaCount = 0;
+
+        const float enemThreshold = 0.8f;
+
+        const int logEvery = 500;
+
         string path = Path.Combine(Application.dataPath, "EneFitness.csv");
         var sb = new StringBuilder();
-        sb.AppendLine("iterations, enemy fitness, total fitness");
+        sb.AppendLine("iterations, archive avg enemy fitness, archive avg total fitness, avg delta total fitness, elites total, elites enemFitness above 0.8");
 
         for (int i = 0; i < totalIterations; i++)
         {
+            // Generate candidate
             MapCandidate candidate;
-            if (i%1000 == 0)
-            {
-                avgEneFit = avgEneFit/counter;
-                averageTotalFitness /= counter;
-
-
-                sb.AppendLine(i.ToString()+ ", " + avgEneFit.ToString() + ", " + averageTotalFitness.ToString());
-                avgEneFit = 0;
-                averageTotalFitness = 0;
-                counter=0;
-            }
-
             if (iter <= initialRandomSolutions)
             {
-                // x'
                 candidate = GenerateRandomEnemies(SelectRandomGeometry());
                 iter++;
             }
             else
             {
-                // x
                 MapCandidate parent = SelectRandomEnemies();
-
-                // x'
                 candidate = MutateEnemies(parent);
             }
 
-            // b'
-            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(candidate.mapData, BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, new Vector2(0, 0)));
+            //´behavior + fitness
+            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(
+                candidate.mapData,
+                BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, Vector2.zero)
+            );
 
-            // p'
             candidate.enemFitness = FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
 
-            // store candidate
-            if (!enemArchive.ContainsKey((candidate.geoBehavior, candidate.enemyBehavior)) || enemArchive[(candidate.geoBehavior, candidate.enemyBehavior)].CombinedFitness < candidate.CombinedFitness)
+            // Store candidate + track delta on overwrite
+            var key = (candidate.geoBehavior, candidate.enemyBehavior);
+
+            if (!enemArchive.TryGetValue(key, out var prev))
             {
-                enemArchive[(candidate.geoBehavior, candidate.enemyBehavior)] = candidate;
-                if (!float.IsNaN(candidate.enemFitness))
+                enemArchive[key] = candidate;
+            }
+            else if (candidate.CombinedFitness > prev.CombinedFitness)
+            {
+                float delta = candidate.CombinedFitness - prev.CombinedFitness;
+                enemArchive[key] = candidate;
+
+                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
                 {
-                    avgEneFit += candidate.enemFitness;
-                    averageTotalFitness += candidate.CombinedFitness;
-                    counter++;
+                    sumDeltaCombined += delta;
+                    deltaCount++;
                 }
             }
-            //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
+
+            // Log
+            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
+            {
+                int elitesTotal = enemArchive.Count;
+
+                float archiveAvgEne = (elitesTotal > 0) ? enemArchive.Values.Average(e => e.enemFitness) : 0f;
+                float archiveAvgTotal = (elitesTotal > 0) ? enemArchive.Values.Average(e => e.CombinedFitness) : 0f;
+
+                int elitesAboveThreshold = enemArchive.Values.Count(e => e.enemFitness > enemThreshold);
+
+                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
+
+                sb.AppendLine($"{i}, {archiveAvgEne}, {archiveAvgTotal}, {avgDelta}, {elitesTotal}, {elitesAboveThreshold}");
+
+                sumDeltaCombined = 0f;
+                deltaCount = 0;
+            }
         }
+
         File.WriteAllText(path, sb.ToString());
     }
+
 
     public void RunMapElitesFurnishing()
     {
         int iter = 0;
-        float avgFurFit = 0;
-        float averageTotalFitness = 0;
-        float counter = 0;
+
+        // Delta only for replacements (overwrites), averaged per log interval
+        float sumDeltaCombined = 0f;
+        int deltaCount = 0;
+
+        const float furnThreshold = 0.8f;
+
+        const int logEvery = 500;
+
         string path = Path.Combine(Application.dataPath, "FurFitness.csv");
         var sb = new StringBuilder();
-        sb.AppendLine("iterations, furnish fitness, total fitness");
+        sb.AppendLine("iterations, archive avg furnish fitness, archive avg total fitness, avg delta total fitness, elites total, elites furnFitness above 0.8");
 
         for (int i = 0; i < totalIterations; i++)
         {
+            // Generate candidate
             MapCandidate candidate;
-            if (i%1000 == 0)
-            {
-                avgFurFit = avgFurFit/counter;
-                averageTotalFitness /= counter;
-
-                sb.AppendLine(i.ToString()+ ", " + avgFurFit.ToString() + ", " + averageTotalFitness.ToString());
-                avgFurFit = 0;
-                averageTotalFitness = 0;
-                counter=0;
-            }
-
             if (iter <= initialRandomSolutions)
             {
-                // x'
                 candidate = GenerateRandomFurnishing(SelectRandomEnemies());
                 iter++;
             }
             else
             {
-                // x
                 MapCandidate parent = SelectRandomFurnishing();
-
-                // x'
                 candidate = MutateFurnishing(parent);
             }
 
-            // b'
-            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(candidate.mapData, BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, new Vector2(0, 0)));
+            // behavior + fitness 
+            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(
+                candidate.mapData,
+                BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, Vector2.zero)
+            );
 
-            // p'
             candidate.furnFitness = FitnessFunctions.LootAtEndFitness(candidate.mapData);
-            // store candidate
-            if (!furnArchive.ContainsKey((candidate.geoBehavior, candidate.enemyBehavior, candidate.furnBehavior)) || furnArchive[(candidate.geoBehavior, candidate.enemyBehavior, candidate.furnBehavior)].CombinedFitness < candidate.CombinedFitness)
+
+            // Store candidate + track delta on overwrite
+            var key = (candidate.geoBehavior, candidate.enemyBehavior, candidate.furnBehavior);
+
+            if (!furnArchive.TryGetValue(key, out var prev))
             {
-                furnArchive[(candidate.geoBehavior, candidate.enemyBehavior, candidate.furnBehavior)] = candidate;
-                if (!float.IsNaN(candidate.furnFitness))
+                furnArchive[key] = candidate;
+            }
+            else if (candidate.CombinedFitness > prev.CombinedFitness)
+            {
+                float delta = candidate.CombinedFitness - prev.CombinedFitness;
+                furnArchive[key] = candidate;
+
+                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
                 {
-                    avgFurFit += candidate.furnFitness;
-                    averageTotalFitness += candidate.CombinedFitness;
-                    counter++;
+                    sumDeltaCombined += delta;
+                    deltaCount++;
                 }
             }
-            //Debug.Log($"Iteration {iter}/{totalIterations} - fitness: {candidate.fitness}, enemies: {behavior.x}, furnishing: {behavior.y}");
-        }
-        File.WriteAllText(path, sb.ToString());
 
+            // Log 
+            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
+            {
+                int elitesTotal = furnArchive.Count;
+
+                float archiveAvgFurn = (elitesTotal > 0) ? furnArchive.Values.Average(e => e.furnFitness) : 0f;
+                float archiveAvgTotal = (elitesTotal > 0) ? furnArchive.Values.Average(e => e.CombinedFitness) : 0f;
+
+                int elitesAboveThreshold = furnArchive.Values.Count(e => e.furnFitness > furnThreshold);
+
+                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
+
+                sb.AppendLine($"{i}, {archiveAvgFurn}, {archiveAvgTotal}, {avgDelta}, {elitesTotal}, {elitesAboveThreshold}");
+
+                sumDeltaCombined = 0f;
+                deltaCount = 0;
+            }
+        }
+
+        File.WriteAllText(path, sb.ToString());
     }
+
 
     public void RunMapElitesCombined()
     {
         int iter = 0;
-        float averageFitness = 0;
-        float avgGeoFit = 0;
-        float avgEneFit = 0;
-        float avgFurFit = 0;
-        float counter = 0;
-        string path = Path.Combine(Application.dataPath, "fitness.csv");
+
+        // Delta only for replacements (overwrites), averaged per log interval
+        float sumDeltaCombined = 0f;
+        int deltaCount = 0;
+
+        const float combinedThreshold = 2.4f;
+
+        const int logEvery = 500;
+
+        string path = Path.Combine(Application.dataPath, "CombFitness.csv");
         var sb = new StringBuilder();
-        sb.AppendLine("iterations, total fitness score, geometry fitness, furnishing fitness, enemy fitness");
+        sb.AppendLine("iterations, archive avg total fitness, archive avg geo fitness, archive avg enemy fitness, archive avg furnish fitness, avg delta total fitness, elites total, elites totalFitness above 0.8");
+
         for (int i = 0; i < totalIterations; i++)
         {
+            // Generate candidate
             MapCandidate candidate;
-            if (i%1000 == 0)
-            {
-                float avgFit = averageFitness/counter;
-                avgGeoFit = avgGeoFit/counter;
-                avgEneFit = avgEneFit/counter;
-                avgFurFit = avgFurFit/counter;
-
-                sb.AppendLine(i.ToString()+ ", " + avgFit.ToString()+ ", "+avgGeoFit.ToString()+ ", " + avgFurFit.ToString() + ", " + avgEneFit.ToString());
-                averageFitness = 0;
-                avgGeoFit = 0;
-                avgFurFit = 0;
-                avgEneFit = 0;
-                counter=0;
-            }
-
             if (iter <= initialRandomSolutions)
             {
                 candidate = GenerateRandomFurnishing(GenerateRandomEnemies(GenerateRandomGeometry()));
@@ -273,44 +328,78 @@ public class MapElite : MonoBehaviour
                 candidate = MutateFurnishing(MutateEnemies(MutateGeometry(parent)));
             }
 
-            candidate.geoBehavior = new Vector2(BehaviorFunctions.GetMapOpennessBehavior(candidate, 5), BehaviorFunctions.GetWindingnessBehavior(candidate, 5));
+            // Behaviors
+            candidate.geoBehavior = new Vector2(
+                BehaviorFunctions.GetMapOpennessBehavior(candidate, 5),
+                BehaviorFunctions.GetWindingnessBehavior(candidate, 5)
+            );
 
-            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(candidate.mapData, BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, Vector2.zero));
+            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(
+                candidate.mapData,
+                BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, Vector2.zero)
+            );
 
-            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(candidate.mapData, BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, Vector2.zero));
+            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(
+                candidate.mapData,
+                BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, Vector2.zero)
+            );
 
             var key = candidate.CombinedBehavior;
 
-            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(candidate, (50, 10000, 0.35f), (0.5f, 2f, 0.1f), (1000, 3000, 0.35f), (2, 40, 0.1f), (0f, 0.15f, 0.1f));
+            // Fitness
+            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(
+                candidate,
+                (50, 10000, 0.35f),
+                (0.5f, 2f, 0.1f),
+                (1000, 3000, 0.35f),
+                (2, 40, 0.1f),
+                (0f, 0.15f, 0.1f)
+            );
+
             candidate.furnFitness = FitnessFunctions.FurnishingFitnessTotal(candidate.mapData, 0.34f, 0.33f, 0.33f);
             candidate.enemFitness = FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
-            
-            
-            if (!combinedArchive.ContainsKey(key) || combinedArchive[key].CombinedFitness < candidate.CombinedFitness)
+
+            // Store candidate + track delta on overwrite
+            if (!combinedArchive.TryGetValue(key, out var prev))
             {
                 combinedArchive[key] = candidate;
-                if (!float.IsNaN(candidate.geoFitness))
+            }
+            else if (candidate.CombinedFitness > prev.CombinedFitness)
+            {
+                float delta = candidate.CombinedFitness - prev.CombinedFitness;
+                combinedArchive[key] = candidate;
+
+                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
                 {
-                    avgGeoFit += candidate.geoFitness;
+                    sumDeltaCombined += delta;
+                    deltaCount++;
                 }
-                if (!float.IsNaN(candidate.furnFitness))
-                {
-                    avgFurFit += candidate.furnFitness;
-                }
-                if (!float.IsNaN(candidate.enemFitness))
-                {
-                    avgEneFit += candidate.enemFitness;
-                }
-                
-                if (!float.IsNaN(candidate.CombinedFitness))
-                {
-                    averageFitness += candidate.CombinedFitness;
-                }
-                counter++;
+            }
+
+            // Log
+            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
+            {
+                int elitesTotal = combinedArchive.Count;
+
+                float archiveAvgTotal = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.CombinedFitness) : 0f;
+                float archiveAvgGeo = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.geoFitness) : 0f;
+                float archiveAvgEne = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.enemFitness) : 0f;
+                float archiveAvgFurn = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.furnFitness) : 0f;
+
+                int elitesAboveThreshold = combinedArchive.Values.Count(e => e.CombinedFitness > combinedThreshold);
+
+                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
+
+                sb.AppendLine($"{i}, {archiveAvgTotal}, {archiveAvgGeo}, {archiveAvgEne}, {archiveAvgFurn}, {avgDelta}, {elitesTotal}, {elitesAboveThreshold}");
+
+                sumDeltaCombined = 0f;
+                deltaCount = 0;
             }
         }
+
         File.WriteAllText(path, sb.ToString());
     }
+
 
 
     MapCandidate GenerateRandomGeometry()

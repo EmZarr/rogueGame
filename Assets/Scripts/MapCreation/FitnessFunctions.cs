@@ -38,26 +38,32 @@ public class FitnessFunctions : MonoBehaviour
 
     static float ScoreInterval(float value, float min, float max)
     {
+        // Reject invalid inputs
+        if (float.IsNaN(value) || float.IsInfinity(value) ||
+            float.IsNaN(min) || float.IsNaN(max) ||
+            float.IsInfinity(min) || float.IsInfinity(max) ||
+            min <= 0f || max <= 0f)
+        {
+            return 0f;
+        }
 
         if (value <= 0f)
             return 0f;
 
         if (value < min)
-        {
-            // 0..1 as we approach min from below
             return Mathf.Clamp01(value / min);
-        }
 
         if (value > max)
-        {
-            // 1..0 as we exceed max
             return Mathf.Clamp01(max / value);
-        }
 
-        // perfect if inside [min, max]
-        return 1f;
+        if (value >= min && value <= max)
+            return 1f;
+
+        // Fallback 
+        return 0f;
     }
-    
+
+
     static float RoomFitnessFurEne(Room room, MapInfo map)
     {
         bool hasTrap = false;
