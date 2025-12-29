@@ -540,6 +540,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 3989338526430456795, guid: a4c484221cae8f04d9401634381b97ba, type: 3}
+      propertyPath: playerPrefab
+      value: 
+      objectReference: {fileID: 7550404422414327367, guid: e9d91d9f7bab5f04cb88ef13f2d5ff43, type: 3}
+    - target: {fileID: 3989338526430456795, guid: a4c484221cae8f04d9401634381b97ba, type: 3}
       propertyPath: mapInstantiator
       value: 
       objectReference: {fileID: 859900372}

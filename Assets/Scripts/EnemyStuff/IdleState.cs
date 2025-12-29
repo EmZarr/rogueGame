@@ -17,7 +17,9 @@ public class IdleState : BaseState
 
     public override void EnterState()
     {
-        _agent.isStopped = false;
+        if (_agent != null && _agent.isActiveAndEnabled && _agent.isOnNavMesh)
+            _agent.isStopped = false;
+
         _hasDestination = false;
         _nextActionTime = Time.time;
     }
@@ -26,7 +28,7 @@ public class IdleState : BaseState
     {
         if (!_hasDestination && Time.time >= _nextActionTime)
         {
-            if (TryGetRandomPointAroundHome(out var dest))
+            if (_agent != null && _agent.isActiveAndEnabled && _agent.isOnNavMesh && TryGetRandomPointAroundHome(out var dest))
             {
                 dest.z = _enemy.HomePosition.z;
                 _agent.SetDestination(dest);
@@ -38,7 +40,7 @@ public class IdleState : BaseState
             }
         }
 
-        if (_hasDestination && !_agent.pathPending)
+        if (_agent != null && _agent.isActiveAndEnabled && _agent.isOnNavMesh && _hasDestination && !_agent.pathPending)
         {
             if (_agent.remainingDistance <= _agent.stoppingDistance + 0.05f)
             {
@@ -50,12 +52,16 @@ public class IdleState : BaseState
 
     public override void ExitState()
     {
-        _agent.isStopped = false;
+        if (_agent != null && _agent.isActiveAndEnabled && _agent.isOnNavMesh)
+            _agent.isStopped = false;
     }
 
     public override BaseState GetNextState()
     {
-        if (_player == null || !_player.activeInHierarchy)
+        if (!EnsurePlayer())
+            return this;
+
+        if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh)
             return this;
 
         if (Vector3.Distance(_agent.transform.position, _player.transform.position) < _enemy.GetChaseRange())

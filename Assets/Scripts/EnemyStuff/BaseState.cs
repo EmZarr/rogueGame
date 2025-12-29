@@ -13,6 +13,13 @@ public abstract class BaseState
         _agent = enemy.GetAgent();
         _player = enemy.GetPlayer();
     }
+    protected bool EnsurePlayer()
+    {
+        if (_player != null && _player.activeInHierarchy) return true;
+        _player = GameObject.FindGameObjectWithTag("Player");
+        return _player != null && _player.activeInHierarchy;
+    }
+
     public abstract void EnterState();
     public abstract void ExitState();
     public abstract void Execute();
