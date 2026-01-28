@@ -8,6 +8,7 @@ TagManager:
   - Projectile
   - Enemy
   - Canvas
+  - Sword
   layers:
   - Default
   - TransparentFX
