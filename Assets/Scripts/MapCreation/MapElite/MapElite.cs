@@ -330,8 +330,8 @@ public class MapElite : MonoBehaviour
 
             // Behaviors
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.GetMapOpennessBehavior(candidate, 5),
-                BehaviorFunctions.GetWindingnessBehavior(candidate, 5)
+                BehaviorFunctions.GetMapOpennessBehavior(candidate, 10),
+                BehaviorFunctions.GetWindingnessBehavior(candidate, 10)
             );
 
             candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(
