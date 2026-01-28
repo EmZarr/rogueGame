@@ -124,7 +124,7 @@ public class LoadoutState : MonoBehaviour
             }
 
             nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
-            yield return loadout.HeavyDash(vel, transform);
+            yield return loadout.HeavyDash(vel, transform, mousePos);
 
             blockedMovement = false;
             blockedActions = false;
@@ -139,7 +139,7 @@ public class LoadoutState : MonoBehaviour
             }
 
             nextDashTime = Time.time + loadout.getLightDashCD();
-            yield return loadout.LightDash(vel, transform);
+            yield return loadout.LightDash(vel, transform, mousePos);
             blockedMovement = false;
             blockedActions = false;
         }
@@ -158,7 +158,7 @@ public class LoadoutState : MonoBehaviour
     IEnumerator DoDefense()
     {
         nextDefTime = Time.time + loadout.getDefenseCD();
-        yield return loadout.Defense();
+        yield return loadout.Defense(mousePos);
         blockedActions = false;
     }
 
