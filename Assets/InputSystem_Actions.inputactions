@@ -86,6 +86,33 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Loadout 1",
+                    "type": "Button",
+                    "id": "3caeb1cc-8c4d-4959-ba32-e4f8094ad3dd",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Loadout 2",
+                    "type": "Button",
+                    "id": "9904b1c1-de00-44f5-9090-1fcef1f68cc0",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Loadout 3",
+                    "type": "Button",
+                    "id": "ee4c7e85-dd6f-4ff1-8e94-1dfd14287671",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -471,6 +498,39 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8ddaee02-411c-46ed-b2bc-4867cf2f153e",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Loadout 1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "63b70798-6599-4946-95fe-fccf2ae9337e",
+                    "path": "<Keyboard>/2",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Loadout 2",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ad31e33a-d336-46fd-b801-0594a552c0bc",
+                    "path": "<Keyboard>/3",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Loadout 3",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
@@ -987,134 +1047,6 @@
                     "processors": "",
                     "groups": "XR",
                     "action": "TrackedDeviceOrientation",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "MapGeneration",
-            "id": "ef1448b0-a7ec-4866-8340-ddfacb721354",
-            "actions": [
-                {
-                    "name": "RemakeMap",
-                    "type": "Button",
-                    "id": "11f849c3-e2de-4aa3-9e3b-89ad3e74caa4",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "MutateMap",
-                    "type": "Button",
-                    "id": "90c59506-167e-4d50-9aed-8c595795113c",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "PlaceObjects",
-                    "type": "Button",
-                    "id": "d9ccbabb-1746-4139-811f-bf646b7e3688",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "MutatePlacements",
-                    "type": "Button",
-                    "id": "9cc3e3be-1bda-4605-b881-900867541c49",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "MutateContent",
-                    "type": "Button",
-                    "id": "0633e883-8a54-4fb9-a5f3-fb71c28a2edc",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
-                    "name": "MapElite",
-                    "type": "Button",
-                    "id": "34381fec-09de-4bef-9c20-078acac45351",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "0eb1009e-88a2-47b6-afde-2be3617d72a6",
-                    "path": "<Keyboard>/1",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "RemakeMap",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f3400fcf-c489-4915-83d4-0db512f375c6",
-                    "path": "<Keyboard>/3",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "MutateMap",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "ec835d0e-91a1-45ad-95d8-195e5df4fa38",
-                    "path": "<Keyboard>/2",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "PlaceObjects",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "f610c0a1-8735-48c0-b346-cf49afb189dd",
-                    "path": "<Keyboard>/4",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "MutatePlacements",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "789eba8a-e894-48f9-bd03-3c39066657b9",
-                    "path": "<Keyboard>/5",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "MutateContent",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "0d7f1f3f-390d-457e-a4ae-2ad14254ea3a",
-                    "path": "<Keyboard>/m",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "MapElite",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
