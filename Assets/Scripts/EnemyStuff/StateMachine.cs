@@ -18,6 +18,12 @@ public class StateMachine : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //override for stuns
+        if (_enemy.IsStunned && !(_currentState is StunnedState))
+        {
+            ChangeState(new StunnedState(_enemy));
+            return;
+        }
 
         BaseState nextState = _currentState.GetNextState();
         if (_currentState.Equals(nextState) && !_isTransitioning)

@@ -9,6 +9,8 @@ public class Enemy : MonoBehaviour
     [SerializeField] private IAttack _attack;
     private GameObject _player;
     private float _currentHealth;
+    public float RemainingStunDuration { get; private set; }
+    public bool IsStunned => RemainingStunDuration > 0f;
 
     public Vector3 HomePosition { get; private set; }
     public float WanderRadius => _data.wanderRadius;
@@ -30,6 +32,11 @@ public class Enemy : MonoBehaviour
         {
             _player = GameObject.FindWithTag("Player");
         }*/
+
+        if (RemainingStunDuration > 0f)
+        {
+            RemainingStunDuration -= Time.deltaTime;
+        }
     }
 
     public void TakeDamage(float damage)
@@ -38,7 +45,12 @@ public class Enemy : MonoBehaviour
         if (_currentHealth <= 0) Destroy(gameObject);
     }
 
-    public void GetKnockedBack(Vector3 direction, float distance)
+    public void ApplyStun(float duration)
+    {
+        RemainingStunDuration = duration;
+
+    }
+    public void GetKnockedBack(Vector2 direction, float distance)
     {
 
         StartCoroutine(KnockbackRoutine(direction, distance));

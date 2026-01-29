@@ -10,14 +10,14 @@ public class TwoCrossbow : LoadoutBase {
 
 public GameObject ArrowProjectile;
 public GameObject DefenseProjectile;
+GameObject playerObj;
 
-GameObject player;
 
-    public TwoCrossbow()
+    public TwoCrossbow(Player player) : base(player)
     {
-        ArrowProjectile = GameObject.FindGameObjectWithTag("Arrow");
-        DefenseProjectile = GameObject.FindGameObjectWithTag("TestDef");
-        player = GameObject.FindGameObjectWithTag("Player");
+        ArrowProjectile = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<TwoXArrowLogic>().gameObject;
+        DefenseProjectile = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<KnockBackDefense>().gameObject;
+        playerObj = GameObject.FindGameObjectWithTag("Player");
         _attackSpeed = _attackSpeed * 0.5f;
     }
 
@@ -60,7 +60,7 @@ GameObject player;
          yield return LightAttack(mousePos);
     }
 
-    public override IEnumerator HeavyDash(Vector2 direction, Transform transform, Vector2 mousePos)
+    public override IEnumerator HeavyDash(Transform transform, Vector2 mousePos)
     {
           Debug.Log("Heavy");
           Debug.DrawLine(transform.position, (Vector3)mousePos*1000, Color.black, 2.5f);
