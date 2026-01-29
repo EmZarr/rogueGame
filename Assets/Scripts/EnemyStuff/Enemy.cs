@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -37,19 +38,40 @@ public class Enemy : MonoBehaviour
         if (_currentHealth <= 0) Destroy(gameObject);
     }
 
-    public void GetKnockedBack(Vector2 direction, float distance)
+    public void GetKnockedBack(Vector3 direction, float distance)
     {
-        float dashDuration = 0.25f;
-        Vector3 start = transform.position;
-        Vector3 end = start + (Vector3)(direction * distance);
 
-        float t = 0f;
-        while (t < 1f)
-        {
-            t += Time.deltaTime / dashDuration;
-            transform.position = Vector3.Lerp(start, end, t);
-        }
+        StartCoroutine(KnockbackRoutine(direction, distance));
     }
+
+    private IEnumerator KnockbackRoutine(Vector3 direction, float distance)
+    {
+    _agent.enabled = false;
+    float dashDuration = 0.25f;
+
+    Vector3 start = transform.position;
+    Vector3 end = start + (Vector3)(direction * distance);
+
+    NavMeshHit hit;
+    if (NavMesh.Raycast(start, end, out hit, NavMesh.AllAreas))
+    {
+        end = hit.position;
+    }
+
+    float t = 0f;
+
+    while (t < 1f)
+    {
+        t += Time.deltaTime / dashDuration;
+        transform.position = Vector3.Lerp(start, end, t);
+        yield return null; // wait one frame
+    }
+
+    _agent.enabled = true;
+    //transform.position = end; // snap cleanly at the end
+}
+
+
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;

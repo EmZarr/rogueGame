@@ -4,7 +4,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
 public class LoadoutState : MonoBehaviour
 {
-
+    [SerializeField]
+    Player _player;
     [Header("Movement")]
     public float maxSpeed = 8f;
     public float accel = 100f;
@@ -13,6 +14,8 @@ public class LoadoutState : MonoBehaviour
     Vector2 vel;
     bool blockedMovement = false;
     bool blockedActions = false;
+
+
 
     private float dashPressTime;
     private bool dashHeld;
@@ -48,7 +51,7 @@ public class LoadoutState : MonoBehaviour
     }
     void Start()
     {
-        loadout = new LoadoutBase();
+        loadout = new LoadoutBase(_player);
     }
 
     void OnEnable()
@@ -98,7 +101,7 @@ public class LoadoutState : MonoBehaviour
 
     void OnLoadout1(InputAction.CallbackContext ctx)
     {
-        //loadout = new TwoCrossbow();
+        loadout = new TwoCrossbow(_player);
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
@@ -213,7 +216,6 @@ public class LoadoutState : MonoBehaviour
 
     private void Update()
     {
-
         // World-space mouse
         Vector2 mouseScreen = point.action.ReadValue<Vector2>();
         float zDist = Mathf.Abs(cam.transform.position.z - transform.position.z);
