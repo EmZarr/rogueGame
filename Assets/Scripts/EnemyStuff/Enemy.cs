@@ -36,6 +36,20 @@ public class Enemy : MonoBehaviour
         _currentHealth -= damage;
         if (_currentHealth <= 0) Destroy(gameObject);
     }
+
+    public void GetKnockedBack(Vector2 direction, float distance)
+    {
+        float dashDuration = 0.25f;
+        Vector3 start = transform.position;
+        Vector3 end = start + (Vector3)(direction * distance);
+
+        float t = 0f;
+        while (t < 1f)
+        {
+            t += Time.deltaTime / dashDuration;
+            transform.position = Vector3.Lerp(start, end, t);
+        }
+    }
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;
