@@ -19,6 +19,13 @@ public class LoadoutBase : MonoBehaviour
     protected float _heavyDashCD = 5f;
     protected float _lightDashCD = 1f;
 
+    protected Player _player;
+
+    public LoadoutBase(Player player)
+    {
+        _player = player;
+    }
+
     public virtual IEnumerator LightAttack(Vector2 mousePos)
     {
         yield return new WaitForSeconds(_lightWindup);
@@ -89,5 +96,15 @@ public class LoadoutBase : MonoBehaviour
     public float getDefenseCD()
     {
         return _defCD;
+    }
+
+    protected Vector2 getMouseDir(Vector2 mousePos)
+    {
+        Transform player = _player.transform;
+        Vector2 playerPos = player.position;
+
+        Vector2 toMouse = mousePos - playerPos;
+        Vector2 dir = toMouse.sqrMagnitude > 0.000001f ? toMouse.normalized : Vector2.right;
+        return dir;
     }
 }

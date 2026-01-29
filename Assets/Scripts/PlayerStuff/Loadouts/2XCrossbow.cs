@@ -3,59 +3,77 @@ using Unity.Mathematics;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Tilemaps;
 
 
 public class TwoCrossbow : LoadoutBase {  
 
 public GameObject ArrowProjectile;
 public GameObject DefenseProjectile;
+
 GameObject player;
 
-    void Start()
+    public TwoCrossbow()
     {
-        ArrowProjectile = GameObject.FindGameObjectWithTag("player").GetComponentInChildren<TwoXArrowLogic>().gameObject;
-        DefenseProjectile = GameObject.FindGameObjectWithTag("player").GetComponentInChildren<KnockBackDefense>().gameObject;
-        player = GameObject.FindGameObjectWithTag("player");
+        ArrowProjectile = GameObject.FindGameObjectWithTag("Arrow");
+        DefenseProjectile = GameObject.FindGameObjectWithTag("TestDef");
+        player = GameObject.FindGameObjectWithTag("Player");
         _attackSpeed = _attackSpeed * 0.5f;
     }
+
     public override IEnumerator LightAttack(Vector2 MousePos)
     {
-        Instantiate(ArrowProjectile, player.transform.position, Quaternion.identity);
-        var arrow = ArrowProjectile.GetComponent<TwoXArrowLogic>();
-        arrow.Init(10f, MousePos);
+        GameObject arrowObj = Instantiate(ArrowProjectile, player.transform.position, Quaternion.identity);
+        var _arrowRenderer = arrowObj.GetComponent<SpriteRenderer>();
+        var _arrowCollider = arrowObj.GetComponent<Collider2D>();
+        _arrowRenderer.enabled = true;
+        _arrowCollider.enabled = true;
+        var arrow = arrowObj.GetComponent<TwoXArrowLogic>();
+        arrow.Init(10f, MousePos, false);
 
         yield return new WaitForSeconds(0);
     }
 
     public override IEnumerator HeavyAttack(Vector2 MousePos)
     {
-          for(int i = 0; i<20; i++){
-          Instantiate(ArrowProjectile, player.transform.position, Quaternion.identity);
-          var arrow = ArrowProjectile.GetComponent<TwoXArrowLogic>();
-          arrow.Init(10f, MousePos);
-          yield return new WaitForSeconds(0.01f);
+          for(int i = 0; i<40; i++){
+          GameObject arrowObj = Instantiate(ArrowProjectile, player.transform.position, Quaternion.identity);
+            var _arrowRenderer = arrowObj.GetComponent<SpriteRenderer>();
+            var _arrowCollider = arrowObj.GetComponent<Collider2D>();
+            _arrowRenderer.enabled = true;
+            _arrowCollider.enabled = true;
+            var arrow = arrowObj.GetComponent<TwoXArrowLogic>();
+            arrow.Init(10f, MousePos, true);
+
+          yield return new WaitForSeconds(0.12f);
           }
           yield return new WaitForSeconds(0);
     }
 
     public override IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
-         base.LightDash(direction, transform, mousePos);
-         LightAttack(mousePos);
-         LightAttack(mousePos);
-         yield return new WaitForSeconds(0);
+         Debug.Log("hello?");
+         yield return base.LightDash(direction, transform, mousePos);
+         Debug.Log("here?");
+         yield return LightAttack(mousePos);
+         yield return new WaitForSeconds(0.1f);
+         yield return LightAttack(mousePos);
     }
 
     public override IEnumerator HeavyDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
+          Debug.Log("Heavy");
+          Debug.DrawLine(transform.position, (Vector3)mousePos*1000, Color.black, 2.5f);
+          
+
           RaycastHit hit;
-          if (Physics.Raycast(transform.position, mousePos, out hit, 1000))
+          if (Physics.Raycast(transform.position, (Vector3)mousePos.normalized, out hit, 1000))
           {
                var pos = hit.collider.transform.position;
                float dashDuration = 0.2f;
 
                direction.Normalize();
-
+               Debug.Log("Testing");
                Vector3 start = transform.position;
                Vector3 end = pos;
 
@@ -64,7 +82,8 @@ GameObject player;
                {
                     t += Time.deltaTime / dashDuration;
                     transform.position = Vector3.Lerp(start, end, t);
-                    yield return null;
+                    yield return LightAttack(mousePos);
+                    //yield return null;
                }
           }
           
@@ -73,8 +92,13 @@ GameObject player;
 
     public override IEnumerator Defense(Vector2 mousePos)
     {
-          Instantiate(DefenseProjectile, player.transform.position, Quaternion.identity);
-          var defenseArrow = DefenseProjectile.GetComponent<KnockBackDefense>();
+          GameObject defenseBlast = Instantiate(DefenseProjectile, player.transform.position, Quaternion.identity);
+          var _arrowRenderer = defenseBlast.GetComponent<SpriteRenderer>();
+          var _arrowCollider = defenseBlast.GetComponent<BoxCollider2D>();
+
+          _arrowRenderer.enabled = true;
+          _arrowCollider.enabled = true;
+          var defenseArrow = defenseBlast.GetComponent<KnockBackDefense>();
           defenseArrow.Init(mousePos);
           yield return new WaitForSeconds(0);
     }

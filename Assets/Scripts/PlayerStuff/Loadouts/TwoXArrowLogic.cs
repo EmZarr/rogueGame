@@ -13,29 +13,34 @@ public class TwoXArrowLogic : MonoBehaviour
 
     Vector2 _mousePos;
 
-    public void Init(float damage, Vector2 mousePos)
+    bool active = false;
+
+    public void Init(float damage, Vector2 mousePos, bool heavy)
     {
         _damage = damage;
         _mousePos = mousePos;
-    }
-
-
-    private void Awake()
-    {
+        active = true;
+        SetDeathTime();
         _dir = (_mousePos - (Vector2)transform.position).normalized;
 
         // Rotate projectile to face direction of travel
         float angle = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, 0f, 90f + angle);
+        if (heavy)
+        {
+            _speed = 30f;
+        }
     }
 
-    void OnEnable()
+
+    void SetDeathTime()
     {
-        _deathTime = Time.time + _lifeTime;
+        _deathTime = Time.time +_lifeTime;
     }
 
     void Update()
     {
+        if (active){
         if (Time.time >= _deathTime)
         {
             Destroy(gameObject);
@@ -43,6 +48,7 @@ public class TwoXArrowLogic : MonoBehaviour
         }
 
         transform.position += (Vector3)(_dir * _speed * Time.deltaTime);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
