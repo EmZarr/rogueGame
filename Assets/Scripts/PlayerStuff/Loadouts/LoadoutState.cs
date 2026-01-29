@@ -110,7 +110,7 @@ public class LoadoutState : MonoBehaviour
 
     void OnLoadout3(InputAction.CallbackContext ctx)
     {
-        //loadout = new TwoSword();
+        loadout = new DualSwords(player);
     }
 
     void OnAttack(InputAction.CallbackContext ctx)
@@ -178,7 +178,7 @@ public class LoadoutState : MonoBehaviour
                     yield break;
 
                 nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
-                yield return loadout.HeavyDash(vel, transform, mousePos);
+                yield return loadout.HeavyDash(transform, mousePos);
             }
             else
             {

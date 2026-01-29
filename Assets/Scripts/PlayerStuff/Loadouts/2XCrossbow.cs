@@ -47,8 +47,9 @@ GameObject playerObj;
          yield return new WaitForSeconds(0);
     }
 
-    public override IEnumerator HeavyDash(Vector2 direction, Transform transform, Vector2 mousePos)
+    public override IEnumerator HeavyDash(Transform transform, Vector2 mousePos)
     {
+          var direction = getMouseDir(mousePos);
           RaycastHit hit;
           if (Physics.Raycast(transform.position, mousePos, out hit, 1000))
           {

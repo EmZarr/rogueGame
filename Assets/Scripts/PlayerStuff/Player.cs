@@ -7,6 +7,8 @@ using System.Collections;
 public class Player : MonoBehaviour
 {
     [SerializeField] float _health = 100;
+    [SerializeField] private LayerMask _shieldMask;
+    Shield _shield;
     UI _ui;
     float _score = 0;
     public event Action<GameObject /*killer*/> OnDied;
@@ -16,6 +18,7 @@ public class Player : MonoBehaviour
     private float _stunDuration = 1f;
     private bool _isDealingDmg = false;
     private float _damage = 5f;
+    private float _parryStunDuration = 1f;
 
 
     bool _isRespawning;
@@ -23,10 +26,29 @@ public class Player : MonoBehaviour
     private void Start()
     {
         _ui = FindAnyObjectByType<UI>();
+        _shield = GetComponentInChildren<Shield>();
     }
     public void TakeDamage(float damage, GameObject attacker)
     {
         if (_isInvinsible) return;
+
+        bool shieldIntercepts = attacker != null && AttackLineHitsShield(attacker);
+
+        if (_shield.isParrying && shieldIntercepts)
+        {
+            // Successful parry: negate damage + stun attacker (example)
+            var enemy = attacker.GetComponentInParent<Enemy>();
+            if (enemy != null)
+            {
+                enemy.ApplyStun(_parryStunDuration);
+            }
+            return;
+        }
+
+        if (_shield.isBlocking && shieldIntercepts)
+        {
+            return;
+        }
         _health -= damage;
         if (_health <= 0)
         {
@@ -82,6 +104,21 @@ public class Player : MonoBehaviour
         _isInvinsible = isInvinsible;
     }
 
+    public void SetParrying(bool isParrying, float duration, Vector2 dir, float parryStunDuration)
+    {
+        if (isParrying)
+        {
+            _shield.Activate(duration, dir);
+        }
+        _shield.isParrying = isParrying;
+        _parryStunDuration = parryStunDuration;
+    }
+
+    public void SetBlocking(float duration, Vector2 dir)
+    {
+        _shield.Activate(duration, dir);
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
         var enemy = other.GetComponentInParent<Enemy>();
@@ -97,6 +134,22 @@ public class Player : MonoBehaviour
             }
         }
     }
+
+    private bool AttackLineHitsShield(GameObject attacker)
+    {
+        if (_shield == null) return false;
+
+        var shieldCol = _shield.GetComponent<Collider2D>();
+        if (shieldCol == null) return false;
+
+        Vector2 from = attacker.transform.position;
+        Vector2 to = transform.position;
+
+        RaycastHit2D hit = Physics2D.Linecast(from, to, _shieldMask);
+
+        return hit.collider == shieldCol;
+    }
+
 
 
 
