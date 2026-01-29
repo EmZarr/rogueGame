@@ -7,19 +7,19 @@ public class LoadoutBase : MonoBehaviour
 
     [Header("Left Click")]
     protected float _lightWindup = 0.1f;
-    protected float _lightDamage = 5f;
-    protected float _heavyDamage = 10f;
-    protected float _attackSpeed = 1f;
+    protected float _lightDamage = 10f;
+    protected float _heavyDamage = 30f;
+    protected float _attackSpeed = 0.5f;
 
     [Header("Right Click")]
     protected float _defCD = 2f;
 
 
     [Header("Space")]
-    protected float _heavyDashCD = 10f;
-    protected float _lightDashCD = 2f;
+    protected float _heavyDashCD = 5f;
+    protected float _lightDashCD = 1f;
 
-    public virtual IEnumerator LightAttack(Vector2 MousePos)
+    public virtual IEnumerator LightAttack(Vector2 mousePos)
     {
         yield return new WaitForSeconds(_lightWindup);
 
@@ -27,7 +27,7 @@ public class LoadoutBase : MonoBehaviour
         yield return new WaitForSeconds(_attackSpeed);
     }
 
-    public virtual IEnumerator HeavyAttack(Vector2 MousePos) {
+    public virtual IEnumerator HeavyAttack(Vector2 mousePos) {
         Debug.Log("Do heavy attack");
         yield return new WaitForSeconds(_attackSpeed);
     }
@@ -69,7 +69,8 @@ public class LoadoutBase : MonoBehaviour
         }
     }
 
-    public virtual IEnumerator Defense(Vector2 MousePos)
+
+    public virtual IEnumerator Defense(Vector2 mousePos)
     {
         Debug.Log("Do defense");
         yield return new WaitForSeconds(0.1f);

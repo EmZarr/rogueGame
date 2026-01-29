@@ -15,6 +15,7 @@ public class LoadoutState : MonoBehaviour
     bool blockedActions = false;
 
     private float dashPressTime;
+    private bool dashHeld;
     [SerializeField] private float heavyDashHoldTime = 0.4f;
 
     private LoadoutBase loadout;
@@ -24,7 +25,7 @@ public class LoadoutState : MonoBehaviour
     private float nextDefTime;
     private float nextDashTime;
 
-
+    private Coroutine dashLockRoutine;
 
 
     [Header("Input (assign from your Controls asset)")]
@@ -33,6 +34,10 @@ public class LoadoutState : MonoBehaviour
     public InputActionReference def;  // Gameplay/Block (Button)
     public InputActionReference dash;   // Gameplay/Dash (Button)
     public InputActionReference attack;   // Gameplay/Dash (Button)
+
+    public InputActionReference loadout1;
+    public InputActionReference loadout2;
+    public InputActionReference loadout3;  
 
 
     Camera cam;
@@ -53,6 +58,14 @@ public class LoadoutState : MonoBehaviour
         dash.action.canceled += OnDashCanceled;
         def.action.performed += OnDefense;
 
+        loadout1.action.performed += OnLoadout1;
+        loadout2.action.performed += OnLoadout2;
+        loadout3.action.performed += OnLoadout3;
+
+        loadout1.action.Enable();
+        loadout2.action.Enable();
+        loadout3.action.Enable();
+
         move.action.Enable();
         point.action.Enable();
         def.action.Enable();
@@ -68,11 +81,34 @@ public class LoadoutState : MonoBehaviour
         dash.action.canceled -= OnDashCanceled;
         def.action.performed -= OnDefense;
 
+        loadout1.action.performed -= OnLoadout1;
+        loadout2.action.performed -= OnLoadout2;
+        loadout3.action.performed -= OnLoadout3;
+
+        loadout1.action.Disable();
+        loadout2.action.Disable();
+        loadout3.action.Disable();
+
         move.action.Disable();
         point.action.Disable();
         def.action.Disable();
         attack.action.Disable();
         dash.action.Disable();
+    }
+
+    void OnLoadout1(InputAction.CallbackContext ctx)
+    {
+        //loadout = new TwoCrossbow();
+    }
+
+    void OnLoadout2(InputAction.CallbackContext ctx)
+    {
+        loadout = new SwordAndShield();
+    }
+
+    void OnLoadout3(InputAction.CallbackContext ctx)
+    {
+        //loadout = new TwoSword();
     }
 
     void OnAttack(InputAction.CallbackContext ctx)
@@ -97,16 +133,34 @@ public class LoadoutState : MonoBehaviour
     void OnDashStarted(InputAction.CallbackContext ctx)
     {
         if (blockedActions) return;
+        dashHeld = true;
 
         dashPressTime = Time.time;
 
         blockedActions = true;
+        dashLockRoutine = StartCoroutine(LockMovementAfterDelay());
+    }
+    IEnumerator LockMovementAfterDelay()
+    {
+        yield return new WaitForSeconds(heavyDashHoldTime);
+
+        if (Time.time < nextHeavyDashTime)
+        {
+            yield return new WaitForSeconds(nextHeavyDashTime-Time.time);
+        }
+
         blockedMovement = true;
-        vel = Vector2.zero;
     }
 
     void OnDashCanceled(InputAction.CallbackContext ctx)
     {
+        if (!dashHeld) return;
+        dashHeld = false;
+        if (dashLockRoutine != null)
+        {
+            StopCoroutine(dashLockRoutine);
+            dashLockRoutine = null;
+        }
         bool heavy = (Time.time - dashPressTime) >= heavyDashHoldTime;
         StartCoroutine(DoDash(heavy));
     }
@@ -114,28 +168,26 @@ public class LoadoutState : MonoBehaviour
 
     IEnumerator DoDash(bool heavy)
     {
-        if (heavy)
+        try
         {
-            if (Time.time < nextHeavyDashTime)
+            if (heavy)
             {
-                blockedMovement = false;
-                blockedActions = false;
-                yield break;
-            }
+                if (Time.time < nextHeavyDashTime)
+                    yield break;
 
             nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
             yield return loadout.HeavyDash(vel, transform, mousePos);
-
-            blockedMovement = false;
-            blockedActions = false;
-        }
-        else
-        {
-            if (Time.time < nextDashTime)
+ 
+            }
+            else
+            
             {
-                blockedMovement = false; 
-                blockedActions = false;
-                yield break;
+                if (Time.time < nextDashTime)
+                {
+                    blockedMovement = false; 
+                    blockedActions = false;
+                    yield break;
+                }
             }
 
             nextDashTime = Time.time + loadout.getLightDashCD();
@@ -152,7 +204,7 @@ public class LoadoutState : MonoBehaviour
         if (blockedActions || Time.time < nextDefTime) return;
         blockedActions = true;
 
-        DoDefense();
+        StartCoroutine(DoDefense());
     }
 
     IEnumerator DoDefense()
@@ -165,11 +217,12 @@ public class LoadoutState : MonoBehaviour
     private void Update()
     {
 
-        // Update Mouse Pos
-        Vector2 mouseScreen = Mouse.current.position.ReadValue();
-        Vector3 mouseWorld = cam.ScreenToWorldPoint(mouseScreen);
-        mouseWorld.z = transform.position.z; // lock to gameplay plane
-        mousePos = mouseWorld;
+        // World-space mouse
+        Vector2 mouseScreen = point.action.ReadValue<Vector2>();
+        float zDist = Mathf.Abs(cam.transform.position.z - transform.position.z);
+        Vector3 mouseWorld3 = cam.ScreenToWorldPoint(new Vector3(mouseScreen.x, mouseScreen.y, zDist));
+        mouseWorld3.z = transform.position.z; // lock to 2D plane
+        mousePos = mouseWorld3;
 
         // Move player
         Vector2 input = move.action.ReadValue<Vector2>();
