@@ -1,5 +1,3 @@
-using System.Numerics;
-using System.Threading.Tasks.Dataflow;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -13,7 +11,7 @@ public class KnockBackDefense : MonoBehaviour
 
     float _deathTime;
 
-    Gameobject Player;
+    GameObject Player;
 
     public void Init(Vector2 mousePos){
          _mousePos = mousePos;
@@ -32,14 +30,13 @@ public class KnockBackDefense : MonoBehaviour
             return;
         }
 
-        transform.position += (Vector3)(_dir * _speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.TryGetComponent<Enemy>(out Enemy enemy))
         {
-            enemy.GetKnockedBack(Transform.forward, 7.0f);
+            enemy.GetKnockedBack(transform.forward, 7.0f);
         }
     }
 }
