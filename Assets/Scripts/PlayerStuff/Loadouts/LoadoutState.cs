@@ -102,7 +102,7 @@ public class LoadoutState : MonoBehaviour
 
     void OnLoadout1(InputAction.CallbackContext ctx)
     {
-        loadout = new TwoCrossbow(_player);
+        loadout = new TwoCrossbow(player);
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
