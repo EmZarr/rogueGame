@@ -22,6 +22,7 @@ public class LoadoutBase : MonoBehaviour
     public virtual IEnumerator LightAttack(Vector2 mousePos)
     {
         yield return new WaitForSeconds(_lightWindup);
+
         Debug.Log("Do light attack");
         yield return new WaitForSeconds(_attackSpeed);
     }
@@ -31,7 +32,7 @@ public class LoadoutBase : MonoBehaviour
         yield return new WaitForSeconds(_attackSpeed);
     }
 
-    public virtual IEnumerator LightDash(Vector2 direction, Transform transform)
+    public virtual IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
         float dashDistance = 4f;
         float dashDuration = 0.15f;
@@ -49,7 +50,7 @@ public class LoadoutBase : MonoBehaviour
             yield return null;
         }
     }
-    public virtual IEnumerator HeavyDash(Vector2 direction, Transform transform)
+    public virtual IEnumerator HeavyDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
         float dashDistance = 12f;
         float dashDuration = 0.2f;
@@ -67,6 +68,7 @@ public class LoadoutBase : MonoBehaviour
             yield return null;
         }
     }
+
 
     public virtual IEnumerator Defense(Vector2 mousePos)
     {
