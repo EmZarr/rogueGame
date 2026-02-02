@@ -12,9 +12,15 @@ public class EnemyData : ScriptableObject
     [SerializeField] public float attackSpeed;
     [SerializeField] public float attackDelay;
     [SerializeField] public float damage;
-    [SerializeField] public bool ranged;
+    [SerializeField] public EnemyType enemyType;
 
     [Header("Idle/Wander")]
     [SerializeField] public float wanderRadius = 5f;
     [SerializeField] public Vector2 wanderWaitRange = new(2f, 4f);
+}
+
+public enum EnemyType{
+    Melee,
+    Ranged,
+    Bomber
 }

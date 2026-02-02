@@ -80,10 +80,18 @@ public class MapInstantiator : MonoBehaviour
 
                     case 7:
                         tilemapGround.SetTile(cell, groundTileGrass1);
+
+                        int prefabIndex = Random.value < 0.5f ? 1 : 2;
+
                         spawnedObjects.Add(
-                            Instantiate(enemyPrefabs[1], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                            Instantiate(
+                                enemyPrefabs[prefabIndex],
+                                tilemapGround.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
                         );
                         break;
+
                     case 99:
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         tilemapWall.SetTile(cell, null); //remove wall tile

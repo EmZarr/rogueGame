@@ -1,5 +1,5 @@
+using System;
 using UnityEngine;
-using System.Collections.Generic;
 
 public class DamageZone : MonoBehaviour
 {
@@ -9,12 +9,14 @@ public class DamageZone : MonoBehaviour
     private float _dmg;
     private float _duration;
     private bool _hit;
+    private Action _onFinished;
 
-    public void Activate(float dmg, float duration, float delay)
+    public void Activate(float dmg, float duration, float delay, Action onFinished = null)
     {
         _dmg = dmg;
         _duration = duration;
         _hit = false;
+        _onFinished = onFinished;
 
         if (sr) sr.enabled = true;
         SetAlpha(0.1f);
@@ -27,14 +29,17 @@ public class DamageZone : MonoBehaviour
     {
         SetAlpha(1f);
         if (col) col.enabled = true;
+
         CancelInvoke();
         Invoke(nameof(Deactivate), _duration);
     }
 
-    void Deactivate()
+    private void Deactivate()
     {
         if (sr) sr.enabled = false;
         if (col) col.enabled = false;
+
+        _onFinished?.Invoke();
     }
 
     void OnTriggerEnter2D(Collider2D other)

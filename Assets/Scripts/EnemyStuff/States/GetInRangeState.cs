@@ -27,11 +27,16 @@ public class GetInRangeState : BaseState
         if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh)
             return new IdleState(_enemy);
 
+        if (_enemy._data.enemyType == EnemyType.Bomber && _enemy._currentHealth < _enemy._data.health / 2)
+        {
+            return new SuicideState(_enemy);
+        }
+
         float dist = Vector3.Distance(
             _agent.transform.position,
             _player.transform.position
         );
-        if(_enemy._data.ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
+        if(_enemy._data.enemyType == EnemyType.Ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
         {
             return new DashState(_enemy);
         }

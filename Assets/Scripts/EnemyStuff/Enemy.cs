@@ -8,7 +8,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private NavMeshAgent _agent;
     [SerializeField] private IAttack _attack;
     private GameObject _player;
-    private float _currentHealth;
+    public float _currentHealth;
     public float RemainingStunDuration { get; private set; }
     public bool IsStunned => RemainingStunDuration > 0f;
 
