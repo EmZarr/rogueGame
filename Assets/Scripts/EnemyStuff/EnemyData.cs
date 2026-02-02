@@ -10,6 +10,7 @@ public class EnemyData : ScriptableObject
     [SerializeField] public float attackSpeed;
     [SerializeField] public float specialCooldown;
     [SerializeField] public float damage;
+    [SerializeField] public bool ranged;
 
     [Header("Idle/Wander")]
     [SerializeField] public float wanderRadius = 5f;

@@ -31,10 +31,12 @@ public class GetInRangeState : BaseState
             _agent.transform.position,
             _player.transform.position
         );
-
+        if(_enemy._data.ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
+        {
+            return new DashState(_enemy);
+        }
         if (dist > _enemy.GetChaseRange())
             return new IdleState(_enemy);
-
         if (dist < _enemy.GetAttackRange())
             return new AttackState(_enemy);
 
