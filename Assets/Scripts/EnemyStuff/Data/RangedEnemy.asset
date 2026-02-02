@@ -16,7 +16,8 @@ MonoBehaviour:
   attackRange: 20
   health: 30
   attackSpeed: 1
-  specialCooldown: 5
+  attackDelay: 0
   damage: 5
+  ranged: 1
   wanderRadius: 4
   wanderWaitRange: {x: 2, y: 4}
