@@ -52,6 +52,11 @@ public class AttackState : BaseState
 
         float dist = Vector3.Distance(_agent.transform.position, _player.transform.position);
 
+        if(_enemy._data.ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
+        {
+            return new DashState(_enemy);
+        }
+
         if (dist > _enemy.GetAttackRange() && !_attackInProgress)
             return new GetInRangeState(_enemy);
 

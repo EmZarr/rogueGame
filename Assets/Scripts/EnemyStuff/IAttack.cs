@@ -31,4 +31,5 @@ public abstract class IAttack : MonoBehaviour
     public bool IsReady() { return Time.time >= _nextReadyTime; }
     protected abstract IEnumerator SpecialAttack();
     protected abstract IEnumerator BasicAttack();
+
 }

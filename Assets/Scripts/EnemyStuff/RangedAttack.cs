@@ -22,4 +22,5 @@ public class RangedAttack : IAttack
         proj.Init(false, _damage);
         yield return new WaitForSeconds(_attackSpeed / 2);
     }
+
 }
