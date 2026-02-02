@@ -1,9 +1,6 @@
 using UnityEngine;
+using System.Collections;
 
-/// <summary>
-/// Drives the player's Animator parameters and weapon animation swapping.
-/// Keeps animation concerns out of the gameplay/loadout script.
-/// </summary>
 [RequireComponent(typeof(Animator))]
 public class PlayerAnimDriver : MonoBehaviour
 {
@@ -108,6 +105,55 @@ public class PlayerAnimDriver : MonoBehaviour
         animator.SetLayerWeight(knightLayer, weapon == WeaponId.Shield ? 1f : 0f);
         animator.SetLayerWeight(rogueLayer, weapon == WeaponId.Dual ? 1f : 0f);
         animator.SetLayerWeight(rangerLayer, weapon == WeaponId.Bow ? 1f : 0f);
+    }
+
+    public IEnumerator PlayTaggedStateForDuration(string tag, float desiredDuration)
+    {
+        AnimatorStateInfo st;
+        do
+        {
+            st = animator.GetCurrentAnimatorStateInfo(0);
+            yield return null;
+        }
+        while (!st.IsTag(tag));
+
+        // Get the clip length
+        var clips = animator.GetCurrentAnimatorClipInfo(0);
+        float clipLen = (clips != null && clips.Length > 0) ? clips[0].clip.length : 1f;
+
+        // Scale animation speed
+        float prevSpeed = animator.speed;
+        animator.speed = (desiredDuration > 0.001f) ? (clipLen / desiredDuration) : 1f;
+
+        // Handle looping clips
+        while (true)
+        {
+            st = animator.GetCurrentAnimatorStateInfo(0);
+            if (!st.IsTag(tag)) break;                  // transitioned
+            if (st.normalizedTime >= 1f) break;         // finished
+            yield return null;
+        }
+
+        animator.speed = prevSpeed;
+    }
+
+    public IEnumerator WaitUntilTaggedNormalizedTime(string tag, float normalizedT)
+    {
+        AnimatorStateInfo st;
+        do
+        {
+            st = animator.GetCurrentAnimatorStateInfo(0);
+            yield return null;
+        }
+        while (!st.IsTag(tag));
+
+        while (true)
+        {
+            st = animator.GetCurrentAnimatorStateInfo(0);
+            if (!st.IsTag(tag)) break;
+            if (st.normalizedTime >= normalizedT) break;
+            yield return null;
+        }
     }
 
     //Actions
