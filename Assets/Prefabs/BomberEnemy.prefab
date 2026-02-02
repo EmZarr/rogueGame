@@ -80,7 +80,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 3
   m_Sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
-  m_Color: {r: 0.54088044, g: 0, b: 0.3172151, a: 1}
+  m_Color: {r: 0.9433962, g: 0.7656521, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -105,7 +105,7 @@ GameObject:
   - component: {fileID: 8015560544145626414}
   - component: {fileID: 5592875544006121440}
   m_Layer: 0
-  m_Name: RangedEnemy
+  m_Name: BomberEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -176,7 +176,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e8bb01f6d416c64aad9d554d2c39a9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
-  _data: {fileID: 11400000, guid: 5f6da02dd3702814e9a5362f93bdb9ab, type: 2}
+  _data: {fileID: 11400000, guid: 3bb79e397f97b114c8da357204431d18, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: 8015560544145626414}
 --- !u!114 &1742820501312077218
@@ -205,7 +205,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedAttack
   _data: {fileID: 11400000, guid: 5f6da02dd3702814e9a5362f93bdb9ab, type: 2}
-  _player: {fileID: 3659499712336200475, guid: e9d91d9f7bab5f04cb88ef13f2d5ff43, type: 3}
   _projectilePrefab: {fileID: 1122049480233533574, guid: fe01ea3663cf42740b555c30fad28145, type: 3}
 --- !u!195 &5592875544006121440
 NavMeshAgent:
