@@ -13,7 +13,7 @@ public class DualSwords : LoadoutBase
     float _heavyDashDamage = 20f;
 
     float _parryTime = 0.4f;
-    float _parryStunDuration = 1f;
+    float _parryStunDuration = 3f;
     public DualSwords(Player player) : base(player)
     {
         _lightDamage = 5f;
