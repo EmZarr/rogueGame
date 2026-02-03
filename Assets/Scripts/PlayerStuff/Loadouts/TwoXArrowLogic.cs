@@ -15,11 +15,14 @@ public class TwoXArrowLogic : MonoBehaviour
 
     bool active = false;
 
-    public void Init(float damage, Vector2 mousePos, bool heavy)
+    bool _reflected = false;
+
+    public void Init(float damage, Vector2 mousePos, bool heavy, bool reflected)
     {
         _damage = damage;
         _mousePos = mousePos;
         active = true;
+        _reflected = reflected;
         SetDeathTime();
         _dir = (_mousePos - (Vector2)transform.position).normalized;
 
@@ -56,6 +59,11 @@ public class TwoXArrowLogic : MonoBehaviour
         if (other.TryGetComponent<Enemy>(out Enemy enemy))
         {
             enemy.TakeDamage(_damage);
+            Destroy(gameObject);
+        }
+        else if (_reflected && other.TryGetComponent<Player>(out Player player))
+        {
+            player.TakeDamage(_damage, gameObject);
             Destroy(gameObject);
         }
         else if (other.TryGetComponent<TilemapCollider2D>(out TilemapCollider2D wall))

@@ -7,12 +7,16 @@ public class Enemy : MonoBehaviour
     [SerializeField] public EnemyData _data;
     [SerializeField] private NavMeshAgent _agent;
     [SerializeField] private IAttack _attack;
+
+    [SerializeField] private IProtect _protect;
     private GameObject _player;
     public float _currentHealth;
     public float RemainingStunDuration { get; private set; }
     public bool IsStunned => RemainingStunDuration > 0f;
 
     public bool canDash {get; private set;}
+
+    public bool canProtect {get; set;}
 
     public Vector3 HomePosition { get; private set; }
     public float WanderRadius => _data.wanderRadius;
@@ -26,6 +30,7 @@ public class Enemy : MonoBehaviour
         _agent.updateUpAxis = false;
         HomePosition = transform.position;
         canDash = true;
+        canProtect = true;
     }
 
     private void Update()
@@ -164,6 +169,8 @@ public class Enemy : MonoBehaviour
 
     public NavMeshAgent GetAgent() { return _agent; }
     public IAttack GetAttack() { return _attack; }
+
+    public IProtect GetProtect() {return _protect;}
     public GameObject GetPlayer() { return _player; }
     public float GetChaseRange() { return _data.chaseRange; }
     public float GetAttackRange() { return _data.attackRange; }

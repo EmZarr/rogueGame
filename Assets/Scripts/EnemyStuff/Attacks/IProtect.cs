@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public abstract class IAttack : MonoBehaviour
+public abstract class IProtect : MonoBehaviour
 {
     [SerializeField] EnemyData _data;
     protected Player _player;
@@ -9,6 +9,7 @@ public abstract class IAttack : MonoBehaviour
     protected float _attackSpeed;
     protected float _damage;
     protected float _attackDelay;
+    protected float _protectCooldown;
 
 
     private void Start()
@@ -16,33 +17,23 @@ public abstract class IAttack : MonoBehaviour
         _damage = _data.damage;
         _attackSpeed = _data.attackSpeed;
         _attackDelay = _data.attackDelay;
+        _protectCooldown = _data.protectCooldown;
         _player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
     }
-    
-    public IEnumerator Attack()
-    {
-        // Keep specials?
-        /*if (IsReady())
-        {
-            yield return SpecialAttack();   // must yield until the special is done
-            _nextReadyTime = Time.time + _cooldown;
-        }
-        else
-        {
-            yield return BasicAttack();     // must yield until the basic is done
-        }*/
-        if (IsReady())
-        {
-            yield return BasicAttack();
-        }
 
-    }
     public bool IsReady() { return Time.time >= _nextReadyTime; }
     //protected abstract IEnumerator SpecialAttack();
-    protected virtual IEnumerator BasicAttack() {
+    protected virtual IEnumerator BasicProtect() {
 
-        Debug.Log("Do cool attack");
         yield return _attackSpeed;
+    }
+
+    public IEnumerator Protect()
+    {
+        if (IsReady())
+        {
+            yield return BasicProtect();
+        }
     }
 
     protected void TransformFacePlayer(Transform toMoveAndRotate, float distance, float angleOffset = 90f)

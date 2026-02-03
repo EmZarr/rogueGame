@@ -11,12 +11,15 @@ public class Projectile : MonoBehaviour
     float _damage;
     bool _unblockable = false;
 
+    bool _reflected;
+
     GameObject _instigator;
 
     public void SetInstigator(GameObject instigator) => _instigator = instigator;
-    public void Init(bool unblockable, float damage)
+    public void Init(bool unblockable, float damage, bool reflected)
     {
         _damage = damage;
+        _reflected = reflected;
         if (unblockable)
         {
             // Double the x and y scale
@@ -33,6 +36,10 @@ public class Projectile : MonoBehaviour
             {
                 spriteRenderer.color = Color.red;
             }
+        }
+        else if (reflected)
+        {
+            _dir = -_dir;
         }
     }
 
@@ -81,6 +88,11 @@ public class Projectile : MonoBehaviour
         {
             var killer = _instigator != null ? _instigator : gameObject;
             player.TakeDamage(_damage, killer);
+            Destroy(gameObject);
+        }
+        if (_reflected && other.TryGetComponent<Enemy>(out Enemy enemy))
+        {
+            enemy.TakeDamage(_damage);
             Destroy(gameObject);
         }
         else if (other.TryGetComponent<TilemapCollider2D>(out TilemapCollider2D wall))

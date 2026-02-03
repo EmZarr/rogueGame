@@ -50,8 +50,8 @@ public class Shield : MonoBehaviour
                 }
                 else
                 {
-                    //Destroy(other.gameObject);
-                    // TODO: Parry stuff
+                    var projectile = other.GetComponent<Projectile>();
+                    projectile.Init(false, 5.0f, true);
                 }
             }
         }

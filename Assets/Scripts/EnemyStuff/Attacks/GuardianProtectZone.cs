@@ -1,24 +1,22 @@
 using System;
 using UnityEngine;
 
-public class DamageZone : MonoBehaviour
+public class GuardianProtectZone : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer sr;
     [SerializeField] private Collider2D col;
 
-    private float _dmg;
     private float _duration;
-    private bool _hit;
+
     private Action _onFinished;
 
-    public bool knockBack = false;
+    private GameObject _player;
 
-    public void Activate(float dmg, float duration, float delay, Action onFinished = null)
+    public void Activate(float duration, float delay, Action onFinished = null)
     {
-        _dmg = dmg;
         _duration = duration;
-        _hit = false;
         _onFinished = onFinished;
+        _player = GameObject.FindWithTag("Player");
 
         if (sr) sr.enabled = true;
         SetAlpha(0.1f);
@@ -46,20 +44,14 @@ public class DamageZone : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        var player = other.GetComponentInParent<Player>();
-        if (player != null && !_hit)
+        var projectile = other.GetComponent<TwoXArrowLogic>();
+        if (projectile != null)
         {
-            player.TakeDamage(_dmg, transform.parent.gameObject);
-            if (knockBack)
-            {
-                var direction = other.transform.position - transform.position;
-                player.GetKnockedBack(direction, 4.0f);
-            }
-            _hit = true;
+            projectile.Init(5f, (Vector2) _player.transform.position, false, true);
         }
     }
 
-    private void SetAlpha(float a)
+     private void SetAlpha(float a)
     {
         var c = sr.color;
         c.a = a;
