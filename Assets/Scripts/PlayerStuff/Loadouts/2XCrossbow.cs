@@ -34,7 +34,7 @@ public GameObject DefenseProjectile;
         _arrowRenderer.enabled = true;
         _arrowCollider.enabled = true;
         var arrow = arrowObj.GetComponent<TwoXArrowLogic>();
-        arrow.Init(_lightDamage, mousePos, false);
+        arrow.Init(_lightDamage, mousePos, false, false);
         yield return null; 
     }
 

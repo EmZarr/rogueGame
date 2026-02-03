@@ -18,7 +18,7 @@ public class RangedAttack : IAttack
         yield return new WaitForSeconds(_attackDelay);
         var proj = Instantiate(_projectilePrefab, transform.position, Quaternion.identity);
         proj.SetInstigator(gameObject);
-        proj.Init(false, _damage);
+        proj.Init(false, _damage, false);
         _nextReadyTime = Time.time + _attackSpeed;
     }
 

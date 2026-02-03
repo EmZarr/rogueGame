@@ -29,8 +29,14 @@ public class SwordHitbox : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        var defenseZone = other.GetComponent<GuardianProtectZone>();
+        if (defenseZone != null){
+            Debug.Log("blocked");
+        }
+        else {
         var enemy = other.GetComponentInParent<Enemy>();
         if (enemy != null && hit.Add(enemy))
             enemy.TakeDamage(damage);
+        }
     }
 }

@@ -31,11 +31,16 @@ public class GetInRangeState : BaseState
         {
             return new SuicideState(_enemy);
         }
-
         float dist = Vector3.Distance(
             _agent.transform.position,
             _player.transform.position
         );
+        if (_enemy._data.enemyType == EnemyType.Guardian && dist < _enemy.GetChaseRange() && _enemy.canProtect)
+        {
+            Debug.Log("Hello?");
+            return new ProtectState(_enemy); 
+        }
+
         if(_enemy._data.enemyType == EnemyType.Ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
         {
             return new DashState(_enemy);
