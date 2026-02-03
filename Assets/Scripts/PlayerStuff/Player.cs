@@ -150,6 +150,34 @@ public class Player : MonoBehaviour
         return hit.collider == shieldCol;
     }
 
+    public void GetKnockedBack(Vector2 direction, float distance)
+    {
+        StartCoroutine(KnockbackRoutine(direction, distance));
+    }
+
+    private IEnumerator KnockbackRoutine(Vector3 direction, float distance)
+    {
+    float dashDuration = 0.25f;
+
+    Vector3 start = transform.position;
+    Vector3 end = start + (Vector3)(direction * distance);
+
+    UnityEngine.AI.NavMeshHit hit;
+    if (UnityEngine.AI.NavMesh.Raycast(start, end, out hit, UnityEngine.AI.NavMesh.AllAreas))
+    {
+        end = hit.position;
+    }
+
+    float t = 0f;
+
+    while (t < 1f)
+    {
+        t += Time.deltaTime / dashDuration;
+        transform.position = Vector3.Lerp(start, end, t);
+        yield return null; // wait one frame
+    }
+    }
+
 
 
 
