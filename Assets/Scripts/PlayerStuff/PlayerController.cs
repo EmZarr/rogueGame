@@ -35,6 +35,12 @@ public class PlayerController : MonoBehaviour
     public float damage = 10f;
     [SerializeField] PlayerMeleeAttackZone attackZone;
 
+
+    [Header("Crossbow")]
+
+    GameObject arrow;
+
+
     private bool isDashing;
     private bool isAttacking = false;
     private Vector2 mousePos;

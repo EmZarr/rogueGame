@@ -58,7 +58,6 @@ public class PlayerMeleeAttackZone : MonoBehaviour
         {
             if (hit.TryGetComponent<Enemy>(out Enemy enemy))
             {
-                
                 enemy.TakeDamage(damage);
             }
         }

@@ -11,6 +11,8 @@ TagManager:
   - Sword
   - HeavySword
   - AOESword
+  - Arrow
+  - DefArrow
   layers:
   - Default
   - TransparentFX
@@ -19,8 +21,8 @@ TagManager:
   - Water
   - UI
   - Shield
-  - 
-  - 
+  - Player
+  - Terrain
   - 
   - 
   - 

@@ -16,6 +16,8 @@ public class LoadoutState : MonoBehaviour
     bool blockedMovement = false;
     bool blockedActions = false;
 
+
+
     private float dashPressTime;
     private bool dashHeld;
     [SerializeField] private float heavyDashHoldTime = 0.4f;
@@ -100,7 +102,7 @@ public class LoadoutState : MonoBehaviour
 
     void OnLoadout1(InputAction.CallbackContext ctx)
     {
-        //loadout = new TwoCrossbow();
+        loadout = new TwoCrossbow(player);
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
@@ -215,7 +217,6 @@ public class LoadoutState : MonoBehaviour
 
     private void Update()
     {
-
         // World-space mouse
         Vector2 mouseScreen = point.action.ReadValue<Vector2>();
         float zDist = Mathf.Abs(cam.transform.position.z - transform.position.z);

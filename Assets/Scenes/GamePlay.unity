@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 180224431}
   - component: {fileID: 180224433}
   - component: {fileID: 180224432}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: TilemapWalls
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -417,6 +417,7 @@ MonoBehaviour:
   enemyPrefabs:
   - {fileID: 6164719104617455019, guid: c2b004bf4911a8a4d8249268205e0aa4, type: 3}
   - {fileID: 7378334077991207350, guid: 6ce7d400bf1a1ce4c89b300c286f1af8, type: 3}
+  - {fileID: 7378334077991207350, guid: 90ef62bb5f6b7dc41a05c14905a2b7c1, type: 3}
   furnishingPrefabs:
   - {fileID: 6425840253016552175, guid: af9da458c414f0e4bb1ae36e70b80304, type: 3}
   - {fileID: 688636583817786477, guid: 118df840cb0a31942800394f8d291676, type: 3}
