@@ -14,7 +14,10 @@ public class GetInRangeState : BaseState
         if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh)
             return;
 
-        _agent.SetDestination(_player.transform.position);
+        float dist = Vector3.Distance(_agent.transform.position, _player.transform.position);
+        Vector3 direction = _agent.transform.position - _player.transform.position; 
+        direction.Normalize(); 
+        _agent.SetDestination(_player.transform.position + direction * (_enemy.GetAttackRange()-1f));
     }
 
     public override void ExitState() { }
@@ -42,7 +45,7 @@ public class GetInRangeState : BaseState
         }
         if (dist > _enemy.GetChaseRange())
             return new IdleState(_enemy);
-        if (dist < _enemy.GetAttackRange())
+        if (dist < _enemy.GetAttackRange() && _enemy.GetAttack().IsReady())
             return new AttackState(_enemy);
 
         return this;

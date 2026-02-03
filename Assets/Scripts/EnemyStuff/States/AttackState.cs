@@ -26,6 +26,9 @@ public class AttackState : BaseState
         if (!EnsurePlayer())
             return;
 
+        if (!_enemy.GetAttack().IsReady())
+            return;
+
         _attackInProgress = true;
         _enemy.StartCoroutine(AttackFlow());
     }
@@ -62,8 +65,17 @@ public class AttackState : BaseState
             return new DashState(_enemy);
         }
 
-        if (dist > _enemy.GetAttackRange() && !_attackInProgress)
-            return new GetInRangeState(_enemy);
+        if (!_attackInProgress && (dist > _enemy.GetAttackRange() || !_enemy.GetAttack().IsReady()))
+        {
+            if (_enemy._data.enemyType == EnemyType.Assassin)
+            {
+                return new OutflankState(_enemy);
+            }
+            else
+            {
+                return new GetInRangeState(_enemy);
+            }
+        }
 
         return this;
     }

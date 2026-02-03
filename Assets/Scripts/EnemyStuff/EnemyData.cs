@@ -22,5 +22,6 @@ public class EnemyData : ScriptableObject
 public enum EnemyType{
     Melee,
     Ranged,
-    Bomber
+    Bomber,
+    Assassin
 }

@@ -80,7 +80,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 3
   m_Sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
-  m_Color: {r: 0.5471698, g: 0, b: 0, a: 1}
+  m_Color: {r: 0.264155, g: 0.54901963, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -90,7 +90,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 1
---- !u!1 &5209262545980696222
+--- !u!1 &5202824769827067229
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,40 +98,40 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4078235800166170007}
-  - component: {fileID: 4886798263634326035}
-  - component: {fileID: 6837482150020284487}
-  - component: {fileID: 6463005438215452725}
+  - component: {fileID: 720521187861025365}
+  - component: {fileID: 461630458731903065}
+  - component: {fileID: 4964859151057227402}
+  - component: {fileID: 8798078933126887288}
   m_Layer: 0
-  m_Name: MeleeAttackZone
+  m_Name: AttackZone
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4078235800166170007
+--- !u!4 &720521187861025365
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5209262545980696222}
+  m_GameObject: {fileID: 5202824769827067229}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.5, y: 2.5, z: 1}
+  m_LocalScale: {x: 1, y: 20, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4355670000849668850}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &4886798263634326035
+--- !u!212 &461630458731903065
 SpriteRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5209262545980696222}
-  m_Enabled: 1
+  m_GameObject: {fileID: 5202824769827067229}
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -171,8 +171,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
-  m_Color: {r: 1, g: 0.972549, b: 0.41960785, a: 0.21568628}
+  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Color: {r: 0.71913034, g: 1, b: 0.09119487, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -182,13 +182,13 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!60 &6837482150020284487
-PolygonCollider2D:
+--- !u!61 &4964859151057227402
+BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5209262545980696222}
+  m_GameObject: {fileID: 5202824769827067229}
   m_Enabled: 0
   serializedVersion: 3
   m_Density: 1
@@ -219,33 +219,29 @@ PolygonCollider2D:
   m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.28866667}
+    pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 1, y: 1}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Points:
-    m_Paths:
-    - - {x: 0, y: 0.5773587}
-      - {x: -0.5, y: -0.28866667}
-      - {x: 0.5, y: -0.28866667}
-  m_UseDelaunayMesh: 0
---- !u!114 &6463005438215452725
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
+--- !u!114 &8798078933126887288
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5209262545980696222}
+  m_GameObject: {fileID: 5202824769827067229}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 585a766f5e19cfa4ebdb97dc47d9a880, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageZone
-  sr: {fileID: 4886798263634326035}
-  col: {fileID: 6837482150020284487}
+  sr: {fileID: 461630458731903065}
+  col: {fileID: 4964859151057227402}
 --- !u!1 &6164719104617455019
 GameObject:
   m_ObjectHideFlags: 0
@@ -258,10 +254,10 @@ GameObject:
   - component: {fileID: 4762585678125782601}
   - component: {fileID: 5015280384155524935}
   - component: {fileID: 8131901137409769011}
-  - component: {fileID: 8656635374281543014}
+  - component: {fileID: 2066148114121953172}
   - component: {fileID: 8758907191841120201}
   m_Layer: 0
-  m_Name: MeleeEnemy
+  m_Name: AssassinEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -281,7 +277,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3887744324595034173}
-  - {fileID: 4078235800166170007}
+  - {fileID: 720521187861025365}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!195 &4762585678125782601
@@ -294,13 +290,13 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 3.5
-  m_Acceleration: 8
+  m_Speed: 7
+  m_Acceleration: 20
   avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_AngularSpeed: 200
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
+  m_AutoBraking: 0
   m_AutoRepath: 1
   m_Height: 2
   m_BaseOffset: 0
@@ -318,9 +314,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e8bb01f6d416c64aad9d554d2c39a9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy
-  _data: {fileID: 11400000, guid: d6d78ef127fd4d543ba867404f882bfd, type: 2}
+  _data: {fileID: 11400000, guid: a6ac537dca4f7fd4282b9c66b2bc6901, type: 2}
   _agent: {fileID: 4762585678125782601}
-  _attack: {fileID: 8656635374281543014}
+  _attack: {fileID: 2066148114121953172}
   _currentHealth: 0
 --- !u!114 &8131901137409769011
 MonoBehaviour:
@@ -335,7 +331,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StateMachine
   _enemy: {fileID: 5015280384155524935}
---- !u!114 &8656635374281543014
+--- !u!114 &2066148114121953172
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -344,11 +340,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 6164719104617455019}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b5428aa039687f545b9a04fea0a7565e, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d31ae75af0697f41b7618479d83d02f, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MeleeAttack
-  _data: {fileID: 11400000, guid: d6d78ef127fd4d543ba867404f882bfd, type: 2}
-  damageZone: {fileID: 6463005438215452725}
+  m_EditorClassIdentifier: Assembly-CSharp::DashAttack
+  _data: {fileID: 11400000, guid: a6ac537dca4f7fd4282b9c66b2bc6901, type: 2}
+  damageZone: {fileID: 8798078933126887288}
+  wallMask:
+    serializedVersion: 2
+    m_Bits: 256
+  wallSkin: 0.5
 --- !u!70 &8758907191841120201
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
