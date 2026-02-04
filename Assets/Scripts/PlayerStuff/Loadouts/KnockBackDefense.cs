@@ -8,19 +8,16 @@ public class KnockBackDefense : MonoBehaviour
 
     Vector2 _dir;
 
-    Vector2 _mousePos;
-
     float _deathTime;
 
     bool active = false;
 
     GameObject Player;
 
-    public void Init(Vector2 mousePos){
+    public void Init(Vector2 dir){
         Player = GameObject.FindGameObjectWithTag("Player");
-         _mousePos = mousePos;
          active = true;
-         _dir = (_mousePos - (Vector2)transform.position).normalized;
+         _dir = dir;
          // Rotate projectile to face direction of travel
          float angle = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
          transform.rotation = Quaternion.Euler(0f, 0f, 90f + angle);

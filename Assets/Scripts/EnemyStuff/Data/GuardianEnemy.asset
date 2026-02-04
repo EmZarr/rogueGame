@@ -14,11 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
   chaseRange: 50
   attackRange: 2
-  health: 100
+  health: 50
   attackSpeed: 1
   attackDelay: 1
   damage: 5
-  protectCooldown: 5
   enemyType: 4
   wanderRadius: 4
   wanderWaitRange: {x: 2, y: 4}

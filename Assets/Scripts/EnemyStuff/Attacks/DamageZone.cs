@@ -3,13 +3,13 @@ using UnityEngine;
 
 public class DamageZone : MonoBehaviour
 {
-    [SerializeField] private SpriteRenderer sr;
-    [SerializeField] private Collider2D col;
+    [SerializeField] protected SpriteRenderer sr;
+    [SerializeField] protected Collider2D col;
 
-    private float _dmg;
-    private float _duration;
-    private bool _hit;
-    private Action _onFinished;
+    protected float _dmg;
+    protected float _duration;
+    protected bool _hit = false;
+    protected Action _onFinished;
 
     public bool knockBack = false;
 
@@ -44,9 +44,9 @@ public class DamageZone : MonoBehaviour
         _onFinished?.Invoke();
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    protected virtual void OnTriggerEnter2D(Collider2D other)
     {
-        var player = other.GetComponentInParent<Player>();
+        var player = other.GetComponent<Player>();
         if (player != null && !_hit)
         {
             player.TakeDamage(_dmg, transform.parent.gameObject);

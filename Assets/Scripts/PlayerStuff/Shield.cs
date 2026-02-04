@@ -9,24 +9,32 @@ public class Shield : MonoBehaviour
 
     [SerializeField] private SpriteRenderer sr;
     [SerializeField] private Collider2D col;
+    [SerializeField] private LoadoutState loadoutState;
+
+    private void Update()
+    {
+        if (isParrying || isBlocking)
+        {
+            float shieldDistance = 0.5f;
+
+            Vector2 playerPos = transform.parent.position;
+            var dir = loadoutState.getMouseDir();
+            // world-space placement
+            Vector3 pos = playerPos + dir * shieldDistance;
+            pos.z = transform.position.z;
+            transform.position = pos;
+
+            float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        }
+    }
 
     public void Activate(float duration, Vector2 dir)
     {
+        loadoutState.SetSpeed(0.5f);
         if (sr) sr.enabled = true;
         if (col) col.enabled = true;
         isBlocking = true;
-
-        float shieldDistance = 1f;
-
-        Vector2 playerPos = transform.parent.position;
-
-        // world-space placement
-        Vector3 pos = playerPos + dir * shieldDistance;
-        pos.z = transform.position.z;
-        transform.position = pos;
-
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
         CancelInvoke();
         Invoke(nameof(Deactivate), duration);
@@ -37,6 +45,7 @@ public class Shield : MonoBehaviour
         if (sr) sr.enabled = false;
         if (col) col.enabled = false;
         isBlocking = false;
+        loadoutState.SetSpeed(1f);
     }
     void OnTriggerEnter2D(Collider2D other)
     {
