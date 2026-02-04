@@ -131,7 +131,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5209262545980696222}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -246,6 +246,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DamageZone
   sr: {fileID: 4886798263634326035}
   col: {fileID: 6837482150020284487}
+  knockBack: 0
 --- !u!1 &6164719104617455019
 GameObject:
   m_ObjectHideFlags: 0
@@ -321,6 +322,7 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: d6d78ef127fd4d543ba867404f882bfd, type: 2}
   _agent: {fileID: 4762585678125782601}
   _attack: {fileID: 8656635374281543014}
+  _protect: {fileID: 0}
   _currentHealth: 0
 --- !u!114 &8131901137409769011
 MonoBehaviour:
