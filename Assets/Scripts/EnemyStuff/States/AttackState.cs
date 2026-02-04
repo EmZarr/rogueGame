@@ -67,7 +67,6 @@ public class AttackState : BaseState
         
         if (_enemy._data.enemyType == EnemyType.Guardian && dist < _enemy.GetChaseRange() && _enemy.canProtect)
         {
-            Debug.Log("Hello attack?");
             return new ProtectState(_enemy); 
         }
         
