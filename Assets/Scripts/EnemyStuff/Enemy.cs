@@ -36,11 +36,10 @@ public class Enemy : MonoBehaviour
     private void Update()
     {
         // For combat back
-        /*if (_player == null)
+        if (_player == null)
         {
             _player = GameObject.FindWithTag("Player");
-        }*/
-
+        }
         if (RemainingStunDuration > 0f)
         {
             RemainingStunDuration -= Time.deltaTime;

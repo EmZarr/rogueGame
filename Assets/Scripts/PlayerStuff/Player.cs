@@ -18,7 +18,7 @@ public class Player : MonoBehaviour
     private float _stunDuration = 1f;
     private bool _isDealingDmg = false;
     private float _damage = 5f;
-    private float _parryStunDuration = 1f;
+    private float _parryStunDuration = 10f;
 
 
     bool _isRespawning;
@@ -32,7 +32,7 @@ public class Player : MonoBehaviour
     {
         if (_isInvinsible) return;
 
-        bool shieldIntercepts = attacker != null && AttackLineHitsShield(attacker);
+        bool shieldIntercepts = attacker != null && AttackLineHitsShield(attacker.transform);
 
         if (_shield.isParrying && shieldIntercepts)
         {
@@ -41,6 +41,7 @@ public class Player : MonoBehaviour
             if (enemy != null)
             {
                 enemy.ApplyStun(_parryStunDuration);
+                Debug.Log("Stunned");
             }
             return;
         }
@@ -135,14 +136,14 @@ public class Player : MonoBehaviour
         }
     }
 
-    private bool AttackLineHitsShield(GameObject attacker)
+    private bool AttackLineHitsShield(Transform attacker)
     {
         if (_shield == null) return false;
 
         var shieldCol = _shield.GetComponent<Collider2D>();
         if (shieldCol == null) return false;
 
-        Vector2 from = attacker.transform.position;
+        Vector2 from = attacker.position;
         Vector2 to = transform.position;
 
         RaycastHit2D hit = Physics2D.Linecast(from, to, _shieldMask);

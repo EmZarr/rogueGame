@@ -30,6 +30,7 @@ public class StunnedState : BaseState
 
     public override void Execute()
     {
+        Debug.Log("fuck i am stunned");
         // intentionally empty
     }
 

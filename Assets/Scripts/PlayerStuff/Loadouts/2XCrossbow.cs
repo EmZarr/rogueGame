@@ -65,8 +65,8 @@ public GameObject DefenseProjectile;
 
         //Debug.DrawLine(origin, origin + dir * 20f, Color.red, 2.5f);
 
-        int playerLayer = LayerMask.NameToLayer("default");
-        int mask = LayerMask.GetMask("Terrain");
+        //int playerLayer = LayerMask.NameToLayer("default");
+        int mask = LayerMask.GetMask("Wall");
 
         RaycastHit2D hit = Physics2D.Raycast(
             origin,
@@ -93,7 +93,7 @@ public GameObject DefenseProjectile;
                 counter += Time.deltaTime/dashDuration;
                 if (counter > 0.1f)
                 {
-                    yield return LightAttackAttack(mousePos);
+                    yield return LightAttackAttack(-mousePos);
                     counter = 0f;
                 }
                 
