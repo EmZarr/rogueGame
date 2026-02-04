@@ -54,7 +54,7 @@ public class AutoCreateDirectionalClips
 
                 AssetDatabase.CreateAsset(
                     clip,
-                    $"Assets/PlayerAnim/Ranger/Defensive_{dirNames[d]}.anim"
+                    $"Assets/PlayerAnim/Ranger/die/Die_{dirNames[d]}.anim"
                 );
             }
         }
