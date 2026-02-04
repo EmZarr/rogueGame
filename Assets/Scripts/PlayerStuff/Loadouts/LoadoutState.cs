@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
+using static PlayerAnimDriver;
 public class LoadoutState : MonoBehaviour
 {
 
@@ -174,16 +175,19 @@ public class LoadoutState : MonoBehaviour
 
     void OnLoadout1(InputAction.CallbackContext ctx)
     {
+        anim.EquipWeapon(WeaponId.Bow);
         loadout = new TwoCrossbow(player);
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
     {
+        anim.EquipWeapon(WeaponId.Shield);
         loadout = new SwordAndShield(player);
     }
 
     void OnLoadout3(InputAction.CallbackContext ctx)
     {
+        anim.EquipWeapon(WeaponId.Dual);
         loadout = new DualSwords(player);
     }
 
@@ -300,7 +304,7 @@ public class LoadoutState : MonoBehaviour
         }
 
         // Wait until the animator
-        while (animator.GetCurrentAnimatorStateInfo(0).IsTag(stateTag))
+        while (!animator.GetCurrentAnimatorStateInfo(0).IsTag(stateTag))
             yield return null;
 
         // read clip length
