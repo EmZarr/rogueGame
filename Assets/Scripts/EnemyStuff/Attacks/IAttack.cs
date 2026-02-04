@@ -45,7 +45,7 @@ public abstract class IAttack : MonoBehaviour
         yield return _attackSpeed;
     }
 
-    protected void TransformFacePlayer(Transform toMoveAndRotate, float distance, float angleOffset = 90f)
+    protected void TransformFacePlayer(Transform toMoveAndRotate, float distance, float angleOffset = 90f, float turnSpeedDegPerSec = 0f)
     {
         if (_player == null || toMoveAndRotate == null)
             return;
@@ -66,10 +66,33 @@ public abstract class IAttack : MonoBehaviour
         // Position at distance from parent
         Vector3 pos = parent.position + (Vector3)(dir * distance);
         pos.z = toMoveAndRotate.position.z;
-        toMoveAndRotate.position = pos;
+        if (turnSpeedDegPerSec <= 0f)
+        {
+            toMoveAndRotate.position = pos;
+        }
+        else
+        {
+            toMoveAndRotate.position = Vector3.MoveTowards(
+                toMoveAndRotate.position,
+                pos,
+                turnSpeedDegPerSec * 0.1f * Time.deltaTime
+            );
+        }
 
         // Rotate to face player
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        toMoveAndRotate.rotation = Quaternion.Euler(0f, 0f, angle + angleOffset);
+        Quaternion targetRot = Quaternion.Euler(0f, 0f, angle + angleOffset);
+        if (turnSpeedDegPerSec <= 0f)
+        {
+            toMoveAndRotate.rotation = targetRot;
+        }
+        else
+        {
+            toMoveAndRotate.rotation = Quaternion.RotateTowards(
+                toMoveAndRotate.rotation,
+                targetRot,
+                turnSpeedDegPerSec * Time.deltaTime
+            );
+        }
     }
 }

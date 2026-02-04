@@ -104,7 +104,7 @@ GameObject:
   - component: {fileID: 1742820501312077218}
   - component: {fileID: 8015560544145626414}
   - component: {fileID: 5592875544006121440}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: RangedEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -179,6 +179,8 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: 5f6da02dd3702814e9a5362f93bdb9ab, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: 8015560544145626414}
+  _protect: {fileID: 0}
+  _currentHealth: 0
 --- !u!114 &1742820501312077218
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -205,7 +207,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RangedAttack
   _data: {fileID: 11400000, guid: 5f6da02dd3702814e9a5362f93bdb9ab, type: 2}
-  _player: {fileID: 3659499712336200475, guid: e9d91d9f7bab5f04cb88ef13f2d5ff43, type: 3}
   _projectilePrefab: {fileID: 1122049480233533574, guid: fe01ea3663cf42740b555c30fad28145, type: 3}
 --- !u!195 &5592875544006121440
 NavMeshAgent:

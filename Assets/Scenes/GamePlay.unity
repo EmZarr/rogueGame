@@ -1083,7 +1083,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraFollowCinematic
   playerTag: Player
   followSmoothTime: 0.2
-  cameraZOffset: -25
+  cameraZOffset: -15
   deathPauseDuration: 0.8
   travelDuration: 1.2
   deathZoomTarget: 15

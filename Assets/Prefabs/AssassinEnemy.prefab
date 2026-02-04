@@ -242,6 +242,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DamageZone
   sr: {fileID: 461630458731903065}
   col: {fileID: 4964859151057227402}
+  knockBack: 0
 --- !u!1 &6164719104617455019
 GameObject:
   m_ObjectHideFlags: 0
@@ -256,7 +257,7 @@ GameObject:
   - component: {fileID: 8131901137409769011}
   - component: {fileID: 2066148114121953172}
   - component: {fileID: 8758907191841120201}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: AssassinEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -317,6 +318,7 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: a6ac537dca4f7fd4282b9c66b2bc6901, type: 2}
   _agent: {fileID: 4762585678125782601}
   _attack: {fileID: 2066148114121953172}
+  _protect: {fileID: 0}
   _currentHealth: 0
 --- !u!114 &8131901137409769011
 MonoBehaviour:

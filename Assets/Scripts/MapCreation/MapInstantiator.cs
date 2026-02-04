@@ -87,7 +87,7 @@ public class MapInstantiator : MonoBehaviour
 
                         spawnedObjects.Add(
                             Instantiate(
-                                enemyPrefabs[prefabIndex],
+                                enemyPrefabs[2],
                                 tilemapGround.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )

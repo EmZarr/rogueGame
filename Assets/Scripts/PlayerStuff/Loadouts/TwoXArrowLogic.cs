@@ -11,20 +11,17 @@ public class TwoXArrowLogic : MonoBehaviour
     float _deathTime;
     float _damage;
 
-    Vector2 _mousePos;
-
     bool active = false;
 
     bool _reflected = false;
 
-    public void Init(float damage, Vector2 mousePos, bool heavy, bool reflected)
+    public void Init(float damage, Vector2 dir, bool heavy, bool reflected)
     {
         _damage = damage;
-        _mousePos = mousePos;
         active = true;
         _reflected = reflected;
         SetDeathTime();
-        _dir = (_mousePos - (Vector2)transform.position).normalized;
+        _dir = dir;
 
         // Rotate projectile to face direction of travel
         float angle = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;

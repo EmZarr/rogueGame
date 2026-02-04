@@ -1,60 +1,126 @@
 using System;
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class GuardianProtectZone : MonoBehaviour
+public class GuardianProtectZone : DamageZone
 {
-    [SerializeField] private SpriteRenderer sr;
-    [SerializeField] private Collider2D col;
-
-    private float _duration;
-
-    private Action _onFinished;
 
     private GameObject _player;
 
-    public void Activate(float duration, float delay, Action onFinished = null)
+    private bool _animating;
+
+    private void Start()
     {
-        _duration = duration;
-        _onFinished = onFinished;
         _player = GameObject.FindWithTag("Player");
-
-        if (sr) sr.enabled = true;
-        SetAlpha(0.1f);
-
-        CancelInvoke();
-        Invoke(nameof(DealDamage), delay);
+        _dmg = 5f;
     }
 
-    private void DealDamage()
+    private void Update()
     {
-        SetAlpha(1f);
-        if (col) col.enabled = true;
-
-        CancelInvoke();
-        Invoke(nameof(Deactivate), _duration);
+        _hit = false;
+        UpdateFacingTransform(1.3f, 40f);
     }
-
-    private void Deactivate()
+    protected override void OnTriggerEnter2D(Collider2D other)
     {
-        if (sr) sr.enabled = false;
-        if (col) col.enabled = false;
+        var player = other.GetComponent<Player>();
+        if (player != null)
+        {
+            player.TakeDamage(_dmg, transform.parent.gameObject);
 
-        _onFinished?.Invoke();
-    }
+            if (knockBack)
+            {
+                var direction = other.transform.position - transform.position;
+                player.GetKnockedBack(direction, 4.0f);
+            }
 
-    void OnTriggerEnter2D(Collider2D other)
-    {
+            if (!_animating)
+            {
+                Vector2 hitDir = (other.transform.position - transform.position).normalized;
+                StartCoroutine(ShieldPush(hitDir));
+            }
+            _hit = true;
+        }
+
         var projectile = other.GetComponent<TwoXArrowLogic>();
         if (projectile != null)
         {
-            projectile.Init(5f, (Vector2) _player.transform.position, false, true);
+            projectile.Init(
+                5f,
+                (_player.transform.position - transform.position).normalized,
+                false,
+                true
+            );
         }
     }
 
-     private void SetAlpha(float a)
+
+    private IEnumerator ShieldPush(Vector2 direction)
     {
-        var c = sr.color;
-        c.a = a;
-        sr.color = c;
+        _animating = true;
+        var startPos = transform.localPosition;
+        Vector3 pushOffset = (Vector3)direction * 0.6f;
+        Vector3 targetPos = startPos + pushOffset;
+
+        float t = 0f;
+
+        // Push forward
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.1f;
+            transform.localPosition = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        t = 0f;
+
+        // Pull back
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.1f;
+            transform.localPosition = Vector3.Lerp(targetPos, startPos, t);
+            yield return null;
+        }
+
+        transform.localPosition = startPos;
+        _animating = false;
     }
+
+    private void UpdateFacingTransform(
+    float fixedDistance,
+    float turnSpeedDegreesPerSecond)
+    {
+        Transform parent = transform.parent;
+
+        if (!transform || !parent || !_player)
+            return;
+
+        Vector2 toPlayer = (Vector2)(_player.transform.position - parent.position);
+        if (toPlayer.sqrMagnitude < 0.00001f)
+            return;
+
+        // Desired angle around Z
+        float targetAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
+
+        // Current angle based on current position around parent
+        Vector2 fromParent = (Vector2)(transform.position - parent.position);
+        float currentAngle = Mathf.Atan2(fromParent.y, fromParent.x) * Mathf.Rad2Deg;
+
+        // Turn with speed limit
+        float newAngle = Mathf.MoveTowardsAngle(
+            currentAngle,
+            targetAngle,
+            turnSpeedDegreesPerSecond * Time.deltaTime
+        );
+
+        // Maintain fixed distance from parent
+        Vector2 offset = new Vector2(
+            Mathf.Cos(newAngle * Mathf.Deg2Rad),
+            Mathf.Sin(newAngle * Mathf.Deg2Rad)
+        ) * fixedDistance;
+
+        transform.position = (Vector2)parent.position + offset;
+        transform.rotation = Quaternion.Euler(0f, 0f, newAngle + 90f);
+    }
+
 }

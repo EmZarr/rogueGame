@@ -142,6 +142,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DamageZone
   sr: {fileID: 4519643231527515962}
   col: {fileID: 4011872346071171345}
+  knockBack: 0
 --- !u!1 &2811616041619152791
 GameObject:
   m_ObjectHideFlags: 0
@@ -246,7 +247,7 @@ GameObject:
   - component: {fileID: 1742820501312077218}
   - component: {fileID: 5592875544006121440}
   - component: {fileID: 3861260130231522777}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: BomberEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -322,6 +323,8 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: 3bb79e397f97b114c8da357204431d18, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: 3861260130231522777}
+  _protect: {fileID: 0}
+  _currentHealth: 0
 --- !u!114 &1742820501312077218
 MonoBehaviour:
   m_ObjectHideFlags: 0

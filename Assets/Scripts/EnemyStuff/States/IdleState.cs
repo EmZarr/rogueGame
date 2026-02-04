@@ -70,6 +70,10 @@ public class IdleState : BaseState
             {
                 return new OutflankState(_enemy);
             }
+            else if (_enemy._data.enemyType == EnemyType.Guardian)
+            {
+                return new ProtectState(_enemy);
+            }
             else
             {
                 return new GetInRangeState(_enemy);
