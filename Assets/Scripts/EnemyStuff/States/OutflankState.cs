@@ -88,10 +88,8 @@ public class OutflankState : BaseState
             return new AttackState(_enemy);
         }
 
-        float dist = Vector2.Distance(
-            _agent.transform.position,
-            _player.transform.position
-        );
+        Debug.Log(_player);
+        float dist = Vector2.Distance(_agent.transform.position, _player.transform.position);
 
         if (dist > _enemy.GetChaseRange())
             return new IdleState(_enemy);

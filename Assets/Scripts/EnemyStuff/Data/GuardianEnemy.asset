@@ -19,6 +19,6 @@ MonoBehaviour:
   attackDelay: 1
   damage: 5
   protectCooldown: 5
-  enemyType: 3
+  enemyType: 4
   wanderRadius: 4
   wanderWaitRange: {x: 2, y: 4}
