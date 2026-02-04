@@ -1,60 +1,82 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
-public class GuardianProtectZone : MonoBehaviour
+public class GuardianProtectZone : DamageZone
 {
-    [SerializeField] private SpriteRenderer sr;
-    [SerializeField] private Collider2D col;
-
-    private float _duration;
-
-    private Action _onFinished;
 
     private GameObject _player;
 
-    public void Activate(float duration, float delay, Action onFinished = null)
+    private bool _animating;
+
+    private void Start()
     {
-        _duration = duration;
-        _onFinished = onFinished;
         _player = GameObject.FindWithTag("Player");
-
-        if (sr) sr.enabled = true;
-        SetAlpha(0.1f);
-
-        CancelInvoke();
-        Invoke(nameof(DealDamage), delay);
     }
 
-    private void DealDamage()
+
+    protected override void OnTriggerEnter2D(Collider2D other)
     {
-        SetAlpha(1f);
-        if (col) col.enabled = true;
+        var player = other.GetComponentInParent<Player>();
+        if (player != null)
+        {
+            player.TakeDamage(_dmg, transform.parent.gameObject);
 
-        CancelInvoke();
-        Invoke(nameof(Deactivate), _duration);
-    }
+            if (knockBack)
+            {
+                var direction = other.transform.position - transform.position;
+                player.GetKnockedBack(direction, 4.0f);
+            }
 
-    private void Deactivate()
-    {
-        if (sr) sr.enabled = false;
-        if (col) col.enabled = false;
+            if (!_animating)
+            {
+                Vector2 hitDir = (other.transform.position - transform.position).normalized;
+                StartCoroutine(ShieldPush(hitDir));
+            }
+        }
 
-        _onFinished?.Invoke();
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
         var projectile = other.GetComponent<TwoXArrowLogic>();
         if (projectile != null)
         {
-            projectile.Init(5f, (Vector2) _player.transform.position, false, true);
+            projectile.Init(
+                5f,
+                (Vector2)_player.transform.position,
+                false,
+                true
+            );
         }
     }
 
-     private void SetAlpha(float a)
+
+    private IEnumerator ShieldPush(Vector2 direction)
     {
-        var c = sr.color;
-        c.a = a;
-        sr.color = c;
+        _animating = true;
+        var startPos = transform.localPosition;
+        Vector3 pushOffset = (Vector3)direction * 0.6f;
+        Vector3 targetPos = startPos + pushOffset;
+
+        float t = 0f;
+
+        // Push forward
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.1f;
+            transform.localPosition = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
+
+        t = 0f;
+
+        // Pull back
+        while (t < 1f)
+        {
+            t += Time.deltaTime / 0.1f;
+            transform.localPosition = Vector3.Lerp(targetPos, startPos, t);
+            yield return null;
+        }
+
+        transform.localPosition = startPos;
+        _animating = false;
     }
+
 }
