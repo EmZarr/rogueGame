@@ -25,5 +25,6 @@ public enum EnemyType{
     Melee,
     Ranged,
     Bomber,
+    Assassin,
     Guardian
 }

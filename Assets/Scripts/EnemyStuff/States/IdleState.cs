@@ -65,7 +65,16 @@ public class IdleState : BaseState
             return this;
 
         if (Vector3.Distance(_agent.transform.position, _player.transform.position) < _enemy.GetChaseRange())
-            return new GetInRangeState(_enemy);
+        {
+            if (_enemy._data.enemyType == EnemyType.Assassin)
+            {
+                return new OutflankState(_enemy);
+            }
+            else
+            {
+                return new GetInRangeState(_enemy);
+            }
+        }
 
         return this;
     }
