@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Interactions;
@@ -9,15 +10,21 @@ public class LoadoutState : MonoBehaviour
 
     [SerializeField] private PlayerAnimDriver anim;
 
-    public enum ActionAnim
+    private enum ActionType { AttackLight, AttackHeavy, DashLight, DashHeavy, Defense }
+
+    private struct BufferedAction
     {
-        None,
-        LightAttack,
-        HeavyAttack,
-        Dash,
-        Block
+        public ActionType type;
+        public Vector2 mousePos;
+        public Vector2 vel;     // for dash light
+        public float time;      // when it was queued
     }
 
+    [Header("Input Buffer")]
+    [SerializeField] private float bufferWindow = 0.20f; // 200ms is typical
+    private readonly Queue<BufferedAction> buffer = new Queue<BufferedAction>(4);
+    private Coroutine actionRunner;
+    private Coroutine dashLockRoutine;
 
     [Header("Movement")]
     public float maxSpeed = 8f;
@@ -41,8 +48,6 @@ public class LoadoutState : MonoBehaviour
     private float nextDefTime;
     private float nextDashTime;
 
-    private Coroutine dashLockRoutine;
-
 
     [Header("Input (assign from your Controls asset)")]
     public InputActionReference move;   // Gameplay/Move (Vector2)
@@ -65,6 +70,62 @@ public class LoadoutState : MonoBehaviour
     void Start()
     {
         loadout = new LoadoutBase(player);
+    }
+
+    private void EnqueueAction(BufferedAction a)
+    {
+        // throw away stale requests if queue gets spammy
+        if (buffer.Count >= 4) buffer.Dequeue();
+        buffer.Enqueue(a);
+
+        if (actionRunner == null)
+            actionRunner = StartCoroutine(RunBufferedActions());
+    }
+
+    private IEnumerator RunBufferedActions()
+    {
+        while (buffer.Count > 0)
+        {
+            var a = buffer.Dequeue();
+
+            // Expire old inputs (prevents "I pressed dash 2 seconds ago")
+            if (Time.time - a.time > bufferWindow)
+                continue;
+
+            // Wait until we're free
+            while (blockedActions) yield return null;
+
+            // Execute one
+            blockedActions = true;
+            float duration;
+
+            switch (a.type)
+            {
+                case ActionType.AttackLight:
+                    yield return RunAction(loadout.GetLightAttackDuration(), loadout.LightAttack(mousePos), ActionType.LightAttack, "Attack");
+                    break;
+
+                case ActionType.AttackHeavy:
+                    yield return RunAction(loadout.GetHeavyAttackDuration(), loadout.HeavyAttack(mousePos), ActionType.HeavyAttack, "Special");
+                    break;
+
+                case ActionType.DashLight:
+                    yield return DoDash(heavy: false, a.vel, a.mousePos);
+                    break;
+
+                case ActionType.DashHeavy:
+                    yield return DoDash(heavy: true, a.vel, a.mousePos);
+                    break;
+
+                case ActionType.Defense:
+                    yield return loadout.Defense(a.mousePos);
+                    break;
+            }
+
+            blockedActions = false;
+        }
+
+        actionRunner = null;
     }
 
     void OnEnable()
@@ -129,47 +190,22 @@ public class LoadoutState : MonoBehaviour
 
     void OnAttack(InputAction.CallbackContext ctx)
     {
-        if (blockedActions) return;
-        blockedActions = true;
-        if (ctx.interaction is HoldInteraction)
-            StartCoroutine(DoAttack(true));
-        else if (ctx.interaction is TapInteraction)
-            StartCoroutine(DoAttack(false));
-    }
+        // Decide heavy/light immediately, queue it with the mousePos snapshot
+        bool heavy = ctx.interaction is HoldInteraction;
 
-    IEnumerator DoAttack(bool heavy)
-    {
-        float duration;
-        IEnumerator gameplay;
-        ActionAnim animType;
-        string tag;
-
-        if (heavy)
+        EnqueueAction(new BufferedAction
         {
-            duration = loadout.GetHeavyAttackDuration();
-            gameplay = loadout.HeavyAttack(mousePos);
-            animType = ActionAnim.HeavyAttack;
-            tag = "Special";
-        }
-        else
-        {
-            duration = loadout.GetLightAttackDuration();
-            gameplay = loadout.LightAttack(mousePos);
-            animType = ActionAnim.LightAttack;
-            tag = "Attack";
-        }
-
-        yield return RunAction(duration, gameplay, animType, tag);
+            type = heavy ? ActionType.AttackHeavy : ActionType.AttackLight,
+            mousePos = mousePos,
+            vel = vel,
+            time = Time.time
+        });
     }
 
     void OnDashStarted(InputAction.CallbackContext ctx)
     {
-        if (blockedActions) return;
         dashHeld = true;
-
         dashPressTime = Time.time;
-
-        blockedActions = true;
         dashLockRoutine = StartCoroutine(LockMovementAfterDelay());
     }
     IEnumerator LockMovementAfterDelay()
@@ -194,11 +230,18 @@ public class LoadoutState : MonoBehaviour
             dashLockRoutine = null;
         }
         bool heavy = (Time.time - dashPressTime) >= heavyDashHoldTime;
-        StartCoroutine(DoDash(heavy));
+
+        EnqueueAction(new BufferedAction
+        {
+            type = heavy ? ActionType.DashHeavy : ActionType.DashLight,
+            mousePos = mousePos,
+            vel = vel,       // snapshot velocity for light dash
+            time = Time.time
+        });
     }
 
 
-    IEnumerator DoDash(bool heavy)
+    IEnumerator DoDash(bool heavy, Vector2 velAtTime, Vector2 mousePosAtTime)
     {
         try
         {
@@ -209,6 +252,8 @@ public class LoadoutState : MonoBehaviour
                     yield break;
 
                 nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
+                yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(transform, mousePos) , ActionAnim.Dash, "Dash");
+                yield return loadout.HeavyDash(transform, mousePosAtTime);
             }
             else
             {
@@ -216,31 +261,15 @@ public class LoadoutState : MonoBehaviour
                     yield break;
 
                 nextDashTime = Time.time + loadout.getLightDashCD();
+                yield return RunAction(loadout.GetLightDashDuration(), loadout.LightDash(vel, transform, mousePos), ActionAnim.Dash, "Dash");
+                yield return loadout.LightDash(velAtTime, transform, mousePosAtTime);
             }
-
-            blockedMovement = true;
-
-            float duration = heavy ? loadout.GetHeavyDashDuration()
-                                   : loadout.GetLightDashDuration();
-
-            IEnumerator gameplay = heavy ? loadout.HeavyDash(transform, mousePos) : loadout.LightDash(vel, transform, mousePos);
-
-            yield return RunAction(duration, gameplay, ActionAnim.Dash, "Dash");
         }
         finally
         {
             blockedMovement = false;
-            blockedActions = false;
-
-            // also cancel the delayed movement lock if it was started
-            if (dashLockRoutine != null)
-            {
-                StopCoroutine(dashLockRoutine);
-                dashLockRoutine = null;
-            }
-
             // make sure InAction isn't stuck on
-            anim.SetInAction(false);
+            //anim.SetInAction(false);
         }
     }
 
@@ -249,34 +278,33 @@ public class LoadoutState : MonoBehaviour
     void OnDefense(InputAction.CallbackContext ctx)
     {
         if (blockedActions || Time.time < nextDefTime) return;
-        blockedActions = true;
-
-        StartCoroutine(DoDefense());
-    }
-
-    IEnumerator DoDefense()
-    {
+        EnqueueAction(new BufferedAction
+        {
+            type = ActionType.Defense,
+            mousePos = mousePos,
+            vel = vel,
+            time = Time.time
+        });
         nextDefTime = Time.time + loadout.getDefenseCD();
-
         float duration = loadout.GetDefenseDuration();
         IEnumerator gameplay = loadout.Defense(mousePos);
 
-        yield return RunAction(duration, gameplay, ActionAnim.Block, "Defense");
+        yield return RunAction(duration, gameplay, ActionAnim.Defense, "Defense");
     }
 
-    IEnumerator RunAction(float duration, IEnumerator gameplayRoutine, ActionAnim animToPlay, string stateTag)
+    IEnumerator RunAction(float duration, IEnumerator gameplayRoutine, ActionType animToPlay, string stateTag)
     {
-        blockedActions = true;
         anim.SetInAction(true);
         Animator animator = anim.GetAnimator();
 
         // Fire animation trigger
         switch (animToPlay)
         {
-            case ActionAnim.LightAttack: anim.TriggerAttack(); break;
-            case ActionAnim.HeavyAttack: anim.TriggerSpecial(); break;
-            case ActionAnim.Dash: anim.TriggerDash(); break;
-            case ActionAnim.Block: anim.TriggerDefense(); break;
+            case ActionType.LightAttack: anim.TriggerAttack(); break;
+            case ActionType.HeavyAttack: anim.TriggerSpecial(); break;
+            case ActionType.DashLight: anim.TriggerDash(); break;
+            case ActionType.DashHeavy: anim.TriggerDash(); break;
+            case ActionType.Defense: anim.TriggerDefense(); break;
         }
 
         // Wait until the animator
@@ -306,7 +334,6 @@ public class LoadoutState : MonoBehaviour
 
         animator.speed = prevSpeed;
         anim.SetInAction(false);
-        blockedActions = false;
     }
 
 
