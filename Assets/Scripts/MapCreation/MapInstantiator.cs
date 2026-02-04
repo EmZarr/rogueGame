@@ -83,7 +83,7 @@ public class MapInstantiator : MonoBehaviour
                         tilemapGround.SetTile(cell, groundTileGrass1);
 
                         int prefabIndex = Random.value < 0.5f ? 1 : 2;
-                        prefabIndex = 1;
+                        prefabIndex = 3;
 
                         spawnedObjects.Add(
                             Instantiate(
