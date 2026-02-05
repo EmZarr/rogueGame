@@ -62,7 +62,7 @@ public class AttackState : BaseState
 
         if(_enemy._data.enemyType == EnemyType.Ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
         {
-            return new DashState(_enemy);
+            _enemy.Dash();
         }
         
         if (!_attackInProgress && (dist > _enemy.GetAttackRange() || !_enemy.GetAttack().IsReady()))

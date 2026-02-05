@@ -119,7 +119,6 @@ public class Enemy : MonoBehaviour
             direction = ((Vector2) (Quaternion.Euler(0, 0, i) * baseDirection)).normalized;
             start = (Vector2) transform.position - baseDirection*1.5f;
             end = (Vector2) transform.position + (direction * maxDashLenght);
-            //Debug.DrawLine(start, start + direction * 10f, Color.green, 1.0f);
             int mask = LayerMask.GetMask("Wall");
 
             RaycastHit2D hit = Physics2D.Raycast(
@@ -131,34 +130,24 @@ public class Enemy : MonoBehaviour
 
             if (hit.collider != null)
             {
-                Debug.Log("hello?");
                 end = hit.point;
             } 
-            Debug.DrawLine(start, end, Color.red, 3.0f);
             var distance = Vector2.Distance((Vector2)_player.transform.position, end);
             if (distance > dashDistance)
             {
-                Debug.Log(direction);
                 dashDistance = distance;
                 finalEnd = (Vector3)end;
             }
         }
         start = transform.position;
         end = finalEnd;
-
-        if (dashDistance < 4.0f)
+        
+        if (Vector2.Distance((Vector2)transform.position, end) < 4.0f)
         {
             _agent.enabled = true;
             canDash = true;
         }
-
         else {
-        Debug.DrawLine(start, end, Color.purple, 1.5f);
-        /*NavMeshHit navHit;
-        if (NavMesh.Raycast(start, end, out navHit, NavMesh.AllAreas)) 
-        { 
-            end = navHit.position; 
-        }*/ 
 
         float t = 0f;
         while (t < 1f)

@@ -41,7 +41,7 @@ public class GetInRangeState : BaseState
 
         if(_enemy._data.enemyType == EnemyType.Ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
         {
-            return new DashState(_enemy);
+            _enemy.Dash();
         }
         if (dist > _enemy.GetChaseRange())
             return new IdleState(_enemy);
