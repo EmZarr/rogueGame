@@ -19,6 +19,10 @@ public class GuardianProtectZone : DamageZone
     private void Update()
     {
         _hit = false;
+        if (_player == null)
+        {
+            _player = GameObject.FindWithTag("Player");
+        }
         UpdateFacingTransform(1.3f, 40f);
     }
     protected override void OnTriggerEnter2D(Collider2D other)

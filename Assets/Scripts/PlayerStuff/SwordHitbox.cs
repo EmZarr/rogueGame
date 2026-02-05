@@ -34,9 +34,10 @@ public class SwordHitbox : MonoBehaviour
             Debug.Log("blocked");
         }
         else {
-        var enemy = other.GetComponentInParent<Enemy>();
-        if (enemy != null && hit.Add(enemy))
-            enemy.TakeDamage(damage);
+            Debug.Log("why damage?");
+            var enemy = other.GetComponentInParent<Enemy>();
+            if (enemy != null && hit.Add(enemy))
+                enemy.TakeDamage(damage);
         }
     }
 }
