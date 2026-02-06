@@ -31,6 +31,8 @@ public class LoadoutState : MonoBehaviour
 
     [Header("Movement")]
     public float maxSpeed = 8f;
+
+    public float baseSpeed = 8f;
     public float accel = 100f;
     public float decel = 100f;
 
@@ -401,6 +403,16 @@ public class LoadoutState : MonoBehaviour
     public void SetSpeed(float speedProcent)
     {
         currentSpeed = speedProcent * maxSpeed;
+    }
+
+    public void IncreaseMaxSpeed(float amountPercent)
+    {
+        maxSpeed += baseSpeed * 0.01f * amountPercent;
+    }
+
+    public LoadoutBase GetLoadout()
+    {
+        return loadout;
     }
 
 
