@@ -53,14 +53,14 @@ public class MapInstantiator : MonoBehaviour
                     case 3:
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         spawnedObjects.Add(
-                            Instantiate(furnishingPrefabs[3], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                            Instantiate(furnishingPrefabs[4], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
 
                     case 4:
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         spawnedObjects.Add(
-                            Instantiate(furnishingPrefabs[3], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                            Instantiate(furnishingPrefabs[4], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
 

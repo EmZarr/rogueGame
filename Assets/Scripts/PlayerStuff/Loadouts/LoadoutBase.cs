@@ -24,6 +24,7 @@ public class LoadoutBase
     protected float _heavyDashCD = 5f;
     protected float _lightDashCD = 1f;
 
+
     protected Player _player;
 
     public LoadoutBase(Player player)
@@ -94,7 +95,7 @@ public class LoadoutBase
 
     public float getHeavyDashCD()
     {
-        return _heavyDashCD;
+        return _heavyDashCD * _player.HeavyDashCooldownDecrease > 0 ? _heavyDashCD * _player.HeavyDashCooldownDecrease : 0;
     }
 
     public float getDefenseCD()
@@ -111,6 +112,12 @@ public class LoadoutBase
     {
         return _heavyDamage *_player.BaseDamageAmp + _heavyDamage*_player.DamageAmp;
     }
+
+    public float getAttackSpeed()
+    {
+        return _attackSpeed * _player.AttackSpeedIncrease > 0 ? _attackSpeed * _player.AttackSpeedIncrease : 0;
+    }
+
 
     //override in subclasses
     public float GetLightAttackDuration() => _lightAttackDuration;
@@ -129,8 +136,8 @@ public class LoadoutBase
 
     public virtual float GetAttackCooldown(bool heavy)
     {
-        return heavy ? _heavyAttackDuration * _attackSpeed
-                     : _lightAttackDuration * _attackSpeed;
+        return heavy ? _heavyAttackDuration * getAttackSpeed()
+                     : _lightAttackDuration * getAttackSpeed();
     }
 
     protected IEnumerator MeleeAttack(Vector2 dir, GameObject mySword, SwordHitbox mySwordHitbox, float distance, bool isHeavy)

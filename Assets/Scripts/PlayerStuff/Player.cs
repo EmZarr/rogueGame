@@ -22,6 +22,10 @@ public class Player : MonoBehaviour
     public float DamageAmp = 0.0f;
     public float BaseDamageAmp = 1f;
 
+    public float AttackSpeedIncrease = 1f;
+
+    public float HeavyDashCooldownDecrease = 1f;
+
     private float _damageBoostDuration;
     private float _parryStunDuration = 10f;
 
@@ -205,6 +209,16 @@ public class Player : MonoBehaviour
              DamageAmp = 0f;
         }
         
+    }
+
+    public void IncreaseAttackSpeed(float percentIncrease)
+    {
+        AttackSpeedIncrease -= 0.01f*percentIncrease;
+    }
+
+    public void DecreaseHeavyDashCooldown(float percentDecrease)
+    {
+        HeavyDashCooldownDecrease -= 0.01f*percentDecrease;
     }
 
 

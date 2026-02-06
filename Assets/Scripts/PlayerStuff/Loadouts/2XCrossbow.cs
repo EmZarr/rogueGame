@@ -24,7 +24,7 @@ public GameObject DefenseProjectile;
     {
        
         yield return LightAttackAttack(direction);
-        yield return new WaitForSeconds(_attackSpeed);
+        yield return new WaitForSeconds(getAttackSpeed());
     }
 
     public IEnumerator LightAttackAttack(Vector2 direction)
@@ -46,7 +46,7 @@ public GameObject DefenseProjectile;
 
           yield return new WaitForSeconds(0.12f);
           }
-          yield return new WaitForSeconds(_attackSpeed);
+          yield return new WaitForSeconds(getAttackSpeed());
     }
 
     public override IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
