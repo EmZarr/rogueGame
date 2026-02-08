@@ -79,6 +79,8 @@ public class LoadoutState : MonoBehaviour
         loadout = new LoadoutBase(player);
         currentSpeed = maxSpeed;
         chargeUpBar = GameObject.FindWithTag("ChargeBar").GetComponent<ChargeUp>();
+        nextHeavyDashTime = Time.time;
+
     }
 
     private void EnqueueAction(BufferedAction a)
@@ -276,7 +278,7 @@ public class LoadoutState : MonoBehaviour
                 if (Time.time < nextHeavyDashTime)
                     yield break;
 
-                nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
+                nextHeavyDashTime = Time.time + loadout.GetHeavyDashCD2();
                 yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(getMouseDir(), transform) , ActionType.DashHeavy, "Dash");
             }
             else
@@ -415,5 +417,22 @@ public class LoadoutState : MonoBehaviour
         return loadout;
     }
 
+    public float GetDefCD()
+    {
+        if (nextDefTime - Time.time <= 0.0f)
+        {
+            return 0.0f;
+        }
+        else return nextDefTime - Time.time;
+    }
+
+    public float GetSpecialCD()
+    {
+        if (nextHeavyDashTime - Time.time <= 0.0f)
+        {
+            return 0.0f;
+        }
+        else return nextHeavyDashTime - Time.time;
+    }
 
 }

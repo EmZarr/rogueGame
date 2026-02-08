@@ -15,7 +15,6 @@ public GameObject DefenseProjectile;
     {
         ArrowProjectile = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<TwoXArrowLogic>().gameObject;
         DefenseProjectile = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<KnockBackDefense>().gameObject;
-        _attackSpeed = 0.5f;
         _lightDamage = 5f;
         _defenseDuration = 0.1f;
     }
@@ -24,11 +23,11 @@ public GameObject DefenseProjectile;
     {
        
         yield return LightAttackAttack(direction);
-        yield return new WaitForSeconds(getAttackSpeed());
     }
 
     public IEnumerator LightAttackAttack(Vector2 direction)
     {
+        yield return new WaitForSeconds(GetLightAttackWindup());
         GameObject arrowObj = UnityEngine.GameObject.Instantiate(ArrowProjectile, _player.transform.position, Quaternion.identity);
         var _arrowRenderer = arrowObj.GetComponent<SpriteRenderer>();
         var _arrowCollider = arrowObj.GetComponent<Collider2D>();
@@ -36,7 +35,7 @@ public GameObject DefenseProjectile;
         _arrowCollider.enabled = true;
         var arrow = arrowObj.GetComponent<TwoXArrowLogic>();
         arrow.Init(getLightDamage(), direction, false, false);
-        yield return null; 
+        yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
     }
 
     public override IEnumerator HeavyAttack(Vector2 direction)
@@ -46,7 +45,6 @@ public GameObject DefenseProjectile;
 
           yield return new WaitForSeconds(0.12f);
           }
-          yield return new WaitForSeconds(getAttackSpeed());
     }
 
     public override IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)

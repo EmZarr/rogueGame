@@ -1,20 +1,20 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class LoadoutBase
 {
 
     [Header("Left Click")]
     protected float _windupProcent = 0.4f;
-    protected float _lightAttackDuration = 0.3f;
+    protected float _lightAttackDuration = 0.5f;
     protected float _heavyAttackDuration = 1f;
     protected float _defenseDuration = 2f;
     protected float _lightDashDuration = 0.15f;
     protected float _HeavyDashDuration = 0.2f;
     protected float _lightDamage = 10f;
     protected float _heavyDamage = 20f;
-    protected float _attackSpeed = 0.5f;
 
     [Header("Right Click")]
     protected float _defCD = 2f;
@@ -93,9 +93,15 @@ public class LoadoutBase
         return _lightDashCD;
     }
 
+    // Wtf is this?
     public float getHeavyDashCD()
     {
         return _heavyDashCD * _player.HeavyDashCooldownDecrease > 0 ? _heavyDashCD * _player.HeavyDashCooldownDecrease : 0;
+    }
+
+    public float GetHeavyDashCD2()
+    {
+        return _heavyDashCD;
     }
 
     public float getDefenseCD()
@@ -105,23 +111,27 @@ public class LoadoutBase
 
     public float getLightDamage()
     {
-        return _lightDamage *_player.BaseDamageAmp + _lightDamage*_player.DamageAmp;
+        return _lightDamage * _player.BaseDamageAmp + _lightDamage * _player.DamageAmp;
     }
 
     public float getHeavyDamage()
     {
-        return _heavyDamage *_player.BaseDamageAmp + _heavyDamage*_player.DamageAmp;
+        return _heavyDamage * _player.BaseDamageAmp + _heavyDamage * _player.DamageAmp;
     }
 
-    public float getAttackSpeed()
+    /*public float getAttackSpeed()
     {
-        return _attackSpeed * _player.AttackSpeedIncrease > 0 ? _attackSpeed * _player.AttackSpeedIncrease : 0;
-    }
+        return _lightAttackDuration * _player.AttackSpeedIncrease > 0 ? _lightAttackDuration * _player.AttackSpeedIncrease : 0;
+    }*/
 
 
     //override in subclasses
-    public float GetLightAttackDuration() => _lightAttackDuration;
-    public float GetHeavyAttackDuration() => _heavyAttackDuration;
+    public float GetLightAttackDuration(){
+        return _lightAttackDuration * _player.AttackSpeedIncrease > 0 ? _lightAttackDuration * _player.AttackSpeedIncrease : 0;
+    }
+    public float GetHeavyAttackDuration(){
+        return _heavyAttackDuration * _player.AttackSpeedIncrease > 0 ? _heavyAttackDuration * _player.AttackSpeedIncrease : 0;
+    }
 
     public float GetTempDamageBoost() => _player.DamageAmp;
 
@@ -136,8 +146,8 @@ public class LoadoutBase
 
     public virtual float GetAttackCooldown(bool heavy)
     {
-        return heavy ? _heavyAttackDuration * getAttackSpeed()
-                     : _lightAttackDuration * getAttackSpeed();
+        return heavy ? GetHeavyAttackDuration()
+                     : GetLightAttackDuration();
     }
 
     protected IEnumerator MeleeAttack(Vector2 dir, GameObject mySword, SwordHitbox mySwordHitbox, float distance, bool isHeavy)
@@ -156,14 +166,14 @@ public class LoadoutBase
 
         if (isHeavy) {
             yield return new WaitForSeconds(GetHeavyAttackWindup());
-            mySwordHitbox.Activate(getHeavyDamage(), _heavyAttackDuration - GetHeavyAttackWindup());
-            yield return new WaitForSeconds(_heavyAttackDuration - GetHeavyAttackWindup());
+            mySwordHitbox.Activate(getHeavyDamage(), GetHeavyAttackDuration() - GetHeavyAttackWindup());
+            yield return new WaitForSeconds(GetHeavyAttackDuration() - GetHeavyAttackWindup());
         }
         else
         {
             yield return new WaitForSeconds(GetLightAttackWindup());
-            mySwordHitbox.Activate(getLightDamage(), _lightAttackDuration - GetLightAttackWindup());
-            yield return new WaitForSeconds(_lightAttackDuration - GetLightAttackWindup());
+            mySwordHitbox.Activate(getLightDamage(), GetLightAttackDuration() - GetLightAttackWindup());
+            yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
         }
     }
 }
