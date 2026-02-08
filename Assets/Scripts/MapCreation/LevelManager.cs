@@ -16,7 +16,7 @@ public class LevelManager : MonoBehaviour
     Vector3 _playerSpawnPos;
     Player _player;
     bool _hasSpawnPos;
-
+    public static System.Action<Player> OnPlayerSpawned;
 
 
     void Awake()
@@ -71,6 +71,7 @@ public class LevelManager : MonoBehaviour
 
     void CacheSpawnAndHookPlayer()
     {
+
         _player = FindFirstObjectByType<Player>();
 
         if (!_hasSpawnPos)
@@ -81,6 +82,8 @@ public class LevelManager : MonoBehaviour
 
         _player.OnDied -= HandlePlayerDied;
         _player.OnDied += HandlePlayerDied;
+
+        OnPlayerSpawned?.Invoke(_player);
     }
 
     void HandlePlayerDied(GameObject killer)

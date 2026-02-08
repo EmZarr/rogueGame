@@ -13,11 +13,15 @@ public class DualSwords : LoadoutBase
     float _heavyDashDamage = 30f;
 
     float _parryStunDuration = 3f;
+
+
     public DualSwords(Player player) : base(player)
     {
         _lightDamage = 5f;
-        _attackSpeed = 0.25f;
+        _lightAttackDuration = 0.25f;
+        _heavyAttackDuration = 0.5f;
         _lightDashCD = 0.5f;
+        _defenseDuration = 0.4f;
 
         _sword = GameObject.FindGameObjectWithTag("Sword");
         if (_sword != null)
