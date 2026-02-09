@@ -16,22 +16,31 @@ public class ChargeUp : MonoBehaviour
     {
         if (isCharging)
         {
-            chargeBar.fillAmount += Time.deltaTime*2.5f;
-            if(chargeBar.fillAmount == 1)
+            chargeBar.fillAmount += Time.deltaTime * 2.5f;
+            if (chargeBar.fillAmount == 1)
             {
                 chargeBar.color = Color.green;
+                SetAlpha(0.5f);
             }
         }
         else
         {
             chargeBar.fillAmount = 0;
             chargeBar.color = Color.red;
+            SetAlpha(0.5f);
         }
     }
 
     public void SetChargeBar(bool charging)
-    {   
+    {
         isCharging = charging;
+    }
+
+    private void SetAlpha(float a)
+    {
+        var c = chargeBar.color;
+        c.a = a;
+        chargeBar.color = c;
     }
 }
 
