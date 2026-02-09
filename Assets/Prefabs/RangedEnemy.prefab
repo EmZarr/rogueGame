@@ -57,7 +57,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 9c554c177c9f17644aeeb0b71b3f7cef, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: 1742820501312077218}
   - component: {fileID: 8015560544145626414}
   - component: {fileID: 5592875544006121440}
+  - component: {fileID: 7066976850885223926}
   m_Layer: 3
   m_Name: RangedEnemy
   m_TagString: Enemy
@@ -179,8 +180,8 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: 5f6da02dd3702814e9a5362f93bdb9ab, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: 8015560544145626414}
-  _protect: {fileID: 0}
   maxDashLenght: 10
+  damageFlash: {fileID: 7066976850885223926}
   _currentHealth: 0
 --- !u!114 &1742820501312077218
 MonoBehaviour:
@@ -231,3 +232,16 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &7066976850885223926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7378334077991207350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e600c198eb314134b8f66145a17e9ed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageFlash
+  spriteRenderer: {fileID: 7286621664527232927}

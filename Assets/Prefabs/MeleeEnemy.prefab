@@ -159,7 +159,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 9c554c177c9f17644aeeb0b71b3f7cef, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -363,6 +363,7 @@ GameObject:
   - component: {fileID: 8131901137409769011}
   - component: {fileID: 8656635374281543014}
   - component: {fileID: 8758907191841120201}
+  - component: {fileID: 561515353238132472}
   m_Layer: 3
   m_Name: MeleeEnemy
   m_TagString: Enemy
@@ -425,7 +426,8 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: d6d78ef127fd4d543ba867404f882bfd, type: 2}
   _agent: {fileID: 4762585678125782601}
   _attack: {fileID: 8656635374281543014}
-  _protect: {fileID: 0}
+  maxDashLenght: 0
+  damageFlash: {fileID: 561515353238132472}
   _currentHealth: 0
 --- !u!114 &8131901137409769011
 MonoBehaviour:
@@ -491,6 +493,19 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0.1}
   m_Size: {x: 1, y: 1.2}
   m_Direction: 0
+--- !u!114 &561515353238132472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6164719104617455019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e600c198eb314134b8f66145a17e9ed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageFlash
+  spriteRenderer: {fileID: 6726144923863972154}
 --- !u!1 &8775914392484871698
 GameObject:
   m_ObjectHideFlags: 0

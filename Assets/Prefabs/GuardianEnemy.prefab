@@ -57,7 +57,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 9c554c177c9f17644aeeb0b71b3f7cef, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -80,7 +80,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 3
   m_Sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
-  m_Color: {r: 0.45460925, g: 0, b: 0.94509804, a: 1}
+  m_Color: {r: 0.44044462, g: 0, b: 0.94509804, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -104,6 +104,7 @@ GameObject:
   - component: {fileID: 1742820501312077218}
   - component: {fileID: 5592875544006121440}
   - component: {fileID: -9058889810330493097}
+  - component: {fileID: 9023340267663624786}
   m_Layer: 0
   m_Name: GuardianEnemy
   m_TagString: Enemy
@@ -124,8 +125,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3239594776602672349}
   - {fileID: 1105000486004940107}
+  - {fileID: 3239594776602672349}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!70 &6647700377313793458
@@ -180,6 +181,8 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: ade2375e0cd870740a41c26fcb6d8e34, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: -9058889810330493097}
+  maxDashLenght: 0
+  damageFlash: {fileID: 9023340267663624786}
   _currentHealth: 0
 --- !u!114 &1742820501312077218
 MonoBehaviour:
@@ -229,7 +232,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GuardianAttack
   _data: {fileID: 11400000, guid: ade2375e0cd870740a41c26fcb6d8e34, type: 2}
-  guardianProtectZone: {fileID: 2871543362750780448}
+--- !u!114 &9023340267663624786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7378334077991207350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e600c198eb314134b8f66145a17e9ed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageFlash
+  spriteRenderer: {fileID: 7286621664527232927}
 --- !u!1 &8867156919391814894
 GameObject:
   m_ObjectHideFlags: 0
@@ -242,6 +257,7 @@ GameObject:
   - component: {fileID: 854464616306054891}
   - component: {fileID: 2211602437275344301}
   - component: {fileID: 2871543362750780448}
+  - component: {fileID: 30848921812841654}
   m_Layer: 0
   m_Name: ProtectZone
   m_TagString: Untagged
@@ -289,7 +305,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 9c554c177c9f17644aeeb0b71b3f7cef, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -387,3 +403,20 @@ MonoBehaviour:
   sr: {fileID: 854464616306054891}
   col: {fileID: 2211602437275344301}
   knockBack: 1
+  maxHealth: 30
+  healRate: 5
+  enemy: {fileID: 9205621224563281077}
+  _damageFlash: {fileID: 30848921812841654}
+--- !u!114 &30848921812841654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8867156919391814894}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e600c198eb314134b8f66145a17e9ed5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageFlash
+  spriteRenderer: {fileID: 854464616306054891}

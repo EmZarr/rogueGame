@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
 {
     [SerializeField] float _health = 100;
     [SerializeField] private LayerMask _shieldMask;
+    [SerializeField] DamageFlash _flash;
     Shield _shield;
     UI _ui;
     float _score = 0;
@@ -59,6 +60,7 @@ public class Player : MonoBehaviour
         {
             return;
         }
+        _flash.Flash();
         _health -= damage;
         if (_health <= 0)
         {

@@ -9,6 +9,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private IAttack _attack;
 
     [SerializeField] private float maxDashLenght;
+    [SerializeField] private DamageFlash damageFlash;
 
     private GameObject _player;
     public float _currentHealth;
@@ -32,6 +33,7 @@ public class Enemy : MonoBehaviour
         HomePosition = transform.position;
         canDash = true;
         canProtect = true;
+        RemainingStunDuration = 0f;
     }
 
     private void Update()
@@ -49,6 +51,7 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        damageFlash.Flash();
         _currentHealth -= damage;
         if (_currentHealth <= 0) Destroy(gameObject);
     }

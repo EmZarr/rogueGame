@@ -7,6 +7,7 @@ public class StunnedState : BaseState
     private readonly MonoBehaviour _attackBehaviour;
 
     private bool _prevStopped;
+    private Color originalColor;
 
     public StunnedState(Enemy enemy) : base(enemy)
     {
@@ -17,6 +18,8 @@ public class StunnedState : BaseState
 
     public override void EnterState()
     {
+        originalColor = _enemy.gameObject.GetComponentInChildren<SpriteRenderer>().color;
+        _enemy.gameObject.GetComponentInChildren<SpriteRenderer>().color = Color.cyan;
         if (_agent)
         {
             _prevStopped = _agent.isStopped;
@@ -36,6 +39,7 @@ public class StunnedState : BaseState
 
     public override void ExitState()
     {
+        _enemy.gameObject.GetComponentInChildren<SpriteRenderer>().color = originalColor;
         if (_agent)
             _agent.isStopped = _prevStopped;
 

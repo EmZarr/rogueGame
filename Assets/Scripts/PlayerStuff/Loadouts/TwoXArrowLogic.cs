@@ -58,6 +58,10 @@ public class TwoXArrowLogic : MonoBehaviour
             enemy.TakeDamage(_damage);
             Destroy(gameObject);
         }
+        else if (other.TryGetComponent<GuardianProtectZone>(out GuardianProtectZone guardianProtectZone))
+        {
+            guardianProtectZone.TakeDamage(_damage);
+        }
         else if (_reflected && other.TryGetComponent<Player>(out Player player))
         {
             player.TakeDamage(_damage, gameObject);

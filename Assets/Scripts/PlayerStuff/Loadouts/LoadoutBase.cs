@@ -84,6 +84,7 @@ public class LoadoutBase
 
     public virtual IEnumerator Defense(Vector2 mousePos)
     {
+        Debug.Log("Do defense");
         yield return new WaitForSeconds(0.1f);
         Debug.Log("Do defense");
     }
@@ -150,7 +151,7 @@ public class LoadoutBase
                      : GetLightAttackDuration();
     }
 
-    protected IEnumerator MeleeAttack(Vector2 dir, GameObject mySword, SwordHitbox mySwordHitbox, float distance, bool isHeavy)
+    protected IEnumerator MeleeAttack(Vector2 dir, GameObject mySword, SwordHitbox mySwordHitbox, float distance, bool isHeavy, float angleOffset = -90f)
     {
         if (mySwordHitbox == null) yield break;
 
@@ -162,7 +163,7 @@ public class LoadoutBase
         mySword.transform.position = pos;
 
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        mySword.transform.rotation = Quaternion.Euler(0f, 0f, angle-90f);
+        mySword.transform.rotation = Quaternion.Euler(0f, 0f, angle + angleOffset);
 
         if (isHeavy) {
             yield return new WaitForSeconds(GetHeavyAttackWindup());

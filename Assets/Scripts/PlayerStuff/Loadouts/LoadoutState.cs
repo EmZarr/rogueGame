@@ -37,6 +37,8 @@ public class LoadoutState : MonoBehaviour
     public float accel = 100f;
     public float decel = 100f;
 
+    private int loadoutNumber = 0;
+
     Vector2 vel;
     bool blockedMovement = false;
     bool blockedActions = false;
@@ -199,18 +201,21 @@ public class LoadoutState : MonoBehaviour
     {
         anim.EquipWeapon(WeaponId.Bow);
         loadout = new TwoCrossbow(player);
+        loadoutNumber = 1;
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
     {
         anim.EquipWeapon(WeaponId.Shield);
         loadout = new SwordAndShield(player);
+        loadoutNumber = 2;
     }
 
     void OnLoadout3(InputAction.CallbackContext ctx)
     {
         anim.EquipWeapon(WeaponId.Dual);
         loadout = new DualSwords(player);
+        loadoutNumber = 3;
     }
 
     void OnAttack(InputAction.CallbackContext ctx)
@@ -419,6 +424,11 @@ public class LoadoutState : MonoBehaviour
     public LoadoutBase GetLoadout()
     {
         return loadout;
+    }
+
+    public int GetLoadoutNumber()
+    {
+        return loadoutNumber;
     }
 
     public float GetDefCD()

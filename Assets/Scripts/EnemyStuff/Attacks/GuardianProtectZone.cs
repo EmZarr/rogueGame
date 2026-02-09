@@ -10,10 +10,17 @@ public class GuardianProtectZone : DamageZone
 
     private bool _animating;
 
+    [SerializeField] float maxHealth = 30f;
+    [SerializeField] float healRate = 5f;
+    [SerializeField] Enemy enemy;
+    float _health;
+    [SerializeField] DamageFlash _damageFlash;
+
     private void Start()
     {
         _player = GameObject.FindWithTag("Player");
         _dmg = 5f;
+        _health = maxHealth;
     }
 
     private void Update()
@@ -23,7 +30,13 @@ public class GuardianProtectZone : DamageZone
         {
             _player = GameObject.FindWithTag("Player");
         }
-        UpdateFacingTransform(1.3f, 40f);
+        if (_health < maxHealth)
+        {
+            healShield(Time.deltaTime * healRate);
+        }
+        if (!enemy.IsStunned) {
+            UpdateFacingTransform(1.3f, 40f);
+        }
     }
     protected override void OnTriggerEnter2D(Collider2D other)
     {
@@ -125,6 +138,28 @@ public class GuardianProtectZone : DamageZone
 
         transform.position = (Vector2)parent.position + offset;
         transform.rotation = Quaternion.Euler(0f, 0f, newAngle + 90f);
+    }
+
+    public void TakeDamage(float damage)
+    {
+        _damageFlash.Flash();
+        _health -= damage;
+        if ( _health <= 0)
+        {
+            sr.enabled = false;
+            col.enabled = false;
+            enemy.ApplyStun(4f);
+        }
+    }
+
+    public void healShield(float heal)
+    {
+        _health += heal;
+        if (_health >= maxHealth)
+        {
+            sr.enabled = true;
+            col.enabled = true;
+        }
     }
 
 }
