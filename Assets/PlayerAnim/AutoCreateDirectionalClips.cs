@@ -54,7 +54,7 @@ public class AutoCreateDirectionalClips
 
                 AssetDatabase.CreateAsset(
                     clip,
-                    $"Assets/PlayerAnim/Knight/Special/Special_{dirNames[d]}.anim"
+                    $"Assets/PlayerAnim/Rogue/Hurt/Hurt_{dirNames[d]}.anim"
                 );
             }
         }
