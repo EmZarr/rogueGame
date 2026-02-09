@@ -33,7 +33,6 @@ public class SpecialCooldown : MonoBehaviour
 
         float remaining = state.GetSpecialCD();
         float total = state.GetLoadout().GetHeavyDashCD2();
-        Debug.Log(remaining);
 
         if (remaining <= 0f || total <= 0f)
         {

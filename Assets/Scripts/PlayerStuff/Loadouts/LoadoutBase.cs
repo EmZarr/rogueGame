@@ -137,9 +137,9 @@ public class LoadoutBase
 
     public float GetPermDamageBoost() => _player.BaseDamageAmp;
 
-    public float GetLightAttackWindup() => _lightAttackDuration * _windupProcent;
+    public float GetLightAttackWindup() => GetLightAttackDuration() * _windupProcent;
 
-    public float GetHeavyAttackWindup() => _heavyAttackDuration * _windupProcent;
+    public float GetHeavyAttackWindup() => GetHeavyAttackDuration() * _windupProcent;
     public virtual float GetDefenseDuration() => _defenseDuration;
     public virtual float GetLightDashDuration() => _lightDashDuration;
     public virtual float GetHeavyDashDuration() => _HeavyDashDuration;
