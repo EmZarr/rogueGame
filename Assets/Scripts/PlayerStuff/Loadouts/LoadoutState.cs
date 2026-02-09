@@ -331,7 +331,7 @@ public class LoadoutState : MonoBehaviour
         }
 
         // Wait until the animator
-        while (!animator.GetCurrentAnimatorStateInfo(0).IsTag(stateTag))
+        while (animator.GetCurrentAnimatorStateInfo(0).IsTag(stateTag))
             yield return null;
 
         // read clip length

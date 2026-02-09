@@ -21,13 +21,14 @@ public GameObject DefenseProjectile;
 
     public override IEnumerator LightAttack(Vector2 direction)
     {
-       
+        yield return new WaitForSeconds(GetLightAttackWindup());
         yield return LightAttackAttack(direction);
+        yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
     }
 
     public IEnumerator LightAttackAttack(Vector2 direction)
     {
-        yield return new WaitForSeconds(GetLightAttackWindup());
+
         GameObject arrowObj = UnityEngine.GameObject.Instantiate(ArrowProjectile, _player.transform.position, Quaternion.identity);
         var _arrowRenderer = arrowObj.GetComponent<SpriteRenderer>();
         var _arrowCollider = arrowObj.GetComponent<Collider2D>();
@@ -35,14 +36,13 @@ public GameObject DefenseProjectile;
         _arrowCollider.enabled = true;
         var arrow = arrowObj.GetComponent<TwoXArrowLogic>();
         arrow.Init(getLightDamage(), direction, false, false);
-        yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
+        yield return null;
     }
 
     public override IEnumerator HeavyAttack(Vector2 direction)
     {
           for(int i = 0; i<20; i++){
           yield return LightAttackAttack(direction);
-
           yield return new WaitForSeconds(0.12f);
           }
     }
