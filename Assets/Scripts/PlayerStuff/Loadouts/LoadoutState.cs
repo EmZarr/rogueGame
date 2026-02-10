@@ -13,7 +13,7 @@ public class LoadoutState : MonoBehaviour
     [SerializeField] private Player player;
 
     [SerializeField] private PlayerAnimDriver anim;
-
+    [SerializeField] private PlayerIndicator indicator;
     private enum ActionType { AttackLight, AttackHeavy, DashLight, DashHeavy, Defense }
 
     private struct BufferedAction
@@ -43,6 +43,7 @@ public class LoadoutState : MonoBehaviour
     bool blockedMovement = false;
     bool blockedActions = false;
     bool doAnimationAnyway = false;
+    bool showIndicator = false;
 
 
     private float currentSpeed;
@@ -237,6 +238,7 @@ public class LoadoutState : MonoBehaviour
         if (Time.time > nextHeavyDashTime)
         {
             chargeUpBar.SetChargeBar(true);
+            showIndicator = true;
         }
         dashLockRoutine = StartCoroutine(LockMovementAfterDelay());
     }
@@ -274,6 +276,8 @@ public class LoadoutState : MonoBehaviour
             time = Time.time
         });
         chargeUpBar.SetChargeBar(false);
+        showIndicator = false;
+        indicator.Deactivate();
     }
 
 
@@ -385,9 +389,18 @@ public class LoadoutState : MonoBehaviour
 
         if (!blockedMovement) transform.position += (Vector3)(vel * Time.deltaTime);
 
+        if (showIndicator && (Time.time - dashPressTime) >= heavyDashHoldTime)
+        {
+            indicator.Activate(getMouseDir(), loadout.GetHeavyDashDistance());
+        }
+
+
         // Facing direction (mouse -> player)
         if (blockedActions && !doAnimationAnyway) return;
         updatePlayerAni();
+
+
+
     }
 
     private void updatePlayerAni()
@@ -448,5 +461,4 @@ public class LoadoutState : MonoBehaviour
         }
         else return nextHeavyDashTime - Time.time;
     }
-
 }
