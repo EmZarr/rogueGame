@@ -32,7 +32,7 @@ public class LevelManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        string path = Path.Combine(Application.streamingAssetsPath, "combArchive_maps.json");
+        string path = Path.Combine(Application.streamingAssetsPath, "furnArchive_maps.json");
         var archive = MapArchiveExporter.LoadArchiveFromJson(path);
         //var archive = MapArchiveExporter.LoadArchiveFromJson("furnArchive_maps.json");
         //var archive = MapArchiveExporter.LoadArchiveFromJson("combArchive_maps.json");

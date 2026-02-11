@@ -412,6 +412,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MapInstantiator
   tilemapGround: {fileID: 1913072605}
   tilemapWall: {fileID: 180224430}
+  tilesGround: []
+  tilesWall: []
   groundTileGrass1: {fileID: 11400000, guid: 15b6972f7cfb521429db087609cb86b0, type: 2}
   wallTile: {fileID: 11400000, guid: c61893fb968c5f548a30f1e535036592, type: 2}
   testTile: {fileID: 11400000, guid: 469d344fa1d980a41b98e04a2b5c0739, type: 2}
@@ -466,8 +468,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4f6ae296224daa4cb4507d17a2c05b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
-  totalIterations: 100000
-  initialRandomSolutions: 2500
+  totalIterations: 2000
+  initialRandomSolutions: 200
   runElites: {fileID: 4630370472947771425, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &859900378
 MonoBehaviour:

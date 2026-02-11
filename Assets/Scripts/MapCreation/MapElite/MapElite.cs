@@ -32,8 +32,8 @@ public class MapElite : MonoBehaviour
     void Start()
     {
 
-        runElites.action.Enable();
-        runElites.action.performed += ctx => RunMapElitesGeometry();
+        //runElites.action.Enable();
+        //runElites.action.performed += ctx => RunMapElitesGeometry();
         mapGenerator = GetComponent<MapGenerator>();
         RunMapElitesGeometry();
         MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");

@@ -48,7 +48,7 @@ public class MapGenerator : MonoBehaviour
 
     void OnEnable()
     {
-        placeObjects.action.Enable();
+        //placeObjects.action.Enable();
         remakeMap.action.Enable();
         mutateMap.action.Enable();
         mutatePlacements.action.Enable();
@@ -64,7 +64,7 @@ public class MapGenerator : MonoBehaviour
     {
         map = placeFurnishing(map);
         map = placeEnemies(map);
-        mapInstantiator.makeMap(map.mapArray);
+        //mapInstantiator.makeMap(map.mapArray);
         return map;
     }
 
@@ -625,19 +625,51 @@ public class MapGenerator : MonoBehaviour
         }
 
         // 4-neighbor walls
-        TrySetWall(map, x + 1, y);
-        TrySetWall(map, x - 1, y);
-        TrySetWall(map, x, y + 1);
-        TrySetWall(map, x, y - 1);
+        TrySetWall(map, x + 1, y, true);
+        TrySetWall(map, x - 1, y, true);
+        TrySetWall(map, x, y + 1, false);
+        TrySetWall(map, x, y - 1, false);
+
+        TryPlaceCorners(map, x+1, y+1, true);
+        TryPlaceCorners(map, x+1, y-1, false);
+        TryPlaceCorners(map, x-1, y+1, false);
+        TryPlaceCorners(map, x-1, y-1, true);
+
     }
 
-    void TrySetWall(MapInfo map, int x, int y)
+    void TrySetWall(MapInfo map, int x, int y, bool south)
     {
         if (x < 0 || y < 0 || x >= mapSize.x || y >= mapSize.y)
             return;
 
-        if (map.mapArray[x, y] == 0)   // only turn empty into wall
-            map.mapArray[x, y] = 2;
+        if (map.mapArray[x, y] == 0)
+        {
+            // only turn empty into wall
+            if (south)
+            {
+                map.mapArray[x, y] = 2;
+            }
+            else
+            {
+                map.mapArray[x, y] = 3;
+            }
+            
+        }   
+    }
+
+    void TryPlaceCorners(MapInfo map, int x, int y, bool south)
+    {
+        if (map.mapArray[x,y] == 0){
+            if (south)
+            {
+                map.mapArray[x,y] = 4;
+            }
+            else
+            {
+                map.mapArray[x,y] = 5;
+            }
+            
+        }
     }
 
     IEnumerable<Vector2Int> GetNeighbors(Vector2Int p)
