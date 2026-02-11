@@ -17,6 +17,10 @@ public class MapInstantiator : MonoBehaviour
 
     [SerializeField] TileBase[] tilesGroundBase;
 
+    [SerializeField] TileBase[] tilesFarm;
+
+    [SerializeField] TileBase[] tilesForest;
+
     [SerializeField] TileBase[] tilesGround;
 
     [SerializeField] TileBase[] tilesGroundDecour;
@@ -52,9 +56,6 @@ public class MapInstantiator : MonoBehaviour
             for (int y = 0; y < map.GetLength(1); y++)
             {
                 var cell = new Vector3Int(x, y, 0);
-                if (map[x, y] == 100)
-                {
-                }
                 switch (map[x, y])
                 {
                     case 0:
@@ -62,52 +63,63 @@ public class MapInstantiator : MonoBehaviour
                         break;
 
                     case 1:
-                        tileIndex = Random.Range(0,3);
-                        tilemapGround.SetTile(cell, tilesGroundBase[tileIndex]);
+                        tileIndex = Random.Range(0,7);
+                        if (tileIndex < 3)
+                        {
+                            tilemapGround.SetTile(cell, tilesFarm[tileIndex]);
+                        }
+                        else
+                        {
+                            tilemapGroundBase.SetTile(cell, tilesFarm[tileIndex]);
+                        }
                         break;
-
                     case 2:
-                        tilemapWall.SetTile(cell, tilesWall[0]);
+                        tileIndex = Random.Range(0,3);
+                        tilemapRoad.SetTile(cell, tilesRoad[0]);
                         break;
 
                     case 3:
+                        tileIndex = Random.Range(0,7);
+                        tilemapWall.SetTile(cell, tilesWall[0]);
+                        break;
+
+                    case 4:
                         tilemapWall.SetTile(cell, tilesWall[1]);
                         /*spawnedObjects.Add(
                             Instantiate(furnishingPrefabs[5], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );*/
                         break;
 
-                    case 4:
-                        tilemapWall.SetTile(cell, tilesWall[2]);
-                        /*
-                        tileIndex = Random.Range(0,3);
-                        tilemapGround.SetTile(cell, tilesGround[tileIndex]);
-                        spawnedObjects.Add(
-                            Instantiate(furnishingPrefabs[5], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
-                        );*/
-                        break;
-
                     case 5:
-                        tilemapWall.SetTile(cell, tilesWall[3]);
-                        /*tileIndex = Random.Range(0,3);
-                        tilemapGround.SetTile(cell, tilesGround[tileIndex]);
-                        spawnedObjects.Add(
-                            Instantiate(furnishingPrefabs[2], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
-                        );*/
+                        tilemapWall.SetTile(cell, tilesCorner[0]);
                         break;
 
                     case 6:
                         int prefabIndex2 = Random.value < 0.5f ? 0 : 3;
-                        tileIndex = Random.Range(0,3);
-                        tilemapGround.SetTile(cell, tilesGroundBase[tileIndex]);
+                        tileIndex = Random.Range(0,7);
+                        if (tileIndex < 3)
+                        {
+                            tilemapGround.SetTile(cell, tilesFarm[tileIndex]);
+                        }
+                        else
+                        {
+                            tilemapGroundBase.SetTile(cell, tilesFarm[tileIndex]);
+                        }
                         spawnedObjects.Add(
                             Instantiate(enemyPrefabs[4], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
 
                     case 7:
-                        tileIndex = Random.Range(0,3);
-                        tilemapGround.SetTile(cell, tilesGroundBase[tileIndex]);
+                        tileIndex = Random.Range(0,7);
+                        if (tileIndex < 3)
+                        {
+                            tilemapGround.SetTile(cell, tilesFarm[tileIndex]);
+                        }
+                        else
+                        {
+                            tilemapGroundBase.SetTile(cell, tilesFarm[tileIndex]);
+                        }
 
                         int prefabIndex = Random.value < 0.5f ? 1 : 2;
                         prefabIndex = 1;
@@ -129,8 +141,15 @@ public class MapInstantiator : MonoBehaviour
                         levelManager.transform.position = tilemapGround.GetCellCenterWorld(cell);
                         break;
                     case 100:
-                        tileIndex = Random.Range(0,3);
-                        tilemapGround.SetTile(cell, tilesGroundBase[tileIndex]);
+                       tileIndex = Random.Range(0,7);
+                        if (tileIndex < 3)
+                        {
+                            tilemapGround.SetTile(cell, tilesFarm[tileIndex]);
+                        }
+                        else
+                        {
+                            tilemapGroundBase.SetTile(cell, tilesFarm[tileIndex]);
+                        }
                         spawnedObjects.Add(
                             Instantiate(playerPrefab, tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );

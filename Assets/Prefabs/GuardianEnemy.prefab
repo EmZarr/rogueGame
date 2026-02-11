@@ -78,7 +78,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
+  m_SortingOrder: 4
   m_Sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
   m_Color: {r: 0.45460925, g: 0, b: 0.94509804, a: 1}
   m_FlipX: 0
@@ -180,6 +180,7 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: ade2375e0cd870740a41c26fcb6d8e34, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: -9058889810330493097}
+  maxDashLenght: 0
   _currentHealth: 0
 --- !u!114 &1742820501312077218
 MonoBehaviour:
@@ -229,7 +230,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GuardianAttack
   _data: {fileID: 11400000, guid: ade2375e0cd870740a41c26fcb6d8e34, type: 2}
-  guardianProtectZone: {fileID: 2871543362750780448}
 --- !u!1 &8867156919391814894
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,7 +310,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 4
   m_Sprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
   m_Color: {r: 0.8862745, g: 0.16470584, b: 0.85610914, a: 1}
   m_FlipX: 0
