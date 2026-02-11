@@ -10,6 +10,8 @@ public class Enemy : MonoBehaviour
 
     [SerializeField] private float maxDashLenght;
 
+    [SerializeField] private EnemyAnimDriver animDriver;
+
     private GameObject _player;
     public float _currentHealth;
     public float RemainingStunDuration { get; private set; }
@@ -22,6 +24,7 @@ public class Enemy : MonoBehaviour
     public Vector3 HomePosition { get; private set; }
     public float WanderRadius => _data.wanderRadius;
     public Vector2 WanderWaitRange => _data.wanderWaitRange;
+
 
     private void Awake()
     {
@@ -45,6 +48,7 @@ public class Enemy : MonoBehaviour
         {
             RemainingStunDuration -= Time.deltaTime;
         }
+        animDriver.Tick();
     }
 
     public void TakeDamage(float damage)

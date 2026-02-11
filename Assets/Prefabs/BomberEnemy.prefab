@@ -247,6 +247,8 @@ GameObject:
   - component: {fileID: 1742820501312077218}
   - component: {fileID: 5592875544006121440}
   - component: {fileID: 3861260130231522777}
+  - component: {fileID: 3994043220503742000}
+  - component: {fileID: 3003742435217965177}
   m_Layer: 3
   m_Name: BomberEnemy
   m_TagString: Enemy
@@ -323,8 +325,9 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: 3bb79e397f97b114c8da357204431d18, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: 3861260130231522777}
-  _protect: {fileID: 0}
+  maxDashLenght: 0
   _currentHealth: 0
+  animDriver: {fileID: 3003742435217965177}
 --- !u!114 &1742820501312077218
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -374,3 +377,39 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BombAttack
   _data: {fileID: 11400000, guid: 3bb79e397f97b114c8da357204431d18, type: 2}
   bombPrefab: {fileID: 5465887330457805834, guid: 26a1b2ed8688d3243b2264e7be857ad5, type: 3}
+--- !u!95 &3994043220503742000
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7378334077991207350}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: be4b48d088929c240a773c82aa03a585, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3003742435217965177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7378334077991207350}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf93e58bf0f6e7840b96024f571cf269, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyAnimDriver
+  animator: {fileID: 3994043220503742000}
+  forwardDotThreshold: 0.7071
