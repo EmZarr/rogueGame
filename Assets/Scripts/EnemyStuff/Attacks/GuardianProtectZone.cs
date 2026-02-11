@@ -45,7 +45,7 @@ public class GuardianProtectZone : DamageZone
         {
             player.TakeDamage(_dmg, transform.parent.gameObject);
 
-            if (knockBack)
+            if (knockBack && !player.IsInvinsible())
             {
                 var direction = other.transform.position - transform.position;
                 player.GetKnockedBack(direction, 4.0f);

@@ -35,7 +35,6 @@ public class Shield : MonoBehaviour
         if (sr) sr.enabled = true;
         if (col) col.enabled = true;
         isBlocking = true;
-
         CancelInvoke();
         Invoke(nameof(Deactivate), duration);
     }

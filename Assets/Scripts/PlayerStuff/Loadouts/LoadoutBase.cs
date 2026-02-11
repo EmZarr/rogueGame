@@ -182,4 +182,20 @@ public class LoadoutBase
             yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
         }
     }
+    protected IEnumerator AreaAttack(Vector2 dir, GameObject area, SwordHitbox hitbox, float distance, float duration, float angleOffset = -90f)
+    {
+        if (hitbox == null) yield break;
+
+        Vector2 playerPos = _player.transform.position;
+
+        // world-space placement
+        Vector3 pos = playerPos + dir * distance;
+        pos.z = area.transform.position.z;
+        area.transform.position = pos;
+
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        area.transform.rotation = Quaternion.Euler(0f, 0f, angle + angleOffset);
+
+        hitbox.Activate(0, duration);
+    }
 }

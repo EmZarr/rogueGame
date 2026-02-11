@@ -223,6 +223,10 @@ public class Player : MonoBehaviour
         HeavyDashCooldownDecrease -= 0.01f*percentDecrease;
     }
 
+    public bool IsInvinsible()
+    {
+        return _isInvinsible;
+    }
 
 
 
