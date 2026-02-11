@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.AI;
 using System.Collections;
 
 public class EnemyAnimDriver : MonoBehaviour
@@ -20,6 +19,8 @@ public class EnemyAnimDriver : MonoBehaviour
     private static readonly int Dash = Animator.StringToHash("Dash");
     private static readonly int Hurt = Animator.StringToHash("Hurt");
     private static readonly int Block = Animator.StringToHash("Block");
+    private static readonly int Dead = Animator.StringToHash("Dead");
+
 
     public void TriggerAttack() => animator.SetTrigger(Attack);
     public void TriggerDash() => animator.SetTrigger(Dash);
@@ -30,7 +31,20 @@ public class EnemyAnimDriver : MonoBehaviour
     public Animator GetAnimator() => animator;
 
     private GuardianProtectZone guardianShield;
+    private bool _deathFired;
 
+    public void TriggerDead()
+    {
+        if (_deathFired) return;
+        _deathFired = true;
+
+        animator.ResetTrigger(Animator.StringToHash("Hurt"));
+        animator.ResetTrigger(Animator.StringToHash("Dash"));
+        animator.ResetTrigger(Animator.StringToHash("Attack"));
+
+        animator.SetTrigger(Dead);
+        SetInAction(true);
+    }
 
     void Awake()
     {

@@ -26,6 +26,7 @@ public class Enemy : MonoBehaviour
     public float WanderRadius => _data.wanderRadius;
     public Vector2 WanderWaitRange => _data.wanderWaitRange;
 
+    bool _dead;
 
     private void Awake()
     {
@@ -55,10 +56,34 @@ public class Enemy : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (_dead) return;
         damageFlash.Flash();
         StartCoroutine(animDriver.RunAction(0.25f, Animator.StringToHash("Hurt")));
         _currentHealth -= damage;
-        if (_currentHealth <= 0) Destroy(gameObject);
+        if (_currentHealth <= 0) 
+        {
+            _dead = true;
+            Die();
+        } 
+    }
+
+    private void Die()
+    {
+
+        StopAllCoroutines();
+
+        var sm = GetComponent<StateMachine>();
+        sm.enabled = false;
+
+        if (_agent != null)
+        {
+            _agent.isStopped = true;
+            _agent.enabled = false;
+        }
+
+        if (animDriver != null) animDriver.TriggerDead();
+
+        Destroy(gameObject, 2f);
     }
 
     public void ApplyStun(float duration)
