@@ -56,6 +56,7 @@ public class Enemy : MonoBehaviour
     public void TakeDamage(float damage)
     {
         damageFlash.Flash();
+        StartCoroutine(animDriver.RunAction(0.25f, Animator.StringToHash("Hurt")));
         _currentHealth -= damage;
         if (_currentHealth <= 0) Destroy(gameObject);
     }
@@ -67,7 +68,6 @@ public class Enemy : MonoBehaviour
     }
     public void GetKnockedBack(Vector2 direction, float distance)
     {
-
         StartCoroutine(KnockbackRoutine(direction, distance));
     }
 
@@ -101,6 +101,7 @@ public class Enemy : MonoBehaviour
 
     public void Dash()
     {
+        StartCoroutine(animDriver.RunAction(0.15f, Animator.StringToHash("Dash")));
         StartCoroutine(DashRoutine());
         StartCoroutine(DashCooldown());
     }

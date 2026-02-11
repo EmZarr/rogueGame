@@ -16,6 +16,18 @@ public class EnemyAnimDriver : MonoBehaviour
     private static readonly int LookY = Animator.StringToHash("LookY");
     private static readonly int MoveType = Animator.StringToHash("MoveType");
     private static readonly int InAction = Animator.StringToHash("InAction");
+    private static readonly int Attack = Animator.StringToHash("Attack");
+    private static readonly int Dash = Animator.StringToHash("Dash");
+    private static readonly int Hurt = Animator.StringToHash("Hurt");
+    private static readonly int Block = Animator.StringToHash("Block");
+
+    public void TriggerAttack() => animator.SetTrigger(Attack);
+    public void TriggerDash() => animator.SetTrigger(Dash);
+    public void TriggerHurt() => animator.SetTrigger(Hurt);
+    public void TriggerBlock() => animator.SetTrigger(Block);
+
+    public void SetInAction(bool inAction) => animator.SetBool(InAction, inAction);
+    public Animator GetAnimator() => animator;
 
     private GuardianProtectZone guardianShield;
 
@@ -86,17 +98,6 @@ public class EnemyAnimDriver : MonoBehaviour
         return vel;
     }
 
-    void FacePlayerOrKeepDefault()
-    {
-        var player = enemy.GetPlayer();
-        if (player == null) return;
-
-        Vector2 toPlayer = (Vector2)(player.transform.position - transform.position);
-        if (toPlayer.sqrMagnitude < 0.0001f) return;
-
-        lookDir = toPlayer.normalized;
-    }
-
     int ComputeMoveType(Vector2 look, Vector2 velocity)
     {
         if (velocity.sqrMagnitude < 0.0001f) return 0;
@@ -111,21 +112,15 @@ public class EnemyAnimDriver : MonoBehaviour
         return crossZ > 0f ? 3 : 4;
     }
 
-    public void SetInAction(bool inAction) => animator.SetBool(InAction, inAction);
-    private static readonly int Attack = Animator.StringToHash("Attack");
-    public Animator GetAnimator() => animator;
-    public void TriggerAttack() => animator.SetTrigger(Attack);
-
-    public IEnumerator RunAttackScaled(float duration, string stateTag = "Attack")
+    public IEnumerator RunAction(float duration, int triggerHash)
     {
         SetInAction(true);
 
         float prevSpeed = animator.speed;
 
-        TriggerAttack();
+        animator.SetTrigger(triggerHash);
 
-        while (animator.GetCurrentAnimatorStateInfo(0).IsTag(stateTag))
-            yield return null;
+        yield return null; // allow transition to begin
 
         var infos = animator.GetCurrentAnimatorClipInfo(0);
         float clipLen = (infos != null && infos.Length > 0 && infos[0].clip != null)
@@ -142,5 +137,6 @@ public class EnemyAnimDriver : MonoBehaviour
         animator.speed = prevSpeed;
         SetInAction(false);
     }
+
 
 }

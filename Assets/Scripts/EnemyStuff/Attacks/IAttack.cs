@@ -39,12 +39,9 @@ public abstract class IAttack : MonoBehaviour
         if (IsReady())
         {
 
-            Coroutine animCo = null;
-            animCo = StartCoroutine(_anim.RunAttackScaled(_attackSpeed, "Attack"));
-
             yield return BasicAttack();
 
-            yield return animCo;
+            yield return _anim.RunAction(_attackSpeed, Animator.StringToHash("Attack"));
         }
 
     }
