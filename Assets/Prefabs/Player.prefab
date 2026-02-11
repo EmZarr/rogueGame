@@ -663,6 +663,8 @@ MonoBehaviour:
     m_Bits: 64
   DamageAmp: 0
   BaseDamageAmp: 1
+  AttackSpeedIncrease: 1
+  HeavyDashCooldownDecrease: 1
 --- !u!70 &7005813500300224167
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -716,6 +718,7 @@ MonoBehaviour:
   anim: {fileID: 7916581994351859345}
   bufferWindow: 0.2
   maxSpeed: 8
+  baseSpeed: 8
   accel: 100
   decel: 100
   heavyDashHoldTime: 0.4
@@ -843,7 +846,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 4
   m_Sprite: {fileID: -1308841466, guid: bf7b8c82f8938c34681940923af3b455, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

@@ -218,7 +218,7 @@ TilemapRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 4
+  m_SortingOrder: 5
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
   m_MaxChunkCount: 16
@@ -723,6 +723,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bfa9367a40fa5b84e9e4c60a21370778, type: 2}
   - {fileID: 11400000, guid: f20505b747e53f6449a382ebeada4a79, type: 2}
   - {fileID: 11400000, guid: f1e0476cfccbc294f8e0267456f6c3c9, type: 2}
+  tilesFarm:
+  - {fileID: 11400000, guid: acc2a5e5778c4e945af3806f83720458, type: 2}
+  - {fileID: 11400000, guid: ac765b45466ab48439a2bcb9302017e7, type: 2}
+  - {fileID: 11400000, guid: 4f88db4c9386a874da41da6ed6e3e01b, type: 2}
+  - {fileID: 11400000, guid: a3c91aa24681b7c46b6d171bf41ca4d3, type: 2}
+  - {fileID: 11400000, guid: ad55dff39457e9147b93cf4df59611cb, type: 2}
+  - {fileID: 11400000, guid: 16e9fe5f9a635a54b8005e7893bc4fee, type: 2}
+  - {fileID: 11400000, guid: ecc9dcc014f025e4e9e0e630d73a0519, type: 2}
+  tilesForest: []
   tilesGround:
   - {fileID: 11400000, guid: acc2a5e5778c4e945af3806f83720458, type: 2}
   - {fileID: 11400000, guid: 524c4d6305ed4864fa3a2c9d770739a6, type: 2}
