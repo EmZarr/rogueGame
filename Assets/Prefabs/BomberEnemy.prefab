@@ -142,7 +142,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DamageZone
   sr: {fileID: 4519643231527515962}
   col: {fileID: 4011872346071171345}
-  knockBack: 0
+  knockBackDistance: 0
 --- !u!1 &2811616041619152791
 GameObject:
   m_ObjectHideFlags: 0
@@ -328,9 +328,11 @@ MonoBehaviour:
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: 3861260130231522777}
   maxDashLenght: 0
+  dashCooldown: 3
   damageFlash: {fileID: 3058725139698875878}
   animDriver: {fileID: 3003742435217965177}
   _currentHealth: 0
+  attacking: 0
 --- !u!114 &1742820501312077218
 MonoBehaviour:
   m_ObjectHideFlags: 0

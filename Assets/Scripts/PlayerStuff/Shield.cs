@@ -35,7 +35,6 @@ public class Shield : MonoBehaviour
         if (sr) sr.enabled = true;
         if (col) col.enabled = true;
         isBlocking = true;
-
         CancelInvoke();
         Invoke(nameof(Deactivate), duration);
     }
@@ -49,19 +48,24 @@ public class Shield : MonoBehaviour
     }
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Projectile"))
+        var projectile = other.GetComponent<Projectile>();
+        if (projectile != null)
         {
-            if (!other.gameObject.GetComponent<Projectile>().GetUnblockable())
+            if (!isParrying)
             {
-                if (!isParrying)
-                {
-                    Destroy(other.gameObject);
-                }
-                else
-                {
-                    var projectile = other.GetComponent<Projectile>();
-                    projectile.Init(false, 5.0f, true);
-                }
+                Destroy(other.gameObject);
+            }
+            else
+            {
+                projectile.Reflect(loadoutState.getMouseDir());
+            }
+        }
+        else
+        {
+            var bomb = other.GetComponent<Bomb>();
+            if (bomb != null)
+            {
+                bomb.Reflect((Vector2)transform.position + (10f*loadoutState.getMouseDir()));
             }
         }
     }

@@ -27,6 +27,12 @@ public class Bomb : MonoBehaviour
         _isMoving = true;
     }
 
+    public void Reflect(Vector2 targetPosition)
+    {
+        _targetPosition = targetPosition;
+        damageZone.changeTeam();
+    }
+
     // Update is called once per frame
     void Update()
     {

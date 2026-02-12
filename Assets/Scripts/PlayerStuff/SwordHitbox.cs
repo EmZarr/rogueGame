@@ -1,25 +1,31 @@
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 public class SwordHitbox : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private SpriteRenderer sr;
-    [SerializeField] private Collider2D col;
+    [SerializeField] protected SpriteRenderer sr;
+    [SerializeField] protected Collider2D col;
+
+    [SerializeField] private Vector2 colliderOffsetAtFront0 = new Vector2(-2.25f, 0f);  // where hitbox is when _Front = 0
+    [SerializeField] private Vector2 colliderOffsetAtFront1 = new Vector2(2.25f, 0f); // where hitbox is when _Front = 1
+    [SerializeField] private float widthAtFront0 = 0.1f;
+    [SerializeField] private float widthAtFront1 = 1.0f;
 
     [Header("Shader")]
-    [SerializeField] private string frontProp = "_Front";
-    [SerializeField] private string alphaProp = "_Alpha";
+    [SerializeField] protected string frontProp = "_Front";
+    [SerializeField] protected string alphaProp = "_Alpha";
 
-    private float damage;
-    private readonly HashSet<Enemy> hit = new();
+    protected float damage;
+    protected readonly HashSet<Enemy> hit = new();
 
-    private MaterialPropertyBlock _mpb;
-    private Coroutine _animRoutine;
+    protected MaterialPropertyBlock _mpb;
+    protected Coroutine _animRoutine;
 
-    private int _frontID;
-    private int _alphaID;
+    protected int _frontID;
+    protected int _alphaID;
 
     void Awake()
     {
@@ -39,7 +45,6 @@ public class SwordHitbox : MonoBehaviour
 
         if (sr) sr.enabled = true;
         if (col) col.enabled = true;
-
         // reset + animate the shader from HERE
         if (sr)
         {
@@ -61,12 +66,25 @@ public class SwordHitbox : MonoBehaviour
     {
         float t = 0f;
         duration = Mathf.Max(0.0001f, duration);
+        
 
         while (t < duration)
         {
             t += Time.deltaTime;
             float n = Mathf.Clamp01(t / duration); // 0..1
 
+            if (col is BoxCollider2D box)
+            {
+                Vector2 target = Vector2.Lerp(colliderOffsetAtFront0, colliderOffsetAtFront1, n);
+                col.offset = target;
+                Vector2 s = box.size;
+                s.x = Mathf.Lerp(widthAtFront0, widthAtFront1, n);
+                box.size = s;
+            }
+            else if (col is CircleCollider2D cir)
+            {
+                cir.radius = Mathf.Lerp(widthAtFront0, widthAtFront1, Mathf.Clamp01(n / 0.7f));
+            }
             sr.GetPropertyBlock(_mpb);
             _mpb.SetFloat(_frontID, n);
             sr.SetPropertyBlock(_mpb);
@@ -93,7 +111,7 @@ public class SwordHitbox : MonoBehaviour
         if (col) col.enabled = false;
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    protected virtual void OnTriggerEnter2D(Collider2D other)
     {
         var defenseZone = other.GetComponent<GuardianProtectZone>();
         if (defenseZone != null)

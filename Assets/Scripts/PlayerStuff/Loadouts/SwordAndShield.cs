@@ -35,7 +35,7 @@ public class SwordAndShield : LoadoutBase
 
     public override IEnumerator HeavyAttack(Vector2 direction)
     {
-        yield return MeleeAttack(direction, _heavySword, _heavySwordhitbox, 4f, true, -30f);
+        yield return MeleeAttack(direction, _heavySword, _heavySwordhitbox, 4f, true, 90f);
     }
 
     public override IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)

@@ -9,8 +9,8 @@ public class LoadoutBase
 
     [Header("Left Click")]
     protected float _windupProcent = 0.4f;
-    protected float _lightAttackDuration = 0.5f;
-    protected float _heavyAttackDuration = 1f;
+    protected float _lightAttackDuration = 0.4f;
+    protected float _heavyAttackDuration = 0.9f;
     protected float _defenseDuration = 2f;
     protected float _lightDashDuration = 0.15f;
     protected float _HeavyDashDuration = 0.2f;
@@ -150,12 +150,6 @@ public class LoadoutBase
     public virtual float GetLightDashDuration() => _lightDashDuration;
     public virtual float GetHeavyDashDuration() => _HeavyDashDuration;
 
-    public virtual float GetAttackCooldown(bool heavy)
-    {
-        return heavy ? GetHeavyAttackDuration()
-                     : GetLightAttackDuration();
-    }
-
     protected IEnumerator MeleeAttack(Vector2 dir, GameObject mySword, SwordHitbox mySwordHitbox, float distance, bool isHeavy, float angleOffset = -90f)
     {
         if (mySwordHitbox == null) yield break;
@@ -181,5 +175,21 @@ public class LoadoutBase
             mySwordHitbox.Activate(getLightDamage(), GetLightAttackDuration() - GetLightAttackWindup());
             yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
         }
+    }
+    protected IEnumerator AreaAttack(Vector2 dir, GameObject area, SwordHitbox hitbox, float distance, float duration, float angleOffset = -90f)
+    {
+        if (hitbox == null) yield break;
+
+        Vector2 playerPos = _player.transform.position;
+
+        // world-space placement
+        Vector3 pos = playerPos + dir * distance;
+        pos.z = area.transform.position.z;
+        area.transform.position = pos;
+
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        area.transform.rotation = Quaternion.Euler(0f, 0f, angle + angleOffset);
+
+        hitbox.Activate(0, duration);
     }
 }

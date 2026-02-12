@@ -4,98 +4,59 @@ using UnityEngine.Tilemaps;
 public class Projectile : MonoBehaviour
 {
     [SerializeField] float _speed = 10f;
-    [SerializeField] float _lifeTime = 5f;
 
     Vector2 _dir;
-    float _deathTime;
     float _damage;
-    bool _unblockable = false;
-
-    bool _reflected;
+    bool _allied;
 
     GameObject _instigator;
 
     public void SetInstigator(GameObject instigator) => _instigator = instigator;
-    public void Init(bool unblockable, float damage, bool reflected)
+    public void Init(float damage, Vector2 dir, bool allied)
     {
         _damage = damage;
-        _reflected = reflected;
-        if (unblockable)
-        {
-            // Double the x and y scale
-            transform.localScale = new Vector3(
-                transform.localScale.x * 2f,
-                transform.localScale.y * 2f,
-                transform.localScale.z
-            );
-
-            _unblockable = true;
-
-            var spriteRenderer = GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null)
-            {
-                spriteRenderer.color = Color.red;
-            }
-        }
-        else if (reflected)
-        {
-            _dir = -_dir;
-        }
+        _dir = dir.sqrMagnitude > 0.000001f ? dir.normalized : Vector2.right;
+        _allied = allied;
     }
 
-    public bool GetUnblockable()
+    public void Reflect(Vector2 newDir)
     {
-        return _unblockable;
+        _allied = !_allied;
+        _dir = newDir.sqrMagnitude > 0.000001f ? newDir.normalized : Vector2.right;
+        _speed = 1.5f * _speed;
     }
 
-    private void Awake()
+    public bool IsAllied()
     {
-        var player = GameObject.FindWithTag("Player");
-        if (player != null)
-        {
-            Vector2 playerPos = player.transform.position;
-            _dir = (playerPos - (Vector2)transform.position).normalized;
-
-            // Rotate projectile to face direction of travel
-            float angle = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Euler(0f, 0f, 90f + angle);
-        }
-        else
-        {
-            _dir = Vector2.left;
-        }
+        return _allied; 
     }
 
-    void OnEnable()
-    {
-        _deathTime = Time.time + _lifeTime;
-    }
 
     void Update()
     {
-        if (Time.time >= _deathTime)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        float angle = Mathf.Atan2(_dir.y, _dir.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, 90f + angle);
         transform.position += (Vector3)(_dir * _speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.TryGetComponent<Player>(out Player player))
+        if (!_allied && other.TryGetComponent<Player>(out Player player))
         {
             var killer = _instigator != null ? _instigator : gameObject;
             player.TakeDamage(_damage, killer);
             Destroy(gameObject);
         }
-        if (_reflected && other.TryGetComponent<Enemy>(out Enemy enemy))
+        if (_allied && other.TryGetComponent<Enemy>(out Enemy enemy))
         {
             enemy.TakeDamage(_damage);
             Destroy(gameObject);
         }
-        else if (other.TryGetComponent<TilemapCollider2D>(out TilemapCollider2D wall))
+        else if (_allied && other.TryGetComponent<GuardianProtectZone>(out GuardianProtectZone guardianProtectZone))
+        {
+            guardianProtectZone.TakeDamage(_damage);
+        }
+        else if (other.tag == "Wall")
         {
             Destroy(gameObject);
         }

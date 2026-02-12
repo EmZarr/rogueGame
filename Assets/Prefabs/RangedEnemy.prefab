@@ -183,7 +183,8 @@ MonoBehaviour:
   _data: {fileID: 11400000, guid: 5f6da02dd3702814e9a5362f93bdb9ab, type: 2}
   _agent: {fileID: 5592875544006121440}
   _attack: {fileID: 8015560544145626414}
-  maxDashLenght: 10
+  maxDashLenght: 5
+  dashCooldown: 3
   damageFlash: {fileID: 7067305895996137203}
   animDriver: {fileID: 4657217420798431053}
   _currentHealth: 0

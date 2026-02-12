@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class MeleeAttack : IAttack
+public class MeleeAttack : IAttack, ICancelableAttack
 {
     [SerializeField] private DamageZone damageZone;
 
@@ -18,5 +18,10 @@ public class MeleeAttack : IAttack
         damageZone.Activate(_damage, 0.1f, _attackDelay);
         yield return new WaitForSeconds(0.1f + _attackDelay);
         _nextReadyTime = Time.time + _attackSpeed;
+    }
+
+    public void CancelAttack()
+    {
+        damageZone.Cancel();
     }
 }

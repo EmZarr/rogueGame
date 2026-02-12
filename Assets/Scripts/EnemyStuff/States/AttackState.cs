@@ -4,12 +4,13 @@ using UnityEngine;
 public class AttackState : BaseState
 {
     private bool _attackInProgress;
-
+    private Coroutine _attackCoroutine;
     public AttackState(Enemy enemy) : base(enemy) { }
 
     public override void EnterState()
     {
         _attackInProgress = false;
+        _enemy.attacking = false;
 
         if (_agent != null && _agent.isActiveAndEnabled && _agent.isOnNavMesh)
         {
@@ -30,17 +31,33 @@ public class AttackState : BaseState
             return;
 
         _attackInProgress = true;
-        _enemy.StartCoroutine(AttackFlow());
+        _enemy.attacking = true;
+        _attackCoroutine = _enemy.StartCoroutine(AttackFlow());
     }
 
     private IEnumerator AttackFlow()
     {
         yield return _enemy.GetAttack().Attack();
+        _enemy.attacking = true;
         _attackInProgress = false;
+        _attackCoroutine = null;
     }
 
     public override void ExitState()
     {
+        if (_attackCoroutine != null)
+        {
+            _enemy.StopCoroutine(_attackCoroutine);
+            _attackCoroutine = null;
+        }
+        if (_enemy.GetAttack() is ICancelableAttack cancelable)
+        {
+            cancelable.CancelAttack();
+        }
+
+        _enemy.attacking = false;
+        _attackInProgress = false;
+
         if (_agent != null && _agent.isActiveAndEnabled && _agent.isOnNavMesh)
             _agent.isStopped = false;
     }
@@ -59,11 +76,6 @@ public class AttackState : BaseState
         }
 
         float dist = Vector3.Distance(_agent.transform.position, _player.transform.position);
-
-        if(_enemy._data.enemyType == EnemyType.Ranged && dist < (_enemy.GetAttackRange() / 2) && _enemy.canDash)
-        {
-            _enemy.Dash();
-        }
         
         if (!_attackInProgress && (dist > _enemy.GetAttackRange() || !_enemy.GetAttack().IsReady()))
         {

@@ -40,15 +40,15 @@ public class GuardianProtectZone : DamageZone
     }
     protected override void OnTriggerEnter2D(Collider2D other)
     {
+        var direction = (other.transform.position - transform.position).normalized;
         var player = other.GetComponent<Player>();
         if (player != null)
         {
             player.TakeDamage(_dmg, transform.parent.gameObject);
 
-            if (knockBack)
+            if (knockBackDistance > 0.0f && !player.IsInvinsible())
             {
-                var direction = other.transform.position - transform.position;
-                player.GetKnockedBack(direction, 4.0f);
+                player.GetKnockedBack(direction, knockBackDistance);
             }
 
             if (!_animating)
@@ -59,15 +59,10 @@ public class GuardianProtectZone : DamageZone
             _hit = true;
         }
 
-        var projectile = other.GetComponent<TwoXArrowLogic>();
-        if (projectile != null)
+        var projectile = other.GetComponent<Projectile>();
+        if (projectile != null && projectile.IsAllied())
         {
-            projectile.Init(
-                5f,
-                (_player.transform.position - transform.position).normalized,
-                false,
-                true
-            );
+            projectile.Reflect(direction);
         }
     }
 
