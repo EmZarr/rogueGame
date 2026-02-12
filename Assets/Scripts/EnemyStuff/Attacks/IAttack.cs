@@ -10,6 +10,8 @@ public abstract class IAttack : MonoBehaviour
     protected float _damage;
     protected float _attackDelay;
 
+    protected EnemyAnimDriver _anim;
+
 
     private void Start()
     {
@@ -17,6 +19,8 @@ public abstract class IAttack : MonoBehaviour
         _attackSpeed = _data.attackSpeed;
         _attackDelay = _data.attackDelay;
         _player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+
+        _anim = GetComponentInParent<EnemyAnimDriver>();
     }
     
     public IEnumerator Attack()
@@ -31,9 +35,13 @@ public abstract class IAttack : MonoBehaviour
         {
             yield return BasicAttack();     // must yield until the basic is done
         }*/
+
         if (IsReady())
         {
+
             yield return BasicAttack();
+
+            yield return _anim.RunAction(_attackSpeed, Animator.StringToHash("Attack"));
         }
 
     }

@@ -13,6 +13,8 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float dashCooldown = 3.0f;
     [SerializeField] private DamageFlash damageFlash;
 
+    [SerializeField] private EnemyAnimDriver animDriver;
+
     private GameObject _player;
     private Action onDeathEffect = null;
     private bool _dying = false;
@@ -29,6 +31,8 @@ public class Enemy : MonoBehaviour
     public Vector3 HomePosition { get; private set; }
     public float WanderRadius => _data.wanderRadius;
     public Vector2 WanderWaitRange => _data.wanderWaitRange;
+
+    bool _dead;
 
     private void Awake()
     {
@@ -53,8 +57,7 @@ public class Enemy : MonoBehaviour
         {
             RemainingStunDuration -= Time.deltaTime;
         }
-
-         if (canDash && maxDashLenght > 0f && !IsStunned && !attacking)
+        if (canDash && maxDashLenght > 0f && !IsStunned && !attacking)
         {
             int mask = LayerMask.GetMask("PlayerAttack", "Player");
             Vector2 enemyPos = transform.position;
@@ -73,11 +76,14 @@ public class Enemy : MonoBehaviour
                 Dash();
             }
         }
+        animDriver.Tick();
     }
 
     public void TakeDamage(float damage)
     {
+        if (_dead) return;
         damageFlash.Flash();
+        StartCoroutine(animDriver.RunAction(0.25f, Animator.StringToHash("Hurt")));
         _currentHealth -= damage;
         if (_currentHealth <= 0 && _dying == false) {
             StopAllCoroutines();
@@ -88,9 +94,29 @@ public class Enemy : MonoBehaviour
             }
             else
             {
-                Destroy(gameObject);
+                _dead = true;
+                Die();
             }
         }
+    }
+
+    private void Die()
+    {
+
+        StopAllCoroutines();
+
+        var sm = GetComponent<StateMachine>();
+        sm.enabled = false;
+
+        if (_agent != null)
+        {
+            _agent.isStopped = true;
+            _agent.enabled = false;
+        }
+
+        if (animDriver != null) animDriver.TriggerDead();
+
+        Destroy(gameObject, 2f);
     }
 
     public void ApplyStun(float duration)
@@ -100,7 +126,6 @@ public class Enemy : MonoBehaviour
     }
     public void GetKnockedBack(Vector2 direction, float distance)
     {
-
         StartCoroutine(KnockbackRoutine(direction, distance));
     }
 
@@ -134,6 +159,7 @@ public class Enemy : MonoBehaviour
 
     public void Dash()
     {
+        StartCoroutine(animDriver.RunAction(0.15f, Animator.StringToHash("Dash")));
         StartCoroutine(DashRoutine());
         _nextDashTime = Time.time + dashCooldown;
     }
