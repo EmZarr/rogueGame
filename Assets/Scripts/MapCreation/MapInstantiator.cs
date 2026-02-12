@@ -75,7 +75,7 @@ public class MapInstantiator : MonoBehaviour
                         int prefabIndex2 = Random.value < 0.5f ? 0 : 3;
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         spawnedObjects.Add(
-                            Instantiate(enemyPrefabs[4], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                            Instantiate(enemyPrefabs[1], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
 
@@ -87,7 +87,7 @@ public class MapInstantiator : MonoBehaviour
 
                         spawnedObjects.Add(
                             Instantiate(
-                                enemyPrefabs[1],
+                                enemyPrefabs[2],
                                 tilemapGround.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )

@@ -1,10 +1,17 @@
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.Rendering;
 
 public class StateMachine : MonoBehaviour
 {
     protected BaseState _currentState;
     protected bool _isTransitioning;
+    private bool _stunApplied;
+    private bool _prevStopped;
+    private MonoBehaviour _attackBehaviour;
+    private Color _prevColor;
+    private SpriteRenderer _sr;
+    private NavMeshAgent _agent;
     [SerializeField] protected Enemy _enemy;
 
 
@@ -18,12 +25,13 @@ public class StateMachine : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //override for stuns
-        if (_enemy.IsStunned && !(_currentState is StunnedState))
+        if (_enemy.IsStunned)
         {
-            ChangeState(new StunnedState(_enemy));
+            ApplyStunOverlay();
             return;
         }
+
+        RemoveStunOverlayIfNeeded();
 
         BaseState nextState = _currentState.GetNextState();
         if (_currentState.Equals(nextState) && !_isTransitioning)
@@ -50,4 +58,49 @@ public class StateMachine : MonoBehaviour
     {
         return _currentState;
     }
+
+    private void ApplyStunOverlay()
+    {
+        if (!_stunApplied)
+        {
+            _currentState.ExitState();
+            _agent = _enemy.GetAgent();
+            _attackBehaviour = _enemy.GetAttack() as MonoBehaviour;
+            _sr = _enemy.GetComponentInChildren<SpriteRenderer>();
+
+            if (_sr)
+            {
+                _prevColor = _sr.color;
+                _sr.color = Color.cyan;
+            }
+
+            if (_agent && _agent.isActiveAndEnabled)
+            {
+                _prevStopped = _agent.isStopped;
+                _agent.isStopped = true;
+                _agent.ResetPath();
+            }
+
+            if (_attackBehaviour)
+                _attackBehaviour.enabled = false;
+
+            _stunApplied = true;
+        }
+    }
+
+    private void RemoveStunOverlayIfNeeded()
+    {
+        if (!_stunApplied) return;
+
+        if (_sr) _sr.color = _prevColor;
+
+        if (_agent && _agent.isActiveAndEnabled)
+            _agent.isStopped = _prevStopped;
+
+        if (_attackBehaviour)
+            _attackBehaviour.enabled = true;
+
+        _stunApplied = false;
+    }
+
 }

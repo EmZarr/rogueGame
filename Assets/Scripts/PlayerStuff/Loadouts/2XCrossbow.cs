@@ -8,15 +8,21 @@ using UnityEngine.Tilemaps;
 
 public class TwoCrossbow : LoadoutBase {  
 
-public GameObject ArrowProjectile;
-public GameObject DefenseProjectile;
+    public GameObject ArrowProjectile;
+    public GameObject _knockBack;
+    public KnockBackDefense _knockBackHitBox;
 
     public TwoCrossbow(Player player) : base(player)
     {
-        ArrowProjectile = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<TwoXArrowLogic>().gameObject;
-        DefenseProjectile = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<KnockBackDefense>().gameObject;
+        ArrowProjectile = GameObject.FindGameObjectWithTag("Player").GetComponentInChildren<Projectile>().gameObject;
+
+        _knockBack = GameObject.FindGameObjectWithTag("DefArrow");
+        if (_knockBack != null)
+        {
+            _knockBackHitBox = _knockBack.GetComponent<KnockBackDefense>();
+        }
         _lightDamage = 5f;
-        _defenseDuration = 0.1f;
+        _defenseDuration = 0.2f;
     }
 
     public override IEnumerator LightAttack(Vector2 direction)
@@ -34,8 +40,8 @@ public GameObject DefenseProjectile;
         var _arrowCollider = arrowObj.GetComponent<Collider2D>();
         _arrowRenderer.enabled = true;
         _arrowCollider.enabled = true;
-        var arrow = arrowObj.GetComponent<TwoXArrowLogic>();
-        arrow.Init(getLightDamage(), direction, false, false);
+        var arrow = arrowObj.GetComponent<Projectile>();
+        arrow.Init(getLightDamage(), direction, true);
         yield return null;
     }
 
@@ -103,17 +109,8 @@ public GameObject DefenseProjectile;
         yield break;
     }
 
-
     public override IEnumerator Defense(Vector2 direction)
     {
-          GameObject defenseBlast = UnityEngine.GameObject.Instantiate(DefenseProjectile, _player.transform.position, Quaternion.identity);
-          var _arrowRenderer = defenseBlast.GetComponent<SpriteRenderer>();
-          var _arrowCollider = defenseBlast.GetComponent<BoxCollider2D>();
-
-          _arrowRenderer.enabled = true;
-          _arrowCollider.enabled = true;
-          var defenseArrow = defenseBlast.GetComponent<KnockBackDefense>();
-          defenseArrow.Init(direction);
-          yield return new WaitForSeconds(0);
+        yield return AreaAttack(direction, _knockBack, _knockBackHitBox, 1.3f, _defenseDuration, 0f);
     }
 }

@@ -21,8 +21,7 @@ public class RangedAttack : IAttack
         Vector3 spawnPos = transform.position + dir * 0.5f;
         var proj = Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
         proj.SetInstigator(gameObject);
-        proj.Init(false, _damage, false);
+        proj.Init(_damage, dir, false);
         _nextReadyTime = Time.time + _attackSpeed;
     }
-
 }
