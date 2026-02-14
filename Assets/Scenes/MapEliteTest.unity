@@ -495,10 +495,10 @@ MonoBehaviour:
   mapSize: {x: 100, y: 100, z: 0}
   maxRoomSize: {x: 15, y: 15, z: 0}
   maxRoomAmount: 50
-  amountOfEnemyTypes: 2
+  amountOfEnemyTypes: 5
   startingBudget: 30
   maxAmountFurnishing: 20
-  amountOfFurnishingTypes: 3
+  amountOfFurnishingTypes: 7
   placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   remakeMap: {fileID: 1708116293339222938, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   mutateMap: {fileID: 101673841628561707, guid: 052faaac586de48259a63d0c4782560b, type: 3}

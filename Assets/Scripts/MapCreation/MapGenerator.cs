@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using Unity.Mathematics;
+using Unity.Collections;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -209,6 +210,18 @@ public class MapGenerator : MonoBehaviour
         return map;
     }
 
+    void PlacePattern(MapInfo map, Vector2Int pattern, Vector2Int start)
+    {
+        for (int i = 0; i < pattern.x; i++)
+        {
+            for (int j = 0; j < pattern.y; j++)
+            {
+                map.mapArray[start.x+i, start.y+j] = 1;
+            }
+        }
+        
+    }
+
     MapInfo placeRandomRoom(MapInfo map)
     {
         Vector2Int roomSize = new Vector2Int(
@@ -343,7 +356,7 @@ public class MapGenerator : MonoBehaviour
 
             // place funrnishing
             int furnishType = UnityEngine.Random.Range(0, amountOfFurnishingTypes);
-            map.furnishing.Add((pos, 3+furnishType));
+            map.furnishing.Add((pos, 11+furnishType));
         }
 
         foreach (var (p, t) in map.furnishing)
@@ -668,11 +681,22 @@ public class MapGenerator : MonoBehaviour
         TrySetWall(map, x, y + 1, false);
         TrySetWall(map, x, y - 1, false);
 
-        TrySetCorner(map, x-1, y - 1);
-        if(map.mapArray[x+1,y] == 1 && map.mapArray[x,y+1] == 1)
+        if(map.mapArray[x-1,y] == 3 && map.mapArray[x,y-1] == 4)
         {
-            TrySetCorner(map, x+1, y +1);
+            TrySetCorner(map, x-1, y-1);
         }
+        if(map.mapArray[x+1,y] == 1 || map.mapArray[x-1,y] == 1)
+        {
+            if(map.mapArray[x,y+1] == 4 || map.mapArray[x,y+1] == 3)
+            {
+                TrySetCorner(map, x, y +1);
+            }
+        } 
+        /*if(map.mapArray[x-1,y] == 1 && map.mapArray[x,y+1] == 4)
+        {
+            if (x > 0 || y > 0 || x < mapSize.x || y < mapSize.y)
+                TrySetCorner(map, x, y +1);
+        }*/
 
     }
 
@@ -681,12 +705,12 @@ public class MapGenerator : MonoBehaviour
         if (x < 0 || y < 0 || x >= mapSize.x || y >= mapSize.y)
             return;
 
-        if (map.mapArray[x, y] == 3 || map.mapArray[x, y] == 4)
+        /*if (map.mapArray[x, y] == 3 || map.mapArray[x, y] == 4)
         {
             // only turn empty into wall
             map.mapArray[x, y] = 5;
             
-        }   
+        }*/
         if (map.mapArray[x, y] == 0)
         {
             // only turn empty into wall
@@ -716,7 +740,7 @@ public class MapGenerator : MonoBehaviour
     {
         foreach (var tile in map.shortestPath)
         {
-            if(map.mapArray[tile.x, tile.y] != 100)
+            if(map.mapArray[tile.x, tile.y] == 1)
             {
                  map.mapArray[tile.x, tile.y] = 2;
             }
@@ -981,7 +1005,6 @@ public class MapGenerator : MonoBehaviour
             remaining.Remove(bestToComp);
         }
     }
-
 }
 
 public class MapInfo
@@ -1115,5 +1138,12 @@ public struct Room
     public int YMin => placement.y;
     public int XMax => placement.x + size.x - 1;
     public int YMax => placement.y + size.y - 1;
+}
+
+
+public struct Pattern
+{
+    public Vector2Int size;
+    public int[,] patternType;
 }
 
