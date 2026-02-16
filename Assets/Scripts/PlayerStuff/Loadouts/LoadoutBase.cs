@@ -47,8 +47,10 @@ public class LoadoutBase
 
     public virtual IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
+        float baseDuration = 0.15f;
+        float speedMul = _player.GetMoveSpeed() / 8f;
+        float dashDuration = Mathf.Max(0.06f, baseDuration / speedMul);
         float dashDistance = 4f;
-        float dashDuration = 0.15f;
 
         direction.Normalize();
 
@@ -65,7 +67,9 @@ public class LoadoutBase
     }
     public virtual IEnumerator HeavyDash(Vector2 direction, Transform transform)
     {
-        float dashDuration = 0.2f;
+        float baseDuration = 0.2f;
+        float speedMul = _player.GetMoveSpeed() / 8f;
+        float dashDuration = Mathf.Max(0.06f, baseDuration / speedMul);
 
         direction.Normalize();
 
@@ -112,12 +116,12 @@ public class LoadoutBase
 
     public float getLightDamage()
     {
-        return _lightDamage * _player.BaseDamageAmp + _lightDamage * _player.DamageAmp;
+        return _lightDamage * _player.DamageMultiplier;
     }
 
     public float getHeavyDamage()
     {
-        return _heavyDamage * _player.BaseDamageAmp + _heavyDamage * _player.DamageAmp;
+        return _heavyDamage * _player.DamageMultiplier;
     }
 
     public float GetHeavyDashDistance()
@@ -133,15 +137,11 @@ public class LoadoutBase
 
     //override in subclasses
     public float GetLightAttackDuration(){
-        return _lightAttackDuration * _player.AttackSpeedIncrease > 0 ? _lightAttackDuration * _player.AttackSpeedIncrease : 0;
+        return _lightAttackDuration / _player.AttackSpeedMultiplier;
     }
     public float GetHeavyAttackDuration(){
-        return _heavyAttackDuration * _player.AttackSpeedIncrease > 0 ? _heavyAttackDuration * _player.AttackSpeedIncrease : 0;
+        return _heavyAttackDuration / _player.AttackSpeedMultiplier;
     }
-
-    public float GetTempDamageBoost() => _player.DamageAmp;
-
-    public float GetPermDamageBoost() => _player.BaseDamageAmp;
 
     public float GetLightAttackWindup() => GetLightAttackDuration() * _windupProcent;
 

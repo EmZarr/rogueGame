@@ -17,7 +17,7 @@ public class DamageBoostLoot : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            player.IncreaseDamage(damageIncreasePercent, permanent);
+            //player.IncreaseDamage(damageIncreasePercent, permanent);
             Destroy(gameObject);
         }
     }

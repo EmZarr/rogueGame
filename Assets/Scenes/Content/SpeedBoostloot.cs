@@ -16,7 +16,7 @@ public class SpeedBoostLoot : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            player.GetComponent<LoadoutState>().IncreaseMaxSpeed(speedIncreasePercent);
+            //player.GetComponent<LoadoutState>().IncreaseMaxSpeed(speedIncreasePercent);
             Destroy(gameObject);
         }
     }

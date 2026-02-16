@@ -31,9 +31,6 @@ public class LoadoutState : MonoBehaviour
     private Coroutine dashLockRoutine;
 
     [Header("Movement")]
-    public float maxSpeed = 8f;
-
-    public float baseSpeed = 8f;
     public float accel = 100f;
     public float decel = 100f;
 
@@ -85,7 +82,7 @@ public class LoadoutState : MonoBehaviour
     void Start()
     {
         loadout = new LoadoutBase(player);
-        currentSpeed = maxSpeed;
+        currentSpeed = player.GetMoveSpeed();
         chargeUpBar = GameObject.FindWithTag("ChargeBar").GetComponent<ChargeUp>();
         nextHeavyDashTime = Time.time;
 
@@ -144,11 +141,11 @@ public class LoadoutState : MonoBehaviour
                     break;
 
                 case ActionType.AttackHeavy:
-                    currentSpeed = maxSpeed*0.4f;
+                    currentSpeed = player.GetMoveSpeed() * 0.4f;
                     heavyAttackQueuedThisPress = true;
                     yield return RunAction(loadout.GetHeavyAttackDuration(), loadout.HeavyAttack(getMouseDir()), ActionType.AttackHeavy, "Special");
                     nextAttackTime = Time.time + loadout.GetLightAttackDuration();
-                    currentSpeed = maxSpeed;
+                    currentSpeed = player.GetMoveSpeed();
                     break;
 
                 case ActionType.DashLight:
@@ -442,12 +439,7 @@ public class LoadoutState : MonoBehaviour
 
     public void SetSpeed(float speedProcent)
     {
-        currentSpeed = speedProcent * maxSpeed;
-    }
-
-    public void IncreaseMaxSpeed(float amountPercent)
-    {
-        maxSpeed += baseSpeed * 0.01f * amountPercent;
+        currentSpeed = speedProcent * player.GetMoveSpeed();
     }
 
     public LoadoutBase GetLoadout()

@@ -7,27 +7,46 @@ using System.Collections;
 public class Player : MonoBehaviour
 {
     [SerializeField] float _health = 100;
+    [SerializeField] float _maxSpeed = 8f;
     [SerializeField] private LayerMask _shieldMask;
     [SerializeField] DamageFlash _flash;
+    [SerializeField] Animator _healthAnimator;
+    [SerializeField] Animator _powerUpAnimator;
+    [SerializeField] LoadoutState _loadoutState;
     Shield _shield;
     UI _ui;
     float _score = 0;
+    private Coroutine _tempBuffCo;
     public event Action<GameObject /*killer*/> OnDied;
+    public static Player Instance { get; private set; }
 
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+    private void OnDisable()
+    {
+        // optional: ensure no “stuck buff” if object is disabled mid-buff
+        _tempBuffCo = null;
+    }
     private bool _isInvinsible = false;
     private bool _isStunning = false;
     private float _stunDuration = 1f;
     private bool _isDealingDmg = false;
     private float _damage = 5f;
 
-    public float DamageAmp = 0.0f;
-    public float BaseDamageAmp = 1f;
-
-    public float AttackSpeedIncrease = 1f;
+    private float _damageMultiplier = 1.0f;
+    private float _attackSpeedMultiplier = 1.0f;
+    private float _moveSpeedMultiplier = 1.0f;
+    private float _activeTempMultiplier = 1f;
 
     public float HeavyDashCooldownDecrease = 1f;
 
-    private float _damageBoostDuration;
     private float _parryStunDuration = 10f;
 
 
@@ -78,6 +97,7 @@ public class Player : MonoBehaviour
     public void Heal(float health)
     {
         _health += health;
+        _healthAnimator.SetTrigger("PickUpHealth");
         _ui.updateHealth(_health);
     }
 
@@ -106,7 +126,7 @@ public class Player : MonoBehaviour
     public void SetDealingDamage(bool isDealingdmg, float damageAmount)
     {
         _isDealingDmg = isDealingdmg;
-        _damage = damageAmount*BaseDamageAmp + damageAmount*DamageAmp;
+        _damage = damageAmount*_damageMultiplier;
     }
 
     public void SetInvinsible(bool isInvinsible)
@@ -188,32 +208,49 @@ public class Player : MonoBehaviour
         }
     }
 
-    public void IncreaseDamage(float percent, bool permanent)
-    {
-        if (permanent){
-            BaseDamageAmp += 0.01f*percent;
-        }
-        else
-        {
-            StartCoroutine(DamageAmpTimer(percent, 10.0f));
-        }
+    public void IncreaseMovespeed(float increase) {
+        _powerUpAnimator.SetTrigger("PowerPickUp");
+        _moveSpeedMultiplier += increase;
+        _loadoutState.SetSpeed(1f);
+        _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
     }
-    private IEnumerator DamageAmpTimer(float percent, float time)
+    public void IncreaseAttackSpeed(float increase)
     {
-        _damageBoostDuration += time;
-        DamageAmp += 0.01f*percent;
-        yield return new WaitForSeconds(_damageBoostDuration );
-        _damageBoostDuration -= time;
-        if (_damageBoostDuration <= 0)
-        {
-             DamageAmp = 0f;
-        }
-        
+        _powerUpAnimator.SetTrigger("PowerPickUp");
+        _attackSpeedMultiplier += increase;
+        _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
+    }
+    public void IncreaseDamage(float increase)
+    {
+        _powerUpAnimator.SetTrigger("PowerPickUp");
+        _damageMultiplier += increase;
+        _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
     }
 
-    public void IncreaseAttackSpeed(float percentIncrease)
+    public void TempDamageBoost(float multiplier = 2f, float duration = 10f)
     {
-        AttackSpeedIncrease -= 0.01f*percentIncrease;
+        _powerUpAnimator.SetTrigger("PowerPickUp");
+        // remove existing temp boost first
+        if (_tempBuffCo != null)
+        {
+            StopCoroutine(_tempBuffCo);
+            _damageMultiplier /= _activeTempMultiplier;   // undo previous temp
+            _activeTempMultiplier = 1f;
+        }
+
+        _tempBuffCo = StartCoroutine(TempBoostRoutine(multiplier, duration));
+    }
+
+    private IEnumerator TempBoostRoutine(float multiplier, float duration)
+    {
+        _activeTempMultiplier = multiplier;
+        _damageMultiplier *= _activeTempMultiplier;
+
+        yield return new WaitForSeconds(duration);
+
+        _damageMultiplier /= _activeTempMultiplier;
+        _activeTempMultiplier = 1f;
+        _tempBuffCo = null;
     }
 
     public void DecreaseHeavyDashCooldown(float percentDecrease)
@@ -226,6 +263,11 @@ public class Player : MonoBehaviour
         return _isInvinsible;
     }
 
-
+    public float DamageMultiplier => _damageMultiplier;
+    public float AttackSpeedMultiplier => _attackSpeedMultiplier;
+    public float GetMoveSpeed() {
+        return _maxSpeed * _moveSpeedMultiplier;
+    }
+    public float ActiveTempMultiplier => _activeTempMultiplier;
 
 }

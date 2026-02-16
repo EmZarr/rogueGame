@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class LoadoutUI : MonoBehaviour
 {
@@ -12,19 +13,12 @@ public class LoadoutUI : MonoBehaviour
 
     private LoadoutState state;
 
-    void OnEnable()
-    {
-        LevelManager.OnPlayerSpawned += AttachPlayer;
-    }
+    private void OnEnable() => MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
+    private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
 
-    void OnDisable()
+    void HandlePlayerSpawned(Player p)
     {
-        LevelManager.OnPlayerSpawned -= AttachPlayer;
-    }
-
-    private void AttachPlayer(Player player)
-    {
-        state = player.GetComponent<LoadoutState>();
+        state = p.GetComponent<LoadoutState>();
     }
 
     // Update is called once per frame

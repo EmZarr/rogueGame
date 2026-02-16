@@ -15,7 +15,7 @@ public class Enemy : MonoBehaviour
 
     [SerializeField] private EnemyAnimDriver animDriver;
 
-    private GameObject _player;
+    private Player _player;
     private Action onDeathEffect = null;
     private bool _dying = false;
     private float _nextDashTime;
@@ -34,9 +34,19 @@ public class Enemy : MonoBehaviour
 
     bool _dead;
 
+    private void OnEnable()
+    {
+        MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
+
+        // catch up in case player already spawned
+        if (_player == null)
+            HandlePlayerSpawned(MapInstantiator.CurrentPlayer);
+    }
+    private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
+
+    void HandlePlayerSpawned(Player p) => _player = p;
     private void Awake()
     {
-        _player = GameObject.FindWithTag("Player");
         _currentHealth = _data.health;
         _agent.updateRotation = false;
         _agent.updateUpAxis = false;
@@ -49,10 +59,6 @@ public class Enemy : MonoBehaviour
     private void Update()
     {
         // For combat back
-        if (_player == null)
-        {
-            _player = GameObject.FindWithTag("Player");
-        }
         if (RemainingStunDuration > 0f)
         {
             RemainingStunDuration -= Time.deltaTime;
@@ -245,7 +251,7 @@ public class Enemy : MonoBehaviour
 
     public NavMeshAgent GetAgent() { return _agent; }
     public IAttack GetAttack() { return _attack; }
-    public GameObject GetPlayer() { return _player; }
+    public Player GetPlayer() { return _player; }
     public float GetChaseRange() { return _data.chaseRange; }
     public float GetAttackRange() { return _data.attackRange; }
 }

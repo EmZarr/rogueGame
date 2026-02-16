@@ -12,13 +12,22 @@ public abstract class IAttack : MonoBehaviour
 
     protected EnemyAnimDriver _anim;
 
+    private void OnEnable()
+    {
+        MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
 
+        // catch up in case player already spawned
+        if (_player == null)
+            HandlePlayerSpawned(MapInstantiator.CurrentPlayer);
+    }
+    private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
+
+    void HandlePlayerSpawned(Player p) => _player = p;
     private void Start()
     {
         _damage = _data.damage;
         _attackSpeed = _data.attackSpeed;
         _attackDelay = _data.attackDelay;
-        _player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
 
         _anim = GetComponentInParent<EnemyAnimDriver>();
     }

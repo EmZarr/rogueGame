@@ -60,7 +60,7 @@ public class Shield : MonoBehaviour
                 projectile.Reflect(loadoutState.getMouseDir());
             }
         }
-        else
+        else if (isParrying)
         {
             var bomb = other.GetComponent<Bomb>();
             if (bomb != null)

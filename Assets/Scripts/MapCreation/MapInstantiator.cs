@@ -21,6 +21,9 @@ public class MapInstantiator : MonoBehaviour
 
     [SerializeField] GameObject levelManager;
 
+    public static Player CurrentPlayer { get; private set; }
+    public static System.Action<Player> OnPlayerSpawned;
+
     // keep references to everything we spawn so we can delete them later
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
@@ -60,14 +63,14 @@ public class MapInstantiator : MonoBehaviour
                     case 4:
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         spawnedObjects.Add(
-                            Instantiate(furnishingPrefabs[5], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                            Instantiate(furnishingPrefabs[3], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
 
                     case 5:
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         spawnedObjects.Add(
-                            Instantiate(furnishingPrefabs[0], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                            Instantiate(furnishingPrefabs[1], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
 
@@ -75,7 +78,7 @@ public class MapInstantiator : MonoBehaviour
                         int prefabIndex2 = Random.value < 0.5f ? 0 : 3;
                         tilemapGround.SetTile(cell, groundTileGrass1);
                         spawnedObjects.Add(
-                            Instantiate(enemyPrefabs[1], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
+                            Instantiate(enemyPrefabs[2], tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
 
@@ -87,7 +90,7 @@ public class MapInstantiator : MonoBehaviour
 
                         spawnedObjects.Add(
                             Instantiate(
-                                enemyPrefabs[2],
+                                enemyPrefabs[0],
                                 tilemapGround.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -102,9 +105,13 @@ public class MapInstantiator : MonoBehaviour
                         break;
                     case 100:
                         tilemapGround.SetTile(cell, groundTileGrass1);
-                        spawnedObjects.Add(
-                            Instantiate(playerPrefab, tilemapGround.GetCellCenterWorld(cell), Quaternion.identity)
-                        );
+
+                        var playerGO = Instantiate(playerPrefab, tilemapGround.GetCellCenterWorld(cell), Quaternion.identity);
+                        spawnedObjects.Add(playerGO);
+
+                        var player = playerGO.GetComponent<Player>();
+                        CurrentPlayer = player;
+                        OnPlayerSpawned?.Invoke(player);
                         break;
                     case 98:
                         tilemapGround.SetTile(cell, testTile);
