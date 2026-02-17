@@ -246,7 +246,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DamageZone
   sr: {fileID: 4886798263634326035}
   col: {fileID: 6837482150020284487}
-  knockBack: 0
+  knockBackDistance: 0
 --- !u!1 &6164719104617455019
 GameObject:
   m_ObjectHideFlags: 0
@@ -327,9 +327,11 @@ MonoBehaviour:
   _agent: {fileID: 4762585678125782601}
   _attack: {fileID: 8656635374281543014}
   maxDashLenght: 0
+  dashCooldown: 3
   damageFlash: {fileID: 3825708354938277016}
   animDriver: {fileID: 1013711049946643960}
   _currentHealth: 0
+  attacking: 0
 --- !u!114 &8131901137409769011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -476,7 +478,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_Sprite: {fileID: -970266556, guid: 83a656ed19d9b494b9ff6b85a50f6404, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

@@ -149,7 +149,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1076630938}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -809,7 +809,7 @@ MonoBehaviour:
   tilesForestDecour: []
   tilesGroundWalls:
   - {fileID: 11400000, guid: 71716daddc804e1469f244da4cd72c74, type: 2}
-  - {fileID: 11400000, guid: c9e8404cd17dc7449a94d72d5d4f4952, type: 2}
+  - {fileID: 11400000, guid: 4c33cca3a3dffc14bba9ffd404c8371c, type: 2}
   - {fileID: 11400000, guid: c9e8404cd17dc7449a94d72d5d4f4952, type: 2}
   tilesFarmWalls:
   - {fileID: 11400000, guid: 21599865d51e3e14c90296ae1bbc5fd2, type: 2}
@@ -1292,7 +1292,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1076630938}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1452,9 +1452,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1744628218010248638, guid: 83411c4e6c421fe41be59ec74228bde7, type: 3}
       insertIndex: 2
       addedObject: {fileID: 1097705173}
-    - targetCorrespondingSourceObject: {fileID: 1744628218010248638, guid: 83411c4e6c421fe41be59ec74228bde7, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1076630938}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 83411c4e6c421fe41be59ec74228bde7, type: 3}
 --- !u!1 &1910020038
@@ -1749,6 +1746,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3523722488733466209, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
+      propertyPath: m_SortingOrder
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 5664547084240846887, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
       propertyPath: mapInstantiator
       value: 
@@ -1816,3 +1817,5 @@ SceneRoots:
   - {fileID: 1085453246}
   - {fileID: 1736563171}
   - {fileID: 3534769319121184608}
+  - {fileID: 68440494}
+  - {fileID: 1478728565}
