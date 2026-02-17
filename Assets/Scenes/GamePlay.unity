@@ -224,7 +224,7 @@ TilemapRenderer:
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 3
-  m_Mode: 0
+  m_Mode: 1
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
 --- !u!1839735485 &180224430
@@ -390,7 +390,7 @@ GameObject:
   - component: {fileID: 720047736}
   - component: {fileID: 720047735}
   m_Layer: 0
-  m_Name: TilemapGroundDecour
+  m_Name: TilemapDecour
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -502,7 +502,7 @@ TilemapRenderer:
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 3
-  m_Mode: 0
+  m_Mode: 1
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
 --- !u!4 &720047737
@@ -645,7 +645,7 @@ TilemapRenderer:
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 3
-  m_Mode: 0
+  m_Mode: 1
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
 --- !u!4 &814895090
@@ -693,10 +693,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c3d796431252d540bdc40203fa172e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapInstantiator
-  tilemapGroundBase: {fileID: 1048831579}
+  tilemapBase: {fileID: 1048831579}
   tilemapRoad: {fileID: 814895087}
-  tilemapGroundDecour: {fileID: 720047734}
-  tilemapGround: {fileID: 1913072605}
+  tilemapDecour: {fileID: 720047734}
   tilemapWall: {fileID: 180224430}
   tilesRoad:
   - {fileID: 11400000, guid: 225850b1b406a524ab5666d508cc5568, type: 2}
@@ -708,54 +707,51 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 1ae01951edf48b448813d1f3b4181273, type: 2}
   - {fileID: 11400000, guid: 40af8ad0194e43d4190c1ffa18364808, type: 2}
   tilesGroundBase:
-  - {fileID: 11400000, guid: 2ac7459b66c65ad47948f88711ccb146, type: 2}
-  - {fileID: 11400000, guid: 34e2396d77eec324c9341d1996154ce0, type: 2}
-  - {fileID: 11400000, guid: eeec5a761017b544cb2b2375e8c2bc67, type: 2}
-  - {fileID: 11400000, guid: b7672a014ba1e8343abd5aa7144f5bff, type: 2}
-  - {fileID: 11400000, guid: a3c91aa24681b7c46b6d171bf41ca4d3, type: 2}
-  - {fileID: 11400000, guid: 6602aeb2fd7b76643ba69923fd4012f4, type: 2}
-  - {fileID: 11400000, guid: 2bd710ddfbfbd194e9156551950d751d, type: 2}
-  - {fileID: 11400000, guid: 8b7fa7026bbdcf34d984db44b6e1be48, type: 2}
-  - {fileID: 11400000, guid: dcc9389db3bfec04185dd1f28e393c5b, type: 2}
-  - {fileID: 11400000, guid: 2392bac030968364389cb9cb409e4cf6, type: 2}
-  - {fileID: 11400000, guid: 8b776786ad7ef23488bb4743e6a45e23, type: 2}
-  - {fileID: 11400000, guid: bb040d2fa3b00a644851595b08655692, type: 2}
-  - {fileID: 11400000, guid: bfa9367a40fa5b84e9e4c60a21370778, type: 2}
-  - {fileID: 11400000, guid: f20505b747e53f6449a382ebeada4a79, type: 2}
-  - {fileID: 11400000, guid: f1e0476cfccbc294f8e0267456f6c3c9, type: 2}
-  tilesFarm:
-  - {fileID: 11400000, guid: acc2a5e5778c4e945af3806f83720458, type: 2}
+  - {fileID: 11400000, guid: 79c14a6d26238974288b31f601ccbc23, type: 2}
+  - {fileID: 11400000, guid: 0b48486cc433f3843b22622342a3d133, type: 2}
+  - {fileID: 11400000, guid: d9904b1971f23fc438d4c651a40c0ecc, type: 2}
+  - {fileID: 11400000, guid: 05227d8865577b741a539a8589705412, type: 2}
+  - {fileID: 11400000, guid: 3f566f0b3bffca041b92aa49d9eefbe5, type: 2}
+  tilesFarmBase:
   - {fileID: 11400000, guid: ac765b45466ab48439a2bcb9302017e7, type: 2}
-  - {fileID: 11400000, guid: 4f88db4c9386a874da41da6ed6e3e01b, type: 2}
-  - {fileID: 11400000, guid: a3c91aa24681b7c46b6d171bf41ca4d3, type: 2}
-  - {fileID: 11400000, guid: ad55dff39457e9147b93cf4df59611cb, type: 2}
-  - {fileID: 11400000, guid: 16e9fe5f9a635a54b8005e7893bc4fee, type: 2}
-  - {fileID: 11400000, guid: ecc9dcc014f025e4e9e0e630d73a0519, type: 2}
-  tilesForest: []
-  tilesGround:
+  - {fileID: 11400000, guid: 2ac7459b66c65ad47948f88711ccb146, type: 2}
+  - {fileID: 11400000, guid: eeec5a761017b544cb2b2375e8c2bc67, type: 2}
+  - {fileID: 11400000, guid: 524c4d6305ed4864fa3a2c9d770739a6, type: 2}
   - {fileID: 11400000, guid: acc2a5e5778c4e945af3806f83720458, type: 2}
-  - {fileID: 11400000, guid: 524c4d6305ed4864fa3a2c9d770739a6, type: 2}
-  - {fileID: 11400000, guid: 524c4d6305ed4864fa3a2c9d770739a6, type: 2}
+  tilesForestBase:
+  - {fileID: 11400000, guid: 8b776786ad7ef23488bb4743e6a45e23, type: 2}
+  - {fileID: 11400000, guid: 9a3d3c73f17a20f43a384db91b8337cb, type: 2}
+  - {fileID: 11400000, guid: 8b776786ad7ef23488bb4743e6a45e23, type: 2}
+  - {fileID: 11400000, guid: 399ec6ac6c3fc9a40a70462abf3d45de, type: 2}
+  - {fileID: 11400000, guid: 399ec6ac6c3fc9a40a70462abf3d45de, type: 2}
   tilesGroundDecour:
-  - {fileID: 11400000, guid: 41aba4a687b674641b6c9523748bfc9a, type: 2}
-  - {fileID: 11400000, guid: 80013ef5d63f26344bd04b5ba139dc57, type: 2}
+  - {fileID: 11400000, guid: 3806d37c2e09b4444a10a491bf63a40f, type: 2}
+  - {fileID: 11400000, guid: 8aa42f6e92c8fc34a9aa12bf62585e74, type: 2}
   - {fileID: 11400000, guid: 565066d5950e00147814fbf03409c503, type: 2}
-  - {fileID: 11400000, guid: faddca900b7f73c43a39ab34272ca9d2, type: 2}
-  - {fileID: 11400000, guid: e40f410eaf2551f4b9b19473c225a1d1, type: 2}
-  - {fileID: 11400000, guid: 5fe510489ea0b13448d28fcf2585c239, type: 2}
-  - {fileID: 11400000, guid: fa9a114c31d2a8b47bfa1ccbbb790dd1, type: 2}
-  - {fileID: 11400000, guid: 54de825f702a8614b9603fddc7d8bdfd, type: 2}
-  - {fileID: 11400000, guid: d7738b4c5cfc1d8409fb3e2a9e3dde70, type: 2}
-  - {fileID: 11400000, guid: d7738b4c5cfc1d8409fb3e2a9e3dde70, type: 2}
-  - {fileID: 11400000, guid: c2059b613a2b3514e869dafa0bd8987b, type: 2}
-  - {fileID: 11400000, guid: b439e06f1e7a8d6449775a4a149ec91b, type: 2}
-  - {fileID: 11400000, guid: f5be9c361d6bc9740895c4f8df99d8d6, type: 2}
-  - {fileID: 11400000, guid: 28fda4a82579c004b937b90fd25d9c56, type: 2}
-  - {fileID: 11400000, guid: b90b94ccffa880346a1cb41cdadc10c3, type: 2}
-  - {fileID: 11400000, guid: bb4fa6619cf077742ad13d4c9ebc55aa, type: 2}
-  - {fileID: 11400000, guid: 18da321ccc9ac4c47be6d40999d31daa, type: 2}
-  - {fileID: 11400000, guid: 7390fb0db3d4b7b4ca9b82955b742588, type: 2}
-  - {fileID: 11400000, guid: bcff15d9257c7a5499b034f7b9688b60, type: 2}
+  - {fileID: 11400000, guid: 848647d24b3b6d34e8082d7c8bfe9184, type: 2}
+  - {fileID: 11400000, guid: c417019d296bde6458dc2bcedc0d4d8e, type: 2}
+  tilesFarmDecour: []
+  tilesForestDecour: []
+  tilesGroundWalls:
+  - {fileID: 11400000, guid: 71716daddc804e1469f244da4cd72c74, type: 2}
+  - {fileID: 11400000, guid: c9e8404cd17dc7449a94d72d5d4f4952, type: 2}
+  - {fileID: 11400000, guid: c9e8404cd17dc7449a94d72d5d4f4952, type: 2}
+  tilesFarmWalls:
+  - {fileID: 11400000, guid: 21599865d51e3e14c90296ae1bbc5fd2, type: 2}
+  - {fileID: 11400000, guid: 492fb7148ec37794e940a25a2fb59bc7, type: 2}
+  - {fileID: 11400000, guid: 589e985e102e9b64a84a5a2cd8666943, type: 2}
+  - {fileID: 11400000, guid: 963014a4c8a0f5f439699d5bc3b79cbf, type: 2}
+  - {fileID: 11400000, guid: 7ee6ab2355eabe74996f5b4ba00355a7, type: 2}
+  tilesForestWalls:
+  - {fileID: 11400000, guid: f514ea207b81fc141b50c47b3dda24b4, type: 2}
+  - {fileID: 11400000, guid: 3d437ff547970c141aaa0dd6e359e98d, type: 2}
+  - {fileID: 11400000, guid: 56b81f52a005c8e4abe04ab219d8d8be, type: 2}
+  tilesGroundRoads:
+  - {fileID: 11400000, guid: 225850b1b406a524ab5666d508cc5568, type: 2}
+  tilesFarmRoads:
+  - {fileID: 11400000, guid: 68b986a1f2337c445820452e08530191, type: 2}
+  tilesForestRoads:
+  - {fileID: 11400000, guid: ed23c0fa943720745982dd095c6e9075, type: 2}
   tilesCorner:
   - {fileID: 11400000, guid: c9e8404cd17dc7449a94d72d5d4f4952, type: 2}
   - {fileID: 11400000, guid: 5f3e51378362a2b4396ac0e00d6650ce, type: 2}
@@ -824,7 +820,6 @@ Transform:
   - {fileID: 1048831582}
   - {fileID: 720047737}
   - {fileID: 814895090}
-  - {fileID: 1913072603}
   - {fileID: 180224427}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -841,7 +836,7 @@ GameObject:
   - component: {fileID: 1048831581}
   - component: {fileID: 1048831580}
   m_Layer: 0
-  m_Name: TilemapGroundBase
+  m_Name: TilemapBase
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -953,7 +948,7 @@ TilemapRenderer:
   m_MaxChunkCount: 16
   m_MaxFrameAge: 16
   m_SortOrder: 3
-  m_Mode: 0
+  m_Mode: 1
   m_DetectChunkCullingBounds: 0
   m_MaskInteraction: 0
 --- !u!4 &1048831582
@@ -1349,149 +1344,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1 &1913072602
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1913072603}
-  - component: {fileID: 1913072605}
-  - component: {fileID: 1913072604}
-  - component: {fileID: 1913072606}
-  m_Layer: 0
-  m_Name: TilemapGround
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1913072603
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1913072602}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 859900375}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!483693784 &1913072604
-TilemapRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1913072602}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 0
-  m_ReflectionProbeUsage: 0
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 1
-  m_ChunkSize: {x: 32, y: 32, z: 32}
-  m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
-  m_MaxChunkCount: 16
-  m_MaxFrameAge: 16
-  m_SortOrder: 3
-  m_Mode: 0
-  m_DetectChunkCullingBounds: 0
-  m_MaskInteraction: 0
---- !u!1839735485 &1913072605
-Tilemap:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1913072602}
-  m_Enabled: 1
-  m_Tiles: {}
-  m_AnimatedTiles: {}
-  m_TileAssetArray: []
-  m_TileSpriteArray: []
-  m_TileMatrixArray: []
-  m_TileColorArray: []
-  m_TileObjectToInstantiateArray: []
-  m_AnimationFrameRate: 1
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Origin: {x: 0, y: 0, z: 0}
-  m_Size: {x: 0, y: 0, z: 1}
-  m_TileAnchor: {x: 0.5, y: 0.18, z: 0}
-  m_TileOrientation: 0
-  m_TileOrientationMatrix:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
---- !u!114 &1913072606
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1913072602}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9809bf1345abc5648af68b3a82653f08, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: NavMeshPlus::NavMeshPlus.Components.NavMeshModifier
-  m_OverrideArea: 1
-  m_Area: 0
-  m_IgnoreFromBuild: 0
-  m_AffectedAgents: ffffffff
 --- !u!1 &2030661023
 GameObject:
   m_ObjectHideFlags: 0
@@ -1554,8 +1406,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 7
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
