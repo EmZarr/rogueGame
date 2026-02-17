@@ -10,13 +10,26 @@ public abstract class IAttack : MonoBehaviour
     protected float _damage;
     protected float _attackDelay;
 
+    protected EnemyAnimDriver _anim;
 
+    private void OnEnable()
+    {
+        MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
+
+        // catch up in case player already spawned
+        if (_player == null)
+            HandlePlayerSpawned(MapInstantiator.CurrentPlayer);
+    }
+    private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
+
+    void HandlePlayerSpawned(Player p) => _player = p;
     private void Start()
     {
         _damage = _data.damage;
         _attackSpeed = _data.attackSpeed;
         _attackDelay = _data.attackDelay;
-        _player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+
+        _anim = GetComponentInParent<EnemyAnimDriver>();
     }
     
     public IEnumerator Attack()
@@ -31,9 +44,13 @@ public abstract class IAttack : MonoBehaviour
         {
             yield return BasicAttack();     // must yield until the basic is done
         }*/
+
         if (IsReady())
         {
+
             yield return BasicAttack();
+
+            yield return _anim.RunAction(_attackSpeed, Animator.StringToHash("Attack"));
         }
 
     }

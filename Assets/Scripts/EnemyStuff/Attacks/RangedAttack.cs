@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class RangedAttack : IAttack
 {
@@ -16,10 +17,11 @@ public class RangedAttack : IAttack
     protected override IEnumerator BasicAttack()
     {
         yield return new WaitForSeconds(_attackDelay);
-        var proj = Instantiate(_projectilePrefab, transform.position, Quaternion.identity);
+        Vector3 dir = (_player.transform.position - transform.position).normalized;
+        Vector3 spawnPos = transform.position + dir * 0.5f;
+        var proj = Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
         proj.SetInstigator(gameObject);
-        proj.Init(false, _damage, false);
+        proj.Init(_damage, dir, false);
         _nextReadyTime = Time.time + _attackSpeed;
     }
-
 }

@@ -16,7 +16,7 @@ public class AttackSpeedBoostLoot : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            player.IncreaseAttackSpeed(attackSpeedIncreasePercent);
+            //player.IncreaseAttackSpeed(attackSpeedIncreasePercent);
             Destroy(gameObject);
         }
     }

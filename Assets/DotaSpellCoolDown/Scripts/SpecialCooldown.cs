@@ -2,6 +2,7 @@
 using UnityEngine.UI;
 using TMPro;
 using Unity.VisualScripting;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class SpecialCooldown : MonoBehaviour
 {
@@ -11,15 +12,22 @@ public class SpecialCooldown : MonoBehaviour
 
     private LoadoutState state;
 
-    void OnEnable()
+    private void OnEnable()
     {
-        LevelManager.OnPlayerSpawned += AttachPlayer;
+        MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
+
+        var p = MapInstantiator.CurrentPlayer;
+        if (p != null) HandlePlayerSpawned(p);
     }
 
-    void OnDisable()
-    {
-        LevelManager.OnPlayerSpawned -= AttachPlayer;
+    private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
+
+    void HandlePlayerSpawned(Player p) {
+        if (p == null) return;
+        state = p.GetComponent<LoadoutState>();
+        HideUI();
     }
+
 
     private void AttachPlayer(Player player)
     {

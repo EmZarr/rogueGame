@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class DefenseCooldown : MonoBehaviour
 {
@@ -8,22 +9,22 @@ public class DefenseCooldown : MonoBehaviour
     [SerializeField] private Image imageCooldown;
     [SerializeField] private TMP_Text textCooldown;
     [SerializeField] private Image imageEdge;
-
     private LoadoutState state;
 
-    void OnEnable()
+    private void OnEnable()
     {
-        LevelManager.OnPlayerSpawned += AttachPlayer;
+        MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
+
+        var p = MapInstantiator.CurrentPlayer;
+        if (p != null) HandlePlayerSpawned(p);
     }
 
-    void OnDisable()
-    {
-        LevelManager.OnPlayerSpawned -= AttachPlayer;
-    }
+    private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
 
-    private void AttachPlayer(Player player)
+    void HandlePlayerSpawned(Player p)
     {
-        state = player.GetComponent<LoadoutState>();
+        if (p == null) return;
+        state = p.GetComponent<LoadoutState>();
         HideUI();
     }
 

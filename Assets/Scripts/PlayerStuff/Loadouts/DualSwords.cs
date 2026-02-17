@@ -19,7 +19,7 @@ public class DualSwords : LoadoutBase
     {
         _lightDamage = 5f;
         _lightAttackDuration = 0.25f;
-        _heavyAttackDuration = 0.5f;
+        _heavyAttackDuration = 1f;
         _lightDashCD = 0.5f;
         _defenseDuration = 0.4f;
 

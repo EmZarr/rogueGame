@@ -12,9 +12,6 @@ public class OutflankState : BaseState
     private readonly float lookAhead = 2.0f;
 
     private float _orbitSign;
-    private float _lastOrbitFlipTime = 0f;
-    private const float OrbitFlipCooldown = 0.5f;
-    private float attackTimer = 5f;
     private float timer = 0f;
 
     public override void EnterState()
@@ -22,7 +19,7 @@ public class OutflankState : BaseState
         timer = 0f;
         _orbitSign = (Random.value < 0.5f) ? -1f : 1f;
         distanceToPlayer = Random.Range(4f, 8f);
-        attackTimer = Random.Range(5f, 9f);
+        _enemy._data.attackSpeed = Random.Range(_enemy._data.attackSpeed, _enemy._data.attackSpeed + 2f);
     }
 
     public override void Execute()
@@ -83,12 +80,11 @@ public class OutflankState : BaseState
 
     public override BaseState GetNextState()
     {
-        if (timer > attackTimer)
+        if (timer > _enemy._data.attackSpeed)
         {
             return new AttackState(_enemy);
         }
 
-        Debug.Log(_player);
         float dist = Vector2.Distance(_agent.transform.position, _player.transform.position);
 
         if (dist > _enemy.GetChaseRange())

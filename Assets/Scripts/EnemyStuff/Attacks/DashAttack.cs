@@ -2,7 +2,7 @@ using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class DashAttack : IAttack
+public class DashAttack : IAttack, ICancelableAttack
 {
     [SerializeField] private DamageZone damageZone;
     [SerializeField] private LayerMask wallMask;
@@ -49,7 +49,7 @@ public class DashAttack : IAttack
         yield return StartCoroutine(DashThrough(-damageZone.transform.up ,0.2f, 20f));
 
         // Opening
-        yield return new WaitForSeconds(_attackDelay);
+        GetComponentInParent<Enemy>().ApplyStun(2f);
         _nextReadyTime = Time.time + _attackSpeed;
     }
 
@@ -121,5 +121,10 @@ public class DashAttack : IAttack
         }
 
         return start + dir * maxDistance;
+    }
+
+    public void CancelAttack()
+    {
+        damageZone.Cancel();
     }
 }

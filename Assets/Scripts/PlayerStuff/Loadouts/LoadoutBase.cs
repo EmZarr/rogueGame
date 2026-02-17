@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.U2D;
 using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class LoadoutBase
@@ -8,13 +9,14 @@ public class LoadoutBase
 
     [Header("Left Click")]
     protected float _windupProcent = 0.4f;
-    protected float _lightAttackDuration = 0.5f;
-    protected float _heavyAttackDuration = 1f;
+    protected float _lightAttackDuration = 0.4f;
+    protected float _heavyAttackDuration = 0.9f;
     protected float _defenseDuration = 2f;
     protected float _lightDashDuration = 0.15f;
     protected float _HeavyDashDuration = 0.2f;
     protected float _lightDamage = 10f;
     protected float _heavyDamage = 20f;
+    protected float _heavyDashDistance = 12f;
 
     [Header("Right Click")]
     protected float _defCD = 2f;
@@ -23,7 +25,6 @@ public class LoadoutBase
     [Header("Space")]
     protected float _heavyDashCD = 5f;
     protected float _lightDashCD = 1f;
-
 
     protected Player _player;
 
@@ -46,8 +47,10 @@ public class LoadoutBase
 
     public virtual IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
+        float baseDuration = 0.15f;
+        float speedMul = _player.GetMoveSpeed() / 8f;
+        float dashDuration = Mathf.Max(0.06f, baseDuration / speedMul);
         float dashDistance = 4f;
-        float dashDuration = 0.15f;
 
         direction.Normalize();
 
@@ -64,13 +67,14 @@ public class LoadoutBase
     }
     public virtual IEnumerator HeavyDash(Vector2 direction, Transform transform)
     {
-        float dashDistance = 12f;
-        float dashDuration = 0.2f;
+        float baseDuration = 0.2f;
+        float speedMul = _player.GetMoveSpeed() / 8f;
+        float dashDuration = Mathf.Max(0.06f, baseDuration / speedMul);
 
         direction.Normalize();
 
         Vector3 start = transform.position;
-        Vector3 end = start + (Vector3)(direction * dashDistance);
+        Vector3 end = start + (Vector3)(direction * _heavyDashDistance);
 
         float t = 0f;
         while (t < 1f)
@@ -84,6 +88,7 @@ public class LoadoutBase
 
     public virtual IEnumerator Defense(Vector2 mousePos)
     {
+        Debug.Log("Do defense");
         yield return new WaitForSeconds(0.1f);
         Debug.Log("Do defense");
     }
@@ -111,12 +116,17 @@ public class LoadoutBase
 
     public float getLightDamage()
     {
-        return _lightDamage * _player.BaseDamageAmp + _lightDamage * _player.DamageAmp;
+        return _lightDamage * _player.DamageMultiplier;
     }
 
     public float getHeavyDamage()
     {
-        return _heavyDamage * _player.BaseDamageAmp + _heavyDamage * _player.DamageAmp;
+        return _heavyDamage * _player.DamageMultiplier;
+    }
+
+    public float GetHeavyDashDistance()
+    {
+        return _heavyDashDistance;
     }
 
     /*public float getAttackSpeed()
@@ -127,15 +137,11 @@ public class LoadoutBase
 
     //override in subclasses
     public float GetLightAttackDuration(){
-        return _lightAttackDuration * _player.AttackSpeedIncrease > 0 ? _lightAttackDuration * _player.AttackSpeedIncrease : 0;
+        return _lightAttackDuration / _player.AttackSpeedMultiplier;
     }
     public float GetHeavyAttackDuration(){
-        return _heavyAttackDuration * _player.AttackSpeedIncrease > 0 ? _heavyAttackDuration * _player.AttackSpeedIncrease : 0;
+        return _heavyAttackDuration / _player.AttackSpeedMultiplier;
     }
-
-    public float GetTempDamageBoost() => _player.DamageAmp;
-
-    public float GetPermDamageBoost() => _player.BaseDamageAmp;
 
     public float GetLightAttackWindup() => GetLightAttackDuration() * _windupProcent;
 
@@ -144,13 +150,7 @@ public class LoadoutBase
     public virtual float GetLightDashDuration() => _lightDashDuration;
     public virtual float GetHeavyDashDuration() => _HeavyDashDuration;
 
-    public virtual float GetAttackCooldown(bool heavy)
-    {
-        return heavy ? GetHeavyAttackDuration()
-                     : GetLightAttackDuration();
-    }
-
-    protected IEnumerator MeleeAttack(Vector2 dir, GameObject mySword, SwordHitbox mySwordHitbox, float distance, bool isHeavy)
+    protected IEnumerator MeleeAttack(Vector2 dir, GameObject mySword, SwordHitbox mySwordHitbox, float distance, bool isHeavy, float angleOffset = -90f)
     {
         if (mySwordHitbox == null) yield break;
 
@@ -162,7 +162,7 @@ public class LoadoutBase
         mySword.transform.position = pos;
 
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        mySword.transform.rotation = Quaternion.Euler(0f, 0f, angle-90f);
+        mySword.transform.rotation = Quaternion.Euler(0f, 0f, angle + angleOffset);
 
         if (isHeavy) {
             yield return new WaitForSeconds(GetHeavyAttackWindup());
@@ -175,5 +175,21 @@ public class LoadoutBase
             mySwordHitbox.Activate(getLightDamage(), GetLightAttackDuration() - GetLightAttackWindup());
             yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
         }
+    }
+    protected IEnumerator AreaAttack(Vector2 dir, GameObject area, SwordHitbox hitbox, float distance, float duration, float angleOffset = -90f)
+    {
+        if (hitbox == null) yield break;
+
+        Vector2 playerPos = _player.transform.position;
+
+        // world-space placement
+        Vector3 pos = playerPos + dir * distance;
+        pos.z = area.transform.position.z;
+        area.transform.position = pos;
+
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        area.transform.rotation = Quaternion.Euler(0f, 0f, angle + angleOffset);
+
+        hitbox.Activate(0, duration);
     }
 }
