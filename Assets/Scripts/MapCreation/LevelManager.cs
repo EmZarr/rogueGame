@@ -16,7 +16,10 @@ public class LevelManager : MonoBehaviour
     Vector3 _playerSpawnPos;
     Player _player;
     bool _hasSpawnPos;
-    public static System.Action<Player> OnPlayerSpawned;
+    private void OnEnable() => MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
+    private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
+
+    void HandlePlayerSpawned(Player p) => _player = p;
 
 
     void Awake()
@@ -84,8 +87,6 @@ public class LevelManager : MonoBehaviour
 
         _player.OnDied -= HandlePlayerDied;
         _player.OnDied += HandlePlayerDied;
-
-        OnPlayerSpawned?.Invoke(_player);
     }
 
     void HandlePlayerDied(GameObject killer)

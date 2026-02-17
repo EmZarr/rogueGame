@@ -10,8 +10,9 @@ public class DamageZone : MonoBehaviour
     protected float _duration;
     protected bool _hit = false;
     protected Action _onFinished;
+    protected bool _isAllied = false;
 
-    public bool knockBack = false;
+    public float knockBackDistance = 0.0f;
 
     public void Activate(float dmg, float duration, float delay, Action onFinished = null)
     {
@@ -44,18 +45,57 @@ public class DamageZone : MonoBehaviour
         _onFinished?.Invoke();
     }
 
+    public void Cancel(bool invokeFinished = false)
+    {
+        CancelInvoke();
+
+        if (sr) sr.enabled = false;
+        if (col) col.enabled = false;
+
+        _hit = false;
+
+        if (invokeFinished)
+            _onFinished?.Invoke();
+
+        _onFinished = null;
+    }
+
+    private void OnDisable()
+    {
+        Cancel();
+    }
+
+    public void changeTeam()
+    {
+        _isAllied = !_isAllied;
+    }
+
     protected virtual void OnTriggerEnter2D(Collider2D other)
     {
-        var player = other.GetComponent<Player>();
-        if (player != null && !_hit)
+        if (!_isAllied)
         {
-            player.TakeDamage(_dmg, transform.parent.gameObject);
-            if (knockBack)
+            if (other.TryGetComponent<Player>(out Player player) && !_hit)
             {
-                var direction = other.transform.position - transform.position;
-                player.GetKnockedBack(direction, 4.0f);
+                player.TakeDamage(_dmg, transform.parent.gameObject);
+                if (knockBackDistance > 0.0f)
+                {
+                    var direction = (other.transform.position - transform.position).normalized;
+                    player.GetKnockedBack(direction, knockBackDistance);
+                }
+                _hit = true;
             }
-            _hit = true;
+        }
+        if (_isAllied)
+        {
+            if (other.TryGetComponent<Enemy>(out Enemy enemy))
+            {
+                enemy.TakeDamage(_dmg);
+                if (knockBackDistance > 0.0f)
+                {
+                    var direction = (other.transform.position - transform.position).normalized;
+                    enemy.GetKnockedBack(direction, knockBackDistance);
+                }
+            }
         }
     }
 

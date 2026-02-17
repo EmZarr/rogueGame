@@ -13,7 +13,7 @@ public class LoadoutState : MonoBehaviour
     [SerializeField] private Player player;
 
     [SerializeField] private PlayerAnimDriver anim;
-
+    [SerializeField] private PlayerIndicator indicator;
     private enum ActionType { AttackLight, AttackHeavy, DashLight, DashHeavy, Defense }
 
     private struct BufferedAction
@@ -31,22 +31,25 @@ public class LoadoutState : MonoBehaviour
     private Coroutine dashLockRoutine;
 
     [Header("Movement")]
-    public float maxSpeed = 8f;
-
-    public float baseSpeed = 8f;
     public float accel = 100f;
     public float decel = 100f;
+
+    private int loadoutNumber = 0;
 
     Vector2 vel;
     bool blockedMovement = false;
     bool blockedActions = false;
     bool doAnimationAnyway = false;
+    bool showIndicator = false;
 
 
     private float currentSpeed;
     private float dashPressTime;
     private bool dashHeld;
+    private float attackPressTime;
+    private bool attackHeld;
     [SerializeField] private float heavyDashHoldTime = 0.4f;
+    [SerializeField] private float heavyAttackHoldTime = 0.4f;
 
     private LoadoutBase loadout;
     private Vector2 mousePos;
@@ -56,6 +59,7 @@ public class LoadoutState : MonoBehaviour
     private float nextDashTime;
     private float nextAttackTime;
 
+    private bool heavyAttackQueuedThisPress = false;
 
     [Header("Input (assign from your Controls asset)")]
     public InputActionReference move;   // Gameplay/Move (Vector2)
@@ -78,7 +82,7 @@ public class LoadoutState : MonoBehaviour
     void Start()
     {
         loadout = new LoadoutBase(player);
-        currentSpeed = maxSpeed;
+        currentSpeed = player.GetMoveSpeed();
         chargeUpBar = GameObject.FindWithTag("ChargeBar").GetComponent<ChargeUp>();
         nextHeavyDashTime = Time.time;
 
@@ -107,39 +111,62 @@ public class LoadoutState : MonoBehaviour
             // Wait until we're free
             while (blockedActions) yield return null;
 
+
+
+            float wait = 0f;
+            switch (a.type)
+            {
+                case ActionType.AttackLight:
+                case ActionType.AttackHeavy: wait = Mathf.Max(0f, nextAttackTime - Time.time); break;
+                case ActionType.Defense: wait = Mathf.Max(0f, nextDefTime - Time.time); break;
+                case ActionType.DashLight: wait = Mathf.Max(0f, nextDashTime - Time.time); break;
+                case ActionType.DashHeavy: wait = Mathf.Max(0f, nextHeavyDashTime - Time.time); break;
+            }
+
+            if (wait > 0f)
+            {
+                if (wait > bufferWindow) continue;
+
+                yield return new WaitForSeconds(wait);
+            }
+
             // Execute one
             blockedActions = true;
 
             switch (a.type)
             {
                 case ActionType.AttackLight:
-                    if (Time.time < nextAttackTime)
-                        break;
                     yield return RunAction(loadout.GetLightAttackDuration(), loadout.LightAttack(getMouseDir()), ActionType.AttackLight, "Attack");
-                    nextAttackTime = Time.time + loadout.GetAttackCooldown(false);
+                    nextAttackTime = Time.time + loadout.GetLightAttackDuration();
                     break;
 
                 case ActionType.AttackHeavy:
-                    if (Time.time < nextAttackTime)
-                        break;
-                    currentSpeed = maxSpeed*0.4f;
+                    currentSpeed = player.GetMoveSpeed() * 0.4f;
+                    heavyAttackQueuedThisPress = true;
                     yield return RunAction(loadout.GetHeavyAttackDuration(), loadout.HeavyAttack(getMouseDir()), ActionType.AttackHeavy, "Special");
-                    nextAttackTime = Time.time + loadout.GetAttackCooldown(true);
-                    currentSpeed = maxSpeed;
+                    nextAttackTime = Time.time + loadout.GetLightAttackDuration();
+                    currentSpeed = player.GetMoveSpeed();
                     break;
 
                 case ActionType.DashLight:
-                    yield return DoDash(heavy: false);
+                    //yield return DoDash(heavy: false);
+                    yield return RunAction(loadout.GetLightDashDuration(), loadout.LightDash(vel, transform, getMouseDir()), ActionType.DashLight, "Dash");
+                    nextDashTime = Time.time + loadout.getLightDashCD();
+                    blockedMovement = false;
                     break;
 
                 case ActionType.DashHeavy:
-                    yield return DoDash(heavy: true);
+                    yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(getMouseDir(), transform), ActionType.DashHeavy, "Dash");
+                    nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
+                    blockedMovement = false;
+                    //yield return DoDash(heavy: true);
                     break;
 
                 case ActionType.Defense:
                     doAnimationAnyway = true;
                     yield return RunAction(loadout.GetDefenseDuration(), loadout.Defense(getMouseDir()), ActionType.Defense, "Defense");
                     doAnimationAnyway = false;
+                    nextDefTime = Time.time + loadout.getDefenseCD();
                     break;
             }
 
@@ -152,7 +179,8 @@ public class LoadoutState : MonoBehaviour
 
     void OnEnable()
     {
-        attack.action.performed += OnAttack;
+        attack.action.started += OnAttackStarted;
+        attack.action.canceled += OnAttackCanceled;
         dash.action.started += OnDashStarted;
         dash.action.canceled += OnDashCanceled;
         def.action.performed += OnDefense;
@@ -175,7 +203,8 @@ public class LoadoutState : MonoBehaviour
 
     void OnDisable()
     {
-        attack.action.performed -= OnAttack;
+        attack.action.started -= OnAttackStarted;
+        attack.action.canceled -= OnAttackCanceled;
         dash.action.started -= OnDashStarted;
         dash.action.canceled -= OnDashCanceled;
         def.action.performed -= OnDefense;
@@ -199,30 +228,49 @@ public class LoadoutState : MonoBehaviour
     {
         anim.EquipWeapon(WeaponId.Bow);
         loadout = new TwoCrossbow(player);
+        loadoutNumber = 1;
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
     {
         anim.EquipWeapon(WeaponId.Shield);
         loadout = new SwordAndShield(player);
+        loadoutNumber = 2;
     }
 
     void OnLoadout3(InputAction.CallbackContext ctx)
     {
         anim.EquipWeapon(WeaponId.Dual);
         loadout = new DualSwords(player);
+        loadoutNumber = 3;
     }
 
-    void OnAttack(InputAction.CallbackContext ctx)
+    void OnAttackStarted(InputAction.CallbackContext ctx)
     {
-        // Decide heavy/light immediately, queue it with the mousePos snapshot
-        bool heavy = ctx.interaction is HoldInteraction;
+        attackHeld = true;
+        attackPressTime = Time.time;
+        heavyAttackQueuedThisPress = false;
+    }
 
-        EnqueueAction(new BufferedAction
+    void OnAttackCanceled(InputAction.CallbackContext ctx)
+    {
+        if ((Time.time - attackPressTime) < heavyAttackHoldTime)
         {
-            type = heavy ? ActionType.AttackHeavy : ActionType.AttackLight,
-            time = Time.time
-        });
+            EnqueueAction(new BufferedAction
+            {
+                type = ActionType.AttackLight,
+                time = Time.time
+            });
+        }
+        /*else
+        {
+            EnqueueAction(new BufferedAction
+            {
+                type = ActionType.AttackHeavy,
+                time = Time.time
+            });
+        }*/
+        attackHeld = false;
     }
 
     void OnDashStarted(InputAction.CallbackContext ctx)
@@ -232,6 +280,7 @@ public class LoadoutState : MonoBehaviour
         if (Time.time > nextHeavyDashTime)
         {
             chargeUpBar.SetChargeBar(true);
+            showIndicator = true;
         }
         dashLockRoutine = StartCoroutine(LockMovementAfterDelay());
     }
@@ -269,38 +318,9 @@ public class LoadoutState : MonoBehaviour
             time = Time.time
         });
         chargeUpBar.SetChargeBar(false);
+        showIndicator = false;
+        indicator.Deactivate();
     }
-
-
-    IEnumerator DoDash(bool heavy)
-    {
-        try
-        {
-            // Cooldown checks
-            if (heavy)
-            {
-                if (Time.time < nextHeavyDashTime)
-                    yield break;
-
-                nextHeavyDashTime = Time.time + loadout.GetHeavyDashCD2();
-                yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(getMouseDir(), transform) , ActionType.DashHeavy, "Dash");
-            }
-            else
-            {
-                if (Time.time < nextDashTime)
-                    yield break;
-
-                nextDashTime = Time.time + loadout.getLightDashCD();
-                yield return RunAction(loadout.GetLightDashDuration(), loadout.LightDash(vel, transform, getMouseDir()), ActionType.DashLight, "Dash");
-            }
-        }
-        finally
-        {
-            blockedMovement = false;
-
-        }
-    }
-
 
 
     void OnDefense(InputAction.CallbackContext ctx)
@@ -312,7 +332,6 @@ public class LoadoutState : MonoBehaviour
             type = ActionType.Defense,
             time = Time.time
         });
-        nextDefTime = Time.time + loadout.getDefenseCD();
     }
 
     IEnumerator RunAction(float duration, IEnumerator gameplayRoutine, ActionType animToPlay, string stateTag)
@@ -380,6 +399,18 @@ public class LoadoutState : MonoBehaviour
 
         if (!blockedMovement) transform.position += (Vector3)(vel * Time.deltaTime);
 
+        if (showIndicator && (Time.time - dashPressTime) >= heavyDashHoldTime)
+        {
+            indicator.Activate(getMouseDir(), loadout.GetHeavyDashDistance());
+        }
+        if ((Time.time - attackPressTime) >= heavyAttackHoldTime && attackHeld && !heavyAttackQueuedThisPress)
+        {
+            EnqueueAction(new BufferedAction
+            {
+                type = ActionType.AttackHeavy,
+                time = Time.time
+            });
+        }
         // Facing direction (mouse -> player)
         if (blockedActions && !doAnimationAnyway) return;
         updatePlayerAni();
@@ -408,17 +439,17 @@ public class LoadoutState : MonoBehaviour
 
     public void SetSpeed(float speedProcent)
     {
-        currentSpeed = speedProcent * maxSpeed;
-    }
-
-    public void IncreaseMaxSpeed(float amountPercent)
-    {
-        maxSpeed += baseSpeed * 0.01f * amountPercent;
+        currentSpeed = speedProcent * player.GetMoveSpeed();
     }
 
     public LoadoutBase GetLoadout()
     {
         return loadout;
+    }
+
+    public int GetLoadoutNumber()
+    {
+        return loadoutNumber;
     }
 
     public float GetDefCD()
@@ -438,5 +469,4 @@ public class LoadoutState : MonoBehaviour
         }
         else return nextHeavyDashTime - Time.time;
     }
-
 }

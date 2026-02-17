@@ -10,10 +10,17 @@ public class GuardianProtectZone : DamageZone
 
     private bool _animating;
 
+    [SerializeField] float maxHealth = 30f;
+    [SerializeField] float healRate = 5f;
+    [SerializeField] Enemy enemy;
+    float _health;
+    [SerializeField] DamageFlash _damageFlash;
+
     private void Start()
     {
         _player = GameObject.FindWithTag("Player");
         _dmg = 5f;
+        _health = maxHealth;
     }
 
     private void Update()
@@ -23,19 +30,25 @@ public class GuardianProtectZone : DamageZone
         {
             _player = GameObject.FindWithTag("Player");
         }
-        UpdateFacingTransform(1.3f, 40f);
+        if (_health < maxHealth)
+        {
+            healShield(Time.deltaTime * healRate);
+        }
+        if (!enemy.IsStunned) {
+            UpdateFacingTransform(1.0f, 40f);
+        }
     }
     protected override void OnTriggerEnter2D(Collider2D other)
     {
+        var direction = (other.transform.position - transform.position).normalized;
         var player = other.GetComponent<Player>();
         if (player != null)
         {
             player.TakeDamage(_dmg, transform.parent.gameObject);
 
-            if (knockBack)
+            if (knockBackDistance > 0.0f && !player.IsInvinsible())
             {
-                var direction = other.transform.position - transform.position;
-                player.GetKnockedBack(direction, 4.0f);
+                player.GetKnockedBack(direction, knockBackDistance);
             }
 
             if (!_animating)
@@ -46,15 +59,10 @@ public class GuardianProtectZone : DamageZone
             _hit = true;
         }
 
-        var projectile = other.GetComponent<TwoXArrowLogic>();
-        if (projectile != null)
+        var projectile = other.GetComponent<Projectile>();
+        if (projectile != null && projectile.IsAllied())
         {
-            projectile.Init(
-                5f,
-                (_player.transform.position - transform.position).normalized,
-                false,
-                true
-            );
+            projectile.Reflect(direction);
         }
     }
 
@@ -123,8 +131,33 @@ public class GuardianProtectZone : DamageZone
             Mathf.Sin(newAngle * Mathf.Deg2Rad)
         ) * fixedDistance;
 
-        transform.position = (Vector2)parent.position + offset;
-        transform.rotation = Quaternion.Euler(0f, 0f, newAngle + 90f);
+        transform.localPosition = offset;
+
+        // Rotate (add +180f here if you need to flip the arc)
+        transform.localRotation = Quaternion.Euler(0f, 0f, newAngle + 90f + 180f);
+
+    }
+
+    public void TakeDamage(float damage)
+    {
+        _damageFlash.Flash();
+        _health -= damage;
+        if ( _health <= 0)
+        {
+            sr.enabled = false;
+            col.enabled = false;
+            enemy.ApplyStun(4f);
+        }
+    }
+
+    public void healShield(float heal)
+    {
+        _health += heal;
+        if (_health >= maxHealth)
+        {
+            sr.enabled = true;
+            col.enabled = true;
+        }
     }
 
 }

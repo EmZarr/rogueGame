@@ -53,6 +53,9 @@ public class MapInstantiator : MonoBehaviour
 
     [SerializeField] GameObject levelManager;
 
+    public static Player CurrentPlayer { get; private set; }
+    public static System.Action<Player> OnPlayerSpawned;
+
     // keep references to everything we spawn so we can delete them later
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
