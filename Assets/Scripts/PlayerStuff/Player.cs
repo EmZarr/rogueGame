@@ -13,6 +13,8 @@ public class Player : MonoBehaviour
     [SerializeField] Animator _healthAnimator;
     [SerializeField] Animator _powerUpAnimator;
     [SerializeField] LoadoutState _loadoutState;
+    [SerializeField] private Rigidbody2D rb;
+
     Shield _shield;
     UI _ui;
     float _score = 0;
@@ -31,7 +33,7 @@ public class Player : MonoBehaviour
     }
     private void OnDisable()
     {
-        // optional: ensure no “stuck buff” if object is disabled mid-buff
+        // optional: ensure no ï¿½stuck buffï¿½ if object is disabled mid-buff
         _tempBuffCo = null;
     }
     private bool _isInvinsible = false;
@@ -149,7 +151,7 @@ public class Player : MonoBehaviour
         _shield.Activate(duration, dir);
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    public void OnHitboxTrigger(Collider2D other)
     {
         var enemy = other.GetComponentInParent<Enemy>();
         if (enemy != null)
@@ -185,28 +187,32 @@ public class Player : MonoBehaviour
         StartCoroutine(KnockbackRoutine(direction, distance));
     }
 
-    private IEnumerator KnockbackRoutine(Vector3 direction, float distance)
+    private IEnumerator KnockbackRoutine(Vector2 dir, float distance)
     {
-        float dashDuration = 0.25f;
+        _loadoutState.SetMovementBlocked(true);
+        dir = dir.normalized;
 
-        Vector3 start = transform.position;
-        Vector3 end = start + (Vector3)(direction * distance);
+        float duration = 0.25f;
 
-        UnityEngine.AI.NavMeshHit hit;
-        if (UnityEngine.AI.NavMesh.Raycast(start, end, out hit, UnityEngine.AI.NavMesh.AllAreas))
+        // speed needed to travel distance in duration (ignoring collisions)
+        float speed = distance / duration;
+
+        // Take control of velocity during knockback
+        float timer = 0f;
+        while (timer < duration)
         {
-            end = hit.position;
+            timer += Time.fixedDeltaTime;
+
+            // override velocity so damping/mass doesn't make it "barely move"
+            rb.linearVelocity = dir * speed;
+
+            yield return new WaitForFixedUpdate();
         }
 
-        float t = 0f;
-
-        while (t < 1f)
-        {
-            t += Time.deltaTime / dashDuration;
-            transform.position = Vector3.Lerp(start, end, t);
-            yield return null; // wait one frame
-        }
+        rb.linearVelocity = Vector2.zero;
+        _loadoutState.SetMovementBlocked(false);
     }
+
 
     public void IncreaseMovespeed(float increase) {
         _powerUpAnimator.SetTrigger("PowerPickUp");

@@ -27,10 +27,12 @@ public class LoadoutBase
     protected float _lightDashCD = 1f;
 
     protected Player _player;
+    protected Rigidbody2D rb;
 
     public LoadoutBase(Player player)
     {
         _player = player;
+        rb = _player.gameObject.GetComponent<Rigidbody2D>();
     }
 
     public virtual IEnumerator LightAttack(Vector2 dir)
@@ -47,26 +49,38 @@ public class LoadoutBase
 
     public virtual IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int enemyLayer = LayerMask.NameToLayer("Enemies");
+
+        Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
+
         float baseDuration = 0.15f;
         float speedMul = _player.GetMoveSpeed() / 8f;
         float dashDuration = Mathf.Max(0.06f, baseDuration / speedMul);
         float dashDistance = 4f;
 
-        direction.Normalize();
+        direction = direction.normalized;
 
-        Vector3 start = transform.position;
-        Vector3 end = start + (Vector3)(direction * dashDistance);
+        Vector2 start = rb.position;
+        Vector2 end = start + direction * dashDistance;
 
         float t = 0f;
         while (t < 1f)
         {
-            t += Time.deltaTime / dashDuration;
-            transform.position = Vector3.Lerp(start, end, t);
-            yield return null;
+            t += Time.fixedDeltaTime / dashDuration;
+            rb.MovePosition(Vector2.Lerp(start, end, t));
+            yield return new WaitForFixedUpdate();
         }
+
+        Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
     }
+
     public virtual IEnumerator HeavyDash(Vector2 direction, Transform transform)
     {
+        int playerLayer = LayerMask.NameToLayer("Player");
+        int enemyLayer = LayerMask.NameToLayer("Enemies");
+        Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
+
         float baseDuration = 0.2f;
         float speedMul = _player.GetMoveSpeed() / 8f;
         float dashDuration = Mathf.Max(0.06f, baseDuration / speedMul);
@@ -79,10 +93,11 @@ public class LoadoutBase
         float t = 0f;
         while (t < 1f)
         {
-            t += Time.deltaTime / dashDuration;
-            transform.position = Vector3.Lerp(start, end, t);
-            yield return null;
+            t += Time.fixedDeltaTime / dashDuration;
+            rb.MovePosition(Vector3.Lerp(start, end, t));
+            yield return new WaitForFixedUpdate();
         }
+        Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
     }
 
 

@@ -410,17 +410,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c3d796431252d540bdc40203fa172e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapInstantiator
-  tilemapGroundBase: {fileID: 0}
+  tilemapBase: {fileID: 0}
   tilemapRoad: {fileID: 0}
-  tilemapGroundDecour: {fileID: 0}
-  tilemapGround: {fileID: 1913072605}
+  tilemapDecour: {fileID: 0}
   tilemapWall: {fileID: 180224430}
   tilesRoad: []
   tilesGroundBase: []
-  tilesFarm: []
-  tilesForest: []
-  tilesGround: []
+  tilesFarmBase: []
+  tilesForestBase: []
   tilesGroundDecour: []
+  tilesFarmDecour: []
+  tilesForestDecour: []
+  tilesGroundWalls: []
+  tilesFarmWalls: []
+  tilesForestWalls: []
+  tilesGroundRoads: []
+  tilesFarmRoads: []
+  tilesForestRoads: []
   tilesCorner: []
   tilesWall: []
   groundTileGrass1: {fileID: 11400000, guid: 15b6972f7cfb521429db087609cb86b0, type: 2}
@@ -477,8 +483,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4f6ae296224daa4cb4507d17a2c05b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
-  totalIterations: 300
-  initialRandomSolutions: 30
+  totalIterations: 5000
+  initialRandomSolutions: 500
   runElites: {fileID: 4630370472947771425, guid: 052faaac586de48259a63d0c4782560b, type: 3}
 --- !u!114 &859900378
 MonoBehaviour:

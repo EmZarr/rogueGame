@@ -505,9 +505,12 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
-                            Instantiate(playerPrefab, tilemapBase.GetCellCenterWorld(cell), Quaternion.identity)
-                        );
+                        var playerGO = Instantiate(playerPrefab, tilemapBase.GetCellCenterWorld(cell), Quaternion.identity);
+                        spawnedObjects.Add(playerGO);
+
+                        var player = playerGO.GetComponent<Player>();
+                        CurrentPlayer = player;
+                        OnPlayerSpawned?.Invoke(player);
                         break;
                     case 98:
                         tilemapBase.SetTile(cell, testTile);

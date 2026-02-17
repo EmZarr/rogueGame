@@ -14,6 +14,8 @@ public class LoadoutState : MonoBehaviour
 
     [SerializeField] private PlayerAnimDriver anim;
     [SerializeField] private PlayerIndicator indicator;
+
+    [SerializeField]private Rigidbody2D rb;
     private enum ActionType { AttackLight, AttackHeavy, DashLight, DashHeavy, Defense }
 
     private struct BufferedAction
@@ -77,11 +79,14 @@ public class LoadoutState : MonoBehaviour
 
     void Awake()
     {
+        rb.gravityScale = 0f;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         cam = Camera.main;
     }
     void Start()
     {
-        loadout = new LoadoutBase(player);
+        loadout = new SwordAndShield(player);
         currentSpeed = player.GetMoveSpeed();
         chargeUpBar = GameObject.FindWithTag("ChargeBar").GetComponent<ChargeUp>();
         nextHeavyDashTime = Time.time;
@@ -150,15 +155,17 @@ public class LoadoutState : MonoBehaviour
 
                 case ActionType.DashLight:
                     //yield return DoDash(heavy: false);
+                    blockedMovement = true;
                     yield return RunAction(loadout.GetLightDashDuration(), loadout.LightDash(vel, transform, getMouseDir()), ActionType.DashLight, "Dash");
                     nextDashTime = Time.time + loadout.getLightDashCD();
-                    blockedMovement = false;
+                    SetMovementBlocked(false);
                     break;
 
                 case ActionType.DashHeavy:
+                    SetMovementBlocked(true);
                     yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(getMouseDir(), transform), ActionType.DashHeavy, "Dash");
                     nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
-                    blockedMovement = false;
+                    SetMovementBlocked(false);
                     //yield return DoDash(heavy: true);
                     break;
 
@@ -397,8 +404,7 @@ public class LoadoutState : MonoBehaviour
         float rate = (input.sqrMagnitude > 0.0001f) ? accel : decel;
         vel = Vector2.MoveTowards(vel, targetVel, rate * Time.deltaTime);
 
-        if (!blockedMovement) transform.position += (Vector3)(vel * Time.deltaTime);
-
+        //if (!blockedMovement) transform.position += (Vector3)(vel * Time.deltaTime);
         if (showIndicator && (Time.time - dashPressTime) >= heavyDashHoldTime)
         {
             indicator.Activate(getMouseDir(), loadout.GetHeavyDashDistance());
@@ -414,6 +420,12 @@ public class LoadoutState : MonoBehaviour
         // Facing direction (mouse -> player)
         if (blockedActions && !doAnimationAnyway) return;
         updatePlayerAni();
+    }
+
+    void FixedUpdate()
+    {
+        if (!blockedMovement)
+            rb.MovePosition(rb.position + vel * Time.fixedDeltaTime);
     }
 
     private void updatePlayerAni()
@@ -468,5 +480,11 @@ public class LoadoutState : MonoBehaviour
             return 0.0f;
         }
         else return nextHeavyDashTime - Time.time;
+    }
+
+    public void SetMovementBlocked(bool blocked)
+    {
+        blockedMovement = blocked;
+        if (blocked) vel = Vector2.zero;
     }
 }

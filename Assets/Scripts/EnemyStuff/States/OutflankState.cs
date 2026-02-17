@@ -14,6 +14,9 @@ public class OutflankState : BaseState
     private float _orbitSign;
     private float timer = 0f;
 
+    // Reuse one path object to avoid GC allocations every frame
+    private readonly NavMeshPath _path = new NavMeshPath();
+
     public override void EnterState()
     {
         timer = 0f;
@@ -29,6 +32,7 @@ public class OutflankState : BaseState
 
         if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh)
             return;
+
         timer += Time.deltaTime;
 
         Vector2 enemyPos = _agent.transform.position;
@@ -56,7 +60,29 @@ public class OutflankState : BaseState
 
         Vector2 desiredDir = (tangent + correction).normalized;
 
-        Vector2 destination2D = enemyPos + desiredDir * lookAhead;
+        // Try a primary destination (full lookAhead), then a fallback (shorter step)
+        if (!TrySetOrbitDestination(enemyPos, playerPos, desiredDir, minDist, maxDist, lookAhead))
+        {
+            // fallback: flip orbit direction
+            _orbitSign *= -1f;
+
+            // optional: also try a smaller step after flipping, helps in tight spaces
+            Vector2 flippedTangent = new Vector2(-radial.y, radial.x) * _orbitSign;
+            Vector2 flippedDir = (flippedTangent + correction).normalized;
+
+            TrySetOrbitDestination(enemyPos, playerPos, flippedDir, minDist, maxDist, lookAhead * 0.5f);
+        }
+    }
+
+    private bool TrySetOrbitDestination(
+        Vector2 enemyPos,
+        Vector2 playerPos,
+        Vector2 desiredDir,
+        float minDist,
+        float maxDist,
+        float step)
+    {
+        Vector2 destination2D = enemyPos + desiredDir * step;
 
         // Clamp destination back onto the ring band
         Vector2 fromPlayer = destination2D - playerPos;
@@ -65,15 +91,16 @@ public class OutflankState : BaseState
 
         Vector3 desiredWorld = new Vector3(destination2D.x, destination2D.y, 0f);
 
-        if (TryGetClosestPointOnNavMesh(desiredWorld, 1.5f, out Vector3 clamped))
-        {
-            _agent.SetDestination(clamped);
-        }
-        else
-        {
-            // fallback: flip orbit
-            _orbitSign *= -1f;
-        }
+        // 1) Snap candidate to navmesh
+        if (!TryGetClosestPointOnNavMesh(desiredWorld, 1.5f, out Vector3 clamped))
+            return false;
+
+        // 2) NEW: Make sure there is a complete path to it (not behind a wall / disconnected)
+        if (!HasCompletePath(_agent, clamped, _path))
+            return false;
+
+        _agent.SetDestination(clamped);
+        return true;
     }
 
     public override void ExitState() { }
@@ -108,5 +135,16 @@ public class OutflankState : BaseState
         closestWorld = desiredWorld;
         return false;
     }
-}
 
+    private static bool HasCompletePath(NavMeshAgent agent, Vector3 destination, NavMeshPath reusablePath)
+    {
+        if (agent == null || !agent.isOnNavMesh)
+            return false;
+
+        // Note: CalculatePath uses the agent's areaMask + settings implicitly.
+        if (!agent.CalculatePath(destination, reusablePath))
+            return false;
+
+        return reusablePath.status == NavMeshPathStatus.PathComplete;
+    }
+}

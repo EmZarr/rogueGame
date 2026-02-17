@@ -108,7 +108,7 @@ GameObject:
   - component: {fileID: 6602417515676336701}
   - component: {fileID: 2844506159985133278}
   - component: {fileID: 8852339247010875897}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: GuardianEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -469,7 +469,7 @@ PolygonCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0

@@ -55,10 +55,10 @@ public class TwoCrossbow : LoadoutBase {
 
     public override IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
-         yield return base.LightDash(direction, transform, mousePos);
-         yield return LightAttackAttack(mousePos);
-         yield return new WaitForSeconds(0.1f);
-         yield return LightAttackAttack(mousePos);
+        yield return LightAttackAttack(mousePos);
+        yield return new WaitForSeconds(0.1f);
+        yield return LightAttackAttack(mousePos);
+        yield return base.LightDash(direction, transform, mousePos);
     }
 
     public override IEnumerator HeavyDash(Vector2 direction, Transform transform)

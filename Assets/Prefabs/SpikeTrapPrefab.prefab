@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 5753273998248703736}
   - component: {fileID: 6411068157435617285}
   - component: {fileID: 7530292463250669511}
-  - component: {fileID: -5925752765989673675}
+  - component: {fileID: 175433902047552768}
   m_Layer: 0
   m_Name: SpikeTrapPrefab
   m_TagString: Untagged
@@ -104,9 +104,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97d6c36e386555d4e85782ce0a05cd9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpikeTrap
-  damage: 2
---- !u!58 &-5925752765989673675
-CircleCollider2D:
+  damage: 10
+--- !u!60 &175433902047552768
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -140,4 +140,19 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1, y: 0.5}
+    newSize: {x: 1, y: 0.5}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 0.25}
+      - {x: -0.5, y: 0}
+      - {x: -0.0046183914, y: -0.088365674}
+      - {x: 0.5, y: 0}
+  m_UseDelaunayMesh: 0
