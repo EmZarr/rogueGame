@@ -15,6 +15,12 @@ public class TelemetryManager : MonoBehaviour
 
     float totalLoot;
 
+    float timeSpentKnight;
+    float timeSpentBerserker;
+    float timeSpentBowMan;
+
+    int loadOutNumber;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -27,6 +33,18 @@ public class TelemetryManager : MonoBehaviour
         if (timerStarted)
         {
             timePlayed+= Time.deltaTime;
+        }
+        switch (loadOutNumber)
+        {
+            case 1: 
+                timeSpentBowMan+= Time.deltaTime; 
+                break;
+            case 2:
+                timeSpentKnight+= Time.deltaTime;
+                break;
+            case 3:
+                timeSpentBerserker+= Time.deltaTime;
+                break;
         }
     }
 
@@ -63,7 +81,15 @@ public class TelemetryManager : MonoBehaviour
         Debug.Log("Time played: " + timePlayed);
         Debug.Log("Enemies killed % " + eneKilledPerc);
         Debug.Log("Loot taken % " + lootGathPerc);
+        Debug.Log("Player deaths: " + playerDeaths);
+
         timePlayed = 0f;
+        playerDeaths = 0;
+        totalEnemies = 0;
+        totalLoot = 0;
+        lootTaken = 0;
+        enemiesKilled = 0;
+
     }
 
     public float LootTakenPercentage()
@@ -74,5 +100,15 @@ public class TelemetryManager : MonoBehaviour
     public float EnemiesKilledPercentage()
     {
         return enemiesKilled/totalEnemies * 100.0f;
+    }
+
+    public void PlayerDied()
+    {
+        playerDeaths+=1;
+    }
+
+    public void SetLoadOut(int loadout)
+    {
+        loadOutNumber = loadout;
     }
 }

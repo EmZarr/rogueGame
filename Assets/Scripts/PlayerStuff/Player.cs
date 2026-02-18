@@ -31,7 +31,7 @@ public class Player : MonoBehaviour
     }
     private void OnDisable()
     {
-        // optional: ensure no “stuck buff” if object is disabled mid-buff
+        // optional: ensure no ï¿½stuck buffï¿½ if object is disabled mid-buff
         _tempBuffCo = null;
     }
     private bool _isInvinsible = false;
@@ -261,6 +261,11 @@ public class Player : MonoBehaviour
     public bool IsInvinsible()
     {
         return _isInvinsible;
+    }
+
+    void CurrentLoadout()
+    {
+        
     }
 
     public float DamageMultiplier => _damageMultiplier;

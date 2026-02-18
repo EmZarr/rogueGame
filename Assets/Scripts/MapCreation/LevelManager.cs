@@ -105,6 +105,7 @@ public class LevelManager : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
         }
+        telemetryManager.PlayerDied();
     }
 
     void OnTriggerEnter2D(Collider2D other)
