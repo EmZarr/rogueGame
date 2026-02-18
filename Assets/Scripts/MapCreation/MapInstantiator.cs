@@ -301,7 +301,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[1],
+                                furnishingPrefabs[0],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -322,7 +322,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[2],
+                                furnishingPrefabs[0],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -343,7 +343,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[3],
+                                furnishingPrefabs[1],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -364,7 +364,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[4],
+                                furnishingPrefabs[1],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -385,7 +385,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[5],
+                                furnishingPrefabs[2],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -406,7 +406,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[6],
+                                furnishingPrefabs[2],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
