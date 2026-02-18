@@ -56,14 +56,24 @@ public class MapInstantiator : MonoBehaviour
     public static Player CurrentPlayer { get; private set; }
     public static System.Action<Player> OnPlayerSpawned;
 
+    [SerializeField] public TelemetryManager telemetryManager;
+
     // keep references to everything we spawn so we can delete them later
+    private List<GameObject> spawnedEnemies = new List<GameObject>();
+    private List<GameObject> spawnedLoot = new List<GameObject>();
+
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
+    void Start()
+    {
+        telemetryManager = FindAnyObjectByType<TelemetryManager>();
+    }
     public void makeMap(int[,] map)
     {
         ClearPreviousMap();
         int tileIndex;
-        int mapStyle = Random.Range(0,3);
+        //int mapStyle = Random.Range(0,3);
+        int mapStyle = 0;
         for (int x = 0; x < map.GetLength(0); x++)
         {
             for (int y = 0; y < map.GetLength(1); y++)
@@ -175,7 +185,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedEnemies.Add(
                             Instantiate(enemyPrefabs[0], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity)
                         );
                         break;
@@ -193,7 +203,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedEnemies.Add(
                             Instantiate(
                                 enemyPrefabs[1],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -214,7 +224,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedEnemies.Add(
                             Instantiate(
                                 enemyPrefabs[2],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -235,7 +245,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedEnemies.Add(
                             Instantiate(
                                 enemyPrefabs[3],
                                tilemapBase.GetCellCenterWorld(cell),
@@ -257,7 +267,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedEnemies.Add(
                             Instantiate(
                                 enemyPrefabs[4],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -278,7 +288,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[0],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -299,7 +309,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[1],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -341,7 +351,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[3],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -362,7 +372,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[4],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -383,7 +393,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[5],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -404,7 +414,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[6],
                                 tilemapBase.GetCellCenterWorld(cell),
@@ -516,7 +526,12 @@ public class MapInstantiator : MonoBehaviour
                 }
             }
         }
-
+        if (telemetryManager == null)
+        {
+            telemetryManager = GetComponent<TelemetryManager>();
+        }
+        telemetryManager.SetTotalEnemies(spawnedEnemies.Count);
+        telemetryManager.SetTotalLoot(spawnedLoot.Count);
         StartCoroutine(BuildNavmeshNextFrame());
     }
 
@@ -536,6 +551,8 @@ public class MapInstantiator : MonoBehaviour
                 Destroy(go);
         }
         spawnedObjects.Clear();
+        spawnedEnemies.Clear();
+        spawnedLoot.Clear();
 
         tilemapWall.ClearAllTiles();
         tilemapBase.ClearAllTiles();

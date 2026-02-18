@@ -1,14 +1,14 @@
 using UnityEngine;
 
-public class SpeedBoostLoot : MonoBehaviour
+public class SpeedBoostLoot : Loot
 {
    [SerializeField] float speedIncreasePercent;
 
-    GameObject player;
+    //GameObject player;
 
     void Start()
     {
-        player = GameObject.FindWithTag("Player");
+        //player = GameObject.FindWithTag("Player");
     }
 
  
@@ -17,6 +17,7 @@ public class SpeedBoostLoot : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             //player.GetComponent<LoadoutState>().IncreaseMaxSpeed(speedIncreasePercent);
+            base.telemetryManager.LootPickedUp();
             Destroy(gameObject);
         }
     }

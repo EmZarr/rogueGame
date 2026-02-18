@@ -1,22 +1,23 @@
 using UnityEngine;
 
-public class HeavyDashCooldownLoot : MonoBehaviour
+public class HeavyDashCooldownLoot : Loot
 {
    [SerializeField] float cooldownDecreasePercent;
 
-    Player player;
-
+    //Player player;
+    
     void Start()
     {
-        player = FindFirstObjectByType<Player>();
+        //player = FindFirstObjectByType<Player>();
     }
 
  
-     void OnTriggerEnter2D(Collider2D other)
+    void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
         {
-            player.DecreaseHeavyDashCooldown(cooldownDecreasePercent);
+            base.telemetryManager.LootPickedUp();
+            base.player.DecreaseHeavyDashCooldown(cooldownDecreasePercent);
             Destroy(gameObject);
         }
     }

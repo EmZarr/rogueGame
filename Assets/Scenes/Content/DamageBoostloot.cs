@@ -1,15 +1,15 @@
 using UnityEngine;
 
-public class DamageBoostLoot : MonoBehaviour
+public class DamageBoostLoot : Loot
 {
    [SerializeField] float damageIncreasePercent;
    [SerializeField] bool permanent;
 
-    Player player;
+    //Player player;
 
     void Start()
     {
-        player = FindFirstObjectByType<Player>();
+        //player = FindFirstObjectByType<Player>();
     }
 
  
@@ -18,6 +18,7 @@ public class DamageBoostLoot : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             //player.IncreaseDamage(damageIncreasePercent, permanent);
+            base.telemetryManager.LootPickedUp();
             Destroy(gameObject);
         }
     }

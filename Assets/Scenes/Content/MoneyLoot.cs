@@ -1,14 +1,14 @@
 using UnityEngine;
 
-public class MoneyLoot : MonoBehaviour
+public class MoneyLoot : Loot
 {
    [SerializeField] int moneyAmount;
 
-    Player player;
+    //Player player;
 
     void Start()
     {
-        player = FindFirstObjectByType<Player>();
+        //player = FindFirstObjectByType<Player>();
     }
 
  
@@ -17,6 +17,7 @@ public class MoneyLoot : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             player.IncreaseScore(moneyAmount);
+            base.telemetryManager.LootPickedUp();
             Destroy(gameObject);
         }
     }

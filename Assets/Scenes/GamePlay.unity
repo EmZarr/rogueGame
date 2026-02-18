@@ -749,6 +749,7 @@ GameObject:
   - component: {fileID: 859900375}
   - component: {fileID: 859900374}
   - component: {fileID: 859900372}
+  - component: {fileID: 859900376}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -867,6 +868,7 @@ MonoBehaviour:
   - {fileID: 6425840253016552175, guid: 8b72c913ecdc0fa4abedf79c1573a52b, type: 3}
   - {fileID: 6425840253016552175, guid: c334d803193484c44bee751696d53389, type: 3}
   levelManager: {fileID: 1723517302}
+  telemetryManager: {fileID: 0}
 --- !u!156049354 &859900374
 Grid:
   m_ObjectHideFlags: 0
@@ -898,6 +900,18 @@ Transform:
   - {fileID: 180224427}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &859900376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859900371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0b1416730902b644a00944226fbca94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TelemetryManager
 --- !u!1 &1048831578
 GameObject:
   m_ObjectHideFlags: 0

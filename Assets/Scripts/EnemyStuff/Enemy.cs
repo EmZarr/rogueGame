@@ -8,7 +8,6 @@ public class Enemy : MonoBehaviour
     [SerializeField] public EnemyData _data;
     [SerializeField] private NavMeshAgent _agent;
     [SerializeField] private IAttack _attack;
-
     [SerializeField] private float maxDashLenght;
     [SerializeField] private float dashCooldown = 3.0f;
     [SerializeField] private DamageFlash damageFlash;
@@ -16,6 +15,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] private EnemyAnimDriver animDriver;
 
     private Player _player;
+
+    private TelemetryManager telemetryManager;
+
     private Action onDeathEffect = null;
     private bool _dying = false;
     private float _nextDashTime;
@@ -54,6 +56,7 @@ public class Enemy : MonoBehaviour
         _nextDashTime = Time.time;
         canProtect = true;
         RemainingStunDuration = 0f;
+        telemetryManager = FindAnyObjectByType<TelemetryManager>();
     }
 
     private void Update()
@@ -122,6 +125,7 @@ public class Enemy : MonoBehaviour
 
         if (animDriver != null) animDriver.TriggerDead();
 
+        telemetryManager.EnemyKilled();
         Destroy(gameObject, 2f);
     }
 

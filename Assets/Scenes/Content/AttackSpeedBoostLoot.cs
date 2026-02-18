@@ -1,14 +1,16 @@
 using UnityEngine;
 
-public class AttackSpeedBoostLoot : MonoBehaviour
+public class AttackSpeedBoostLoot : Loot
 {
    [SerializeField] float attackSpeedIncreasePercent;
 
-    Player player;
+    //Player player;
+    //TelemetryManager telemetryManager;
 
     void Start()
     {
-        player = FindFirstObjectByType<Player>();
+        //player = FindFirstObjectByType<Player>();
+        //telemetryManager = FindFirstObjectByType<TelemetryManager>();
     }
 
  
@@ -17,6 +19,7 @@ public class AttackSpeedBoostLoot : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             //player.IncreaseAttackSpeed(attackSpeedIncreasePercent);
+            telemetryManager.LootPickedUp();
             Destroy(gameObject);
         }
     }
