@@ -14,7 +14,7 @@ public class DamageZone : MonoBehaviour
 
     public float knockBackDistance = 0.0f;
 
-    TelemetryManager telemetryManager;
+    public TelemetryManager telemetryManager;
 
     public void Activate(float dmg, float duration, float delay, Action onFinished = null)
     {
