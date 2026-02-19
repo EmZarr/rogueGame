@@ -16,11 +16,14 @@ public class GuardianProtectZone : DamageZone
     float _health;
     [SerializeField] DamageFlash _damageFlash;
 
+    TelemetryManager telemetryManager;
+
     private void Start()
     {
         _player = GameObject.FindWithTag("Player");
         _dmg = 5f;
         _health = maxHealth;
+        telemetryManager = FindFirstObjectByType<TelemetryManager>();
     }
 
     private void Update()
@@ -45,6 +48,7 @@ public class GuardianProtectZone : DamageZone
         if (player != null)
         {
             player.TakeDamage(_dmg, transform.parent.gameObject);
+            telemetryManager.DamageTrack(2, _dmg);
 
             if (knockBackDistance > 0.0f && !player.IsInvinsible())
             {

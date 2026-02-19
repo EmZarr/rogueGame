@@ -24,6 +24,38 @@ public class TelemetryManager : MonoBehaviour
 
     int loadOutNumber;
 
+    int bowmanLightAttacks;
+
+    int bowmanHeavyAttacks;
+
+    int bowmanLightDashes;
+
+    int bowmanHeavyDashes;
+
+    int bowmanDefense;
+
+    int knightLightAttacks;
+
+    int knightHeavyAttacks;
+
+    int knightLightDashes;
+
+    int knightHeavyDashes;
+
+    int knightDefense;
+
+    int berserkerLightAttacks;
+
+    int berserkerHeavyAttacks;
+
+    int berserkerLightDashes;
+
+    int berserkerHeavyDashes;
+
+    int berserkerDefense;
+
+    float[] damageTaken = new float[4];
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -91,7 +123,10 @@ public class TelemetryManager : MonoBehaviour
 
         SaveTelemetryToCSV(timePlayed, eneKilledPerc, lootGathPerc,
                        playerDeaths, timeSpentBowMan,
-                       timeSpentKnight, timeSpentBerserker);
+                       timeSpentKnight, timeSpentBerserker, bowmanLightAttacks, bowmanHeavyAttacks, bowmanLightDashes, bowmanHeavyDashes, bowmanDefense,
+                       knightLightAttacks, knightHeavyAttacks, knightLightDashes, knightHeavyDashes, knightDefense,
+                       berserkerLightAttacks, berserkerHeavyAttacks, berserkerLightDashes, berserkerHeavyDashes, berserkerDefense,
+                       damageTaken);
 
 
         timePlayed = 0f;
@@ -126,6 +161,96 @@ public class TelemetryManager : MonoBehaviour
         loadOutNumber = loadout;
     }
 
+    public void LightAttackCount(int loadout)
+    {
+        switch (loadout)
+        {
+            case 1:
+                bowmanLightAttacks+=1;
+                break;
+            case 2:
+                knightLightAttacks+=1;
+                break;
+            case 3:
+                berserkerLightAttacks+=1;
+                break;
+        }
+    }
+
+    public void HeavyAttackCount(int loadout)
+    {
+        switch (loadout)
+        {
+            case 1:
+                bowmanHeavyAttacks+=1;
+                break;
+            case 2:
+                knightHeavyAttacks+=1;
+                break;
+            case 3:
+                berserkerHeavyAttacks+=1;
+                break;
+        }
+    }
+
+    public void LightDashCount(int loadout)
+    {
+        switch (loadout)
+        {
+            case 1:
+                bowmanLightDashes+=1;
+                break;
+            case 2:
+                knightLightDashes+=1;
+                break;
+            case 3:
+                berserkerLightDashes+=1;
+                break;
+        }
+    }
+
+    public void HeavyDashCount(int loadout)
+    {
+        switch (loadout)
+        {
+            case 1:
+                bowmanHeavyDashes+=1;
+                break;
+            case 2:
+                knightHeavyDashes+=1;
+                break;
+            case 3:
+                berserkerHeavyDashes+=1;
+                break;
+        }
+    }
+
+    public void DefenseCount(int loadout)
+    {
+        switch (loadout)
+        {
+            case 1:
+                bowmanDefense +=1;
+                break;
+            case 2:
+                knightDefense +=1;
+                break;
+            case 3:
+                berserkerDefense +=1;
+                break;
+        }
+    }
+    //Types:
+    //1: MeleeDamage/BombDamage:
+    //2: Projectile damage
+    //3: Guardian Shield damage
+    //4: Traps
+    public void DamageTrack(int type, float damage)
+    {
+        damageTaken[type]+= damage;
+    }
+
+
 
     void SaveTelemetryToCSV(
     float timePlayed,
@@ -134,8 +259,25 @@ public class TelemetryManager : MonoBehaviour
     float deaths,
     float bowmanTime,
     float knightTime,
-    float berserkerTime)
-{
+    float berserkerTime,
+    int bowLightAtk,
+    int bowHeavyAtk,
+    int bowLightDash,
+    int bowHeavyDash,
+    int bowDefense,
+    int knightLightAtk,
+    int knightHeavyAtk,
+    int knightLightDash,
+    int knightHeavyDash,
+    int knightDefense,
+    int berserkLightAtk,
+    int beserkHeavyAtk,
+    int beserkLightDash,
+    int beserkHeavyDash,
+    int beserkDefense,
+    float[] damageTaken)
+
+    {
     string path = Application.dataPath + "/telemetry.csv";
 
     bool fileExists = File.Exists(path);
@@ -145,14 +287,14 @@ public class TelemetryManager : MonoBehaviour
     // If file doesn't exist, write header first
     if (!fileExists)
     {
-        sb.AppendLine("session,time_played,enemies_killed_pct,loot_taken_pct,deaths,time_bowman,time_knight,time_berserker");
+        sb.AppendLine("session,time_played,enemies_killed_pct,loot_taken_pct,deaths,time_bowman,time_knight,time_berserker, bowman_lightAttacks, bowman_heavyAttacks, bowman_lightDashes, bowman_heavyDashes, bowman_defense, knight_lightAttacks, knight_heavyAttacks, knight_lightDashes, knight_heavyDashes, knight_defense, berserker_lightAttacks, berserker_heavyAttacks, berserker_lightDashes, berserker_heavyDashes, beserker_defense, player_damageTaken_melee_bombs, player_damageTaken_projectiles, player_damageTaken_guardianShields, player_damageTaken_traps");
     }
 
     // Session number = number of lines in file
     int sessionNumber = fileExists ? File.ReadAllLines(path).Length : 1;
 
     string row = string.Format(CultureInfo.InvariantCulture,
-    "{0},{1},{2},{3},{4},{5},{6},{7}",
+    "{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15},{16},{17},{18},{19},{20},{21},{22},{23},{24},{25},{26}",
         sessionNumber,
         timePlayed,
         enemiesKilledPct,
@@ -160,7 +302,26 @@ public class TelemetryManager : MonoBehaviour
         deaths,
         bowmanTime,
         knightTime,
-        berserkerTime);
+        berserkerTime,
+        bowLightAtk,
+        bowHeavyAtk,
+        bowLightDash,
+        bowHeavyDash,
+        bowDefense,
+        knightLightAtk,
+        knightHeavyAtk,
+        knightLightDash,
+        knightHeavyDash,
+        knightDefense,
+        berserkLightAtk,
+        beserkHeavyAtk,
+        beserkLightDash,
+        beserkHeavyDash,
+        beserkDefense,
+        damageTaken[0],
+        damageTaken[1],
+        damageTaken[2],
+        damageTaken[3]);
 
     sb.AppendLine(row);
 

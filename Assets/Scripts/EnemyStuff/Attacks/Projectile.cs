@@ -11,12 +11,15 @@ public class Projectile : MonoBehaviour
 
     GameObject _instigator;
 
+    TelemetryManager telemetryManager;
+
     public void SetInstigator(GameObject instigator) => _instigator = instigator;
     public void Init(float damage, Vector2 dir, bool allied)
     {
         _damage = damage;
         _dir = dir.sqrMagnitude > 0.000001f ? dir.normalized : Vector2.right;
         _allied = allied;
+        telemetryManager = FindFirstObjectByType<TelemetryManager>();
     }
 
     public void Reflect(Vector2 newDir)
@@ -45,6 +48,7 @@ public class Projectile : MonoBehaviour
         {
             var killer = _instigator != null ? _instigator : gameObject;
             player.TakeDamage(_damage, killer);
+            telemetryManager.DamageTrack(1, _damage);
             Destroy(gameObject);
         }
         if (_allied && other.TryGetComponent<Enemy>(out Enemy enemy))

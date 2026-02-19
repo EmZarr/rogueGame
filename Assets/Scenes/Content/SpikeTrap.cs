@@ -6,10 +6,12 @@ public class SpikeTrap : MonoBehaviour
     [SerializeField] float damage;
 
     Player player;
+    TelemetryManager telemetryManager;
 
     void Start()
     {
         player = FindFirstObjectByType<Player>();
+        telemetryManager = FindFirstObjectByType<TelemetryManager>();
     }
 
  
@@ -18,6 +20,7 @@ public class SpikeTrap : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             player.TakeDamage(damage, gameObject);
+            telemetryManager.DamageTrack(3, damage);
         }
     }
     

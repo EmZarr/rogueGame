@@ -14,12 +14,15 @@ public class DamageZone : MonoBehaviour
 
     public float knockBackDistance = 0.0f;
 
+    TelemetryManager telemetryManager;
+
     public void Activate(float dmg, float duration, float delay, Action onFinished = null)
     {
         _dmg = dmg;
         _duration = duration;
         _hit = false;
         _onFinished = onFinished;
+        telemetryManager = FindAnyObjectByType<TelemetryManager>();
 
         if (sr) sr.enabled = true;
         SetAlpha(0.1f);
@@ -83,6 +86,7 @@ public class DamageZone : MonoBehaviour
                     player.GetKnockedBack(direction, knockBackDistance);
                 }
                 _hit = true;
+                telemetryManager.DamageTrack(0, _dmg);
             }
         }
         if (_isAllied)

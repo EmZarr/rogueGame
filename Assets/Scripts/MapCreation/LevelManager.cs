@@ -54,12 +54,14 @@ public class LevelManager : MonoBehaviour
 
         foreach (var map in archive.maps)
         {
-            if (finalMaps.Count < 5)
+            if (finalMaps.Count < 1)
             {
+                finalMaps.Enqueue(map);
+
                 Vector2 geoBehavior = new Vector2(map.geoBehavior[0], map.geoBehavior[1]);
                 Vector2 enemBehavior = new Vector2(map.enemyBehavior[0], map.enemyBehavior[1]);
                 Vector2 furnBehavior = new Vector2(map.furnBehavior[0], map.furnBehavior[1]);
-                finalMaps.Enqueue(map);
+                /*
                 if (map.fitness > 1f && !takenGeoBehaviors.Contains(geoBehavior) && !takenEnemBehaviors.Contains(enemBehavior) && !takenFurnBehaviors.Contains(furnBehavior))
                 {
 
@@ -67,7 +69,7 @@ public class LevelManager : MonoBehaviour
                     takenGeoBehaviors.Add(geoBehavior);
                     takenEnemBehaviors.Add(enemBehavior);
                     takenFurnBehaviors.Add(furnBehavior);
-                }
+                }*/
             }
             else
             {
@@ -117,7 +119,7 @@ public class LevelManager : MonoBehaviour
         {
             telemetryManager.UploadData();
         }
-        if(finalMaps.Dequeue() == null)
+        if(finalMaps.Count==0)
         {
             noMaps = true;
         }

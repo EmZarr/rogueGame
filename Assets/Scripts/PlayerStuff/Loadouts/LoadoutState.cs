@@ -147,6 +147,7 @@ public class LoadoutState : MonoBehaviour
                 case ActionType.AttackLight:
                     yield return RunAction(loadout.GetLightAttackDuration(), loadout.LightAttack(getMouseDir()), ActionType.AttackLight, "Attack");
                     nextAttackTime = Time.time + loadout.GetLightAttackDuration();
+                    telemetryManager.LightAttackCount(loadoutNumber);
                     break;
 
                 case ActionType.AttackHeavy:
@@ -155,6 +156,7 @@ public class LoadoutState : MonoBehaviour
                     yield return RunAction(loadout.GetHeavyAttackDuration(), loadout.HeavyAttack(getMouseDir()), ActionType.AttackHeavy, "Special");
                     nextAttackTime = Time.time + loadout.GetLightAttackDuration();
                     currentSpeed = player.GetMoveSpeed();
+                    telemetryManager.HeavyAttackCount(loadoutNumber);
                     break;
 
                 case ActionType.DashLight:
@@ -163,6 +165,7 @@ public class LoadoutState : MonoBehaviour
                     yield return RunAction(loadout.GetLightDashDuration(), loadout.LightDash(vel, transform, getMouseDir()), ActionType.DashLight, "Dash");
                     nextDashTime = Time.time + loadout.getLightDashCD();
                     SetMovementBlocked(false);
+                    telemetryManager.LightDashCount(loadoutNumber);
                     break;
 
                 case ActionType.DashHeavy:
@@ -170,6 +173,7 @@ public class LoadoutState : MonoBehaviour
                     yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(getMouseDir(), transform), ActionType.DashHeavy, "Dash");
                     nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
                     SetMovementBlocked(false);
+                    telemetryManager.HeavyDashCount(loadoutNumber);
                     //yield return DoDash(heavy: true);
                     break;
 
@@ -178,6 +182,7 @@ public class LoadoutState : MonoBehaviour
                     yield return RunAction(loadout.GetDefenseDuration(), loadout.Defense(getMouseDir()), ActionType.Defense, "Defense");
                     doAnimationAnyway = false;
                     nextDefTime = Time.time + loadout.getDefenseCD();
+                    telemetryManager.DefenseCount(loadoutNumber);
                     break;
             }
 
