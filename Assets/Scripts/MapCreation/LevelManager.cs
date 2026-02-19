@@ -18,6 +18,8 @@ public class LevelManager : MonoBehaviour
     Vector3 _playerSpawnPos;
     Player _player;
     bool _hasSpawnPos;
+
+    bool noMaps = false;
     private void OnEnable() => MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
     private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
 
@@ -77,7 +79,6 @@ public class LevelManager : MonoBehaviour
         //mapInstantiator.makeTestMap();
         _hasSpawnPos = false;
         CacheSpawnAndHookPlayer();
-        telemetryManager.StartTimer();
     }
 
     void CacheSpawnAndHookPlayer()
@@ -112,8 +113,18 @@ public class LevelManager : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
         // Trigger new run
-        telemetryManager.UploadData();
+        if (!noMaps)
+        {
+            telemetryManager.UploadData();
+        }
+        if(finalMaps.Dequeue() == null)
+        {
+            noMaps = true;
+        }
+        else {
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
+        }
+        
 
         _hasSpawnPos = false;
         CacheSpawnAndHookPlayer();

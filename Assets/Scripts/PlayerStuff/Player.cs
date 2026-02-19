@@ -98,9 +98,15 @@ public class Player : MonoBehaviour
 
     public void Heal(float health)
     {
+        
         _health += health;
+        if (_health > 100)
+        {
+            _health = 100;
+        }
         _healthAnimator.SetTrigger("PickUpHealth");
         _ui.updateHealth(_health);
+        
     }
 
     public void TeleportTo(Vector3 worldPos)

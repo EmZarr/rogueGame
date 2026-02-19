@@ -66,7 +66,7 @@ public class Enemy : MonoBehaviour
         {
             RemainingStunDuration -= Time.deltaTime;
         }
-        if (canDash && maxDashLenght > 0f && !IsStunned && _player != null && !(_data.enemyType == EnemyType.Assassin && attacking))
+        if (canDash && maxDashLenght > 0f && !_dying && !IsStunned && _player != null && !(_data.enemyType == EnemyType.Assassin && attacking))
         {
             int mask = LayerMask.GetMask("PlayerAttack", "Player");
             Vector2 enemyPos = transform.position;

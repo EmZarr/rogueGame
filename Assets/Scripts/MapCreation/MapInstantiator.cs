@@ -536,6 +536,7 @@ public class MapInstantiator : MonoBehaviour
         telemetryManager.SetTotalEnemies(spawnedEnemies.Count);
         telemetryManager.SetTotalLoot(spawnedLoot.Count);
         StartCoroutine(BuildNavmeshNextFrame());
+        telemetryManager.StartTimer();
     }
 
     IEnumerator BuildNavmeshNextFrame()
@@ -549,6 +550,16 @@ public class MapInstantiator : MonoBehaviour
     {
 
         foreach (var go in spawnedObjects)
+        {
+            if (go != null)
+                Destroy(go);
+        }
+        foreach (var go in spawnedEnemies)
+        {
+            if (go != null)
+                Destroy(go);
+        }
+        foreach (var go in spawnedLoot)
         {
             if (go != null)
                 Destroy(go);
