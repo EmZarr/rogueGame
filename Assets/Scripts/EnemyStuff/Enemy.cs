@@ -112,10 +112,16 @@ public class Enemy : MonoBehaviour
 
     private void Die()
     {
+        _dead = true;
+        _dying = true;
 
-        StopAllCoroutines();
+        //StopAllCoroutines();
+        foreach (var mb in GetComponentsInChildren<MonoBehaviour>(true))
+            mb.StopAllCoroutines();
+
         GetComponent<Collider2D>().enabled = false;
         DisableChildren();
+
         var sm = GetComponent<StateMachine>();
         sm.enabled = false;
 
