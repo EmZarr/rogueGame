@@ -1,4 +1,7 @@
 using UnityEngine;
+using System.IO;
+using System.Text;
+using System.Globalization;
 
 public class TelemetryManager : MonoBehaviour
 {
@@ -86,6 +89,11 @@ public class TelemetryManager : MonoBehaviour
         Debug.Log("Time spent Knight: " + timeSpentKnight);
         Debug.Log("Time spent Berserker: " + timeSpentBerserker);
 
+        SaveTelemetryToCSV(timePlayed, eneKilledPerc, lootGathPerc,
+                       playerDeaths, timeSpentBowMan,
+                       timeSpentKnight, timeSpentBerserker);
+
+
         timePlayed = 0f;
         playerDeaths = 0;
         totalEnemies = 0;
@@ -117,4 +125,48 @@ public class TelemetryManager : MonoBehaviour
     {
         loadOutNumber = loadout;
     }
+
+
+    void SaveTelemetryToCSV(
+    float timePlayed,
+    float enemiesKilledPct,
+    float lootTakenPct,
+    float deaths,
+    float bowmanTime,
+    float knightTime,
+    float berserkerTime)
+{
+    string path = Application.dataPath + "/telemetry.csv";
+
+    bool fileExists = File.Exists(path);
+
+    StringBuilder sb = new StringBuilder();
+
+    // If file doesn't exist, write header first
+    if (!fileExists)
+    {
+        sb.AppendLine("session,time_played,enemies_killed_pct,loot_taken_pct,deaths,time_bowman,time_knight,time_berserker");
+    }
+
+    // Session number = number of lines in file
+    int sessionNumber = fileExists ? File.ReadAllLines(path).Length : 1;
+
+    string row = string.Format(CultureInfo.InvariantCulture,
+    "{0},{1},{2},{3},{4},{5},{6},{7}",
+        sessionNumber,
+        timePlayed,
+        enemiesKilledPct,
+        lootTakenPct,
+        deaths,
+        bowmanTime,
+        knightTime,
+        berserkerTime);
+
+    sb.AppendLine(row);
+
+    File.AppendAllText(path, sb.ToString());
+
+    Debug.Log("Telemetry saved to: " + path);
+}
+
 }
