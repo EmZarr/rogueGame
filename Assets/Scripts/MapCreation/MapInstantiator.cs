@@ -73,7 +73,7 @@ public class MapInstantiator : MonoBehaviour
         ClearPreviousMap();
         int tileIndex;
         //int mapStyle = Random.Range(0,3);
-        int mapStyle = 0;
+        int mapStyle = 1;
         for (int x = 0; x < map.GetLength(0); x++)
         {
             for (int y = 0; y < map.GetLength(1); y++)

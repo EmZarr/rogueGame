@@ -100,6 +100,7 @@ public class Enemy : MonoBehaviour
             if (onDeathEffect != null)
             {
                 onDeathEffect();
+                Die();
             }
             else
             {
@@ -113,7 +114,8 @@ public class Enemy : MonoBehaviour
     {
 
         StopAllCoroutines();
-
+        GetComponent<Collider2D>().enabled = false;
+        DisableChildren();
         var sm = GetComponent<StateMachine>();
         sm.enabled = false;
 
@@ -127,6 +129,20 @@ public class Enemy : MonoBehaviour
 
         telemetryManager.EnemyKilled();
         Destroy(gameObject, 2f);
+    }
+
+    private void DisableChildren()
+    {
+        // Disable all colliders
+        foreach (var col in GetComponentsInChildren<Collider2D>())
+            col.enabled = false;
+
+        // stop attack/AI scripts
+        foreach (var mb in GetComponentsInChildren<MonoBehaviour>())
+        {
+            if (mb != this)
+                mb.enabled = false;
+        }
     }
 
     public void ApplyStun(float duration)

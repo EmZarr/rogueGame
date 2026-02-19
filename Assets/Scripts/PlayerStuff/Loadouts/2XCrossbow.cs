@@ -21,8 +21,9 @@ public class TwoCrossbow : LoadoutBase {
         {
             _knockBackHitBox = _knockBack.GetComponent<KnockBackDefense>();
         }
-        _lightDamage = 5f;
+        _lightDamage = 10f;
         _defenseDuration = 0.2f;
+        _lightAttackDuration = 0.3f;
     }
 
     public override IEnumerator LightAttack(Vector2 direction)
@@ -47,9 +48,9 @@ public class TwoCrossbow : LoadoutBase {
 
     public override IEnumerator HeavyAttack(Vector2 direction)
     {
-          for(int i = 0; i<20; i++){
+          for(int i = 0; i<6; i++){
           yield return LightAttackAttack(direction);
-          yield return new WaitForSeconds(0.12f);
+          yield return new WaitForSeconds(_lightAttackDuration*0.5f);
           }
     }
 
@@ -63,7 +64,6 @@ public class TwoCrossbow : LoadoutBase {
 
     public override IEnumerator HeavyDash(Vector2 direction, Transform transform)
     {
-        Debug.Log("Heavy Dash");
 
         Vector2 origin = transform.position;
 
@@ -80,11 +80,9 @@ public class TwoCrossbow : LoadoutBase {
         );
 
         if (hit.collider != null)
-        {
-            Debug.Log("Testing (2D hit): " + hit.collider.name);
-            
+        {            
             Vector3 start = transform.position;
-            Vector3 end = hit.point;               // better than collider.transform.position
+            Vector3 end = hit.point + hit.normal * 1f;
             float dashDuration = (float) Vector3.Distance(_player.transform.position, end)*0.03f;
             yield return new WaitForSeconds(Vector3.Distance(_player.transform.position, end)*0.01f);
             float t = 0f;
@@ -95,7 +93,7 @@ public class TwoCrossbow : LoadoutBase {
                 t += Time.deltaTime / dashDuration;
                 transform.position = Vector3.Lerp(start, end, t);
                 counter += Time.deltaTime/dashDuration;
-                if (counter > 0.1f)
+                if (counter > 0.2f)
                 {
                     yield return LightAttackAttack(-direction);
                     counter = 0f;

@@ -9,7 +9,7 @@ public class SwordAndShield : LoadoutBase
     GameObject _heavySword;
     SwordHitbox _heavySwordhitbox;
 
-    float _stunDuration = 2f;
+    float _stunDuration = 3f;
 
     float _heavyStunDuration = 5f;
 
@@ -26,6 +26,7 @@ public class SwordAndShield : LoadoutBase
         {
             _heavySwordhitbox = _heavySword.GetComponent<SwordHitbox>();
         }
+        _defCD = 0f;
     }
 
     public override IEnumerator LightAttack(Vector2 direction)

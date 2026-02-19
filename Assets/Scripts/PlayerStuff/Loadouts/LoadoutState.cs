@@ -150,7 +150,7 @@ public class LoadoutState : MonoBehaviour
                     break;
 
                 case ActionType.AttackHeavy:
-                    currentSpeed = player.GetMoveSpeed() * 0.4f;
+                    currentSpeed = player.GetMoveSpeed() * 0.0f;
                     heavyAttackQueuedThisPress = true;
                     yield return RunAction(loadout.GetHeavyAttackDuration(), loadout.HeavyAttack(getMouseDir()), ActionType.AttackHeavy, "Special");
                     nextAttackTime = Time.time + loadout.GetLightAttackDuration();

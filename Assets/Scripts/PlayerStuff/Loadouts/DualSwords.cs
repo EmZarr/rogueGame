@@ -10,18 +10,18 @@ public class DualSwords : LoadoutBase
     GameObject _aoeSword;
     SwordHitbox _aoeSwordhitbox;
 
-    float _heavyDashDamage = 30f;
+    float _heavyDashDamage = 15f;
 
-    float _parryStunDuration = 3f;
+    float _parryStunDuration = 4f;
 
 
     public DualSwords(Player player) : base(player)
     {
         _lightDamage = 5f;
         _lightAttackDuration = 0.25f;
-        _heavyAttackDuration = 1f;
         _lightDashCD = 0.5f;
         _defenseDuration = 0.4f;
+        _heavyDamage = 10f;
 
         _sword = GameObject.FindGameObjectWithTag("Sword");
         if (_sword != null)
@@ -34,6 +34,7 @@ public class DualSwords : LoadoutBase
         {
             _aoeSwordhitbox = _aoeSword.GetComponent<SwordHitbox>();
         }
+
     }
 
     public override IEnumerator LightAttack(Vector2 direction)
