@@ -171,110 +171,6 @@ public class MapInstantiator : MonoBehaviour
                                 break;
                         }
                         break;
-
-                    case 6:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedEnemies.Add(
-                            Instantiate(enemyPrefabs[0], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity)
-                        );
-                        break;
-
-                    case 7:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[1],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
-                        break;
-                    case 8:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[2],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
-                        break;
-                    case 9:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[3],
-                               tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
-                        break;
-                   
-                    case 10:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[4],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
-                        break;
                     case 11:
                         switch (mapStyle)
                         {
@@ -311,7 +207,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedLoot.Add(
                             Instantiate(
-                                furnishingPrefabs[0],
+                                furnishingPrefabs[1],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -332,7 +228,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[0],
+                                furnishingPrefabs[2],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -353,70 +249,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedLoot.Add(
                             Instantiate(
-                                furnishingPrefabs[1],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
-                        break;
-                    case 15:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedLoot.Add(
-                            Instantiate(
-                                furnishingPrefabs[1],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
-                        break;
-                    case 16:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedLoot.Add(
-                            Instantiate(
-                                furnishingPrefabs[2],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
-                        break;
-                    case 17:
-                        switch (mapStyle)
-                        {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        spawnedLoot.Add(
-                            Instantiate(
-                                furnishingPrefabs[2],
+                                furnishingPrefabs[3],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -482,6 +315,107 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapWall.SetTile(cell, tilesForestWalls[1]);
                                 break;
                         }
+                        break;
+                    case 40:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
+                                break;
+                            case 1:
+                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                                break;
+                            case 2:
+                                tilemapBase.SetTile(cell, tilesForestBase[0]);
+                                break;
+                        }
+                        spawnedEnemies.Add(
+                            Instantiate(enemyPrefabs[0], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity)
+                        );
+                        break;
+                    case 41:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
+                                break;
+                            case 1:
+                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                                break;
+                            case 2:
+                                tilemapBase.SetTile(cell, tilesForestBase[0]);
+                                break;
+                        }
+                        spawnedEnemies.Add(
+                            Instantiate(
+                                enemyPrefabs[1],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        break;
+                    case 42:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
+                                break;
+                            case 1:
+                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                                break;
+                            case 2:
+                                tilemapBase.SetTile(cell, tilesForestBase[0]);
+                                break;
+                        }
+                        spawnedEnemies.Add(
+                            Instantiate(
+                                enemyPrefabs[2],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        break;
+                    case 43:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
+                                break;
+                            case 1:
+                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                                break;
+                            case 2:
+                                tilemapBase.SetTile(cell, tilesForestBase[0]);
+                                break;
+                        }
+                        spawnedEnemies.Add(
+                            Instantiate(
+                                enemyPrefabs[3],
+                               tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        break;
+                    case 44:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
+                                break;
+                            case 1:
+                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                                break;
+                            case 2:
+                                tilemapBase.SetTile(cell, tilesForestBase[0]);
+                                break;
+                        }
+                        spawnedEnemies.Add(
+                            Instantiate(
+                                enemyPrefabs[4],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
                         break;
 
                     case 99:

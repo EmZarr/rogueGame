@@ -1,12 +1,8 @@
-using UnityEngine;
-using System.Collections;
+
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
-using UnityEngine.InputSystem;
-using UnityEngine.Rendering;
-using Unity.Mathematics;
-using Unity.Collections;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -17,48 +13,19 @@ public class MapGenerator : MonoBehaviour
 
     [Header("Enemies")]
     [SerializeField] int amountOfEnemyTypes;
-    [SerializeField] int startingBudget;
+    [SerializeField] int enemiesBudget;
 
 
     [Header("Furnishing")]
-    [SerializeField] int maxAmountFurnishing;
+    [SerializeField] int furnishingBudget;
     [SerializeField] int amountOfFurnishingTypes;
 
 
-    [Header("Controls")]
-    public InputActionReference placeObjects;
-    public InputActionReference remakeMap;
-    public InputActionReference mutateMap;
-    public InputActionReference mutatePlacements;
-    public InputActionReference mutateContent;
-
     public MapInfo currentMap;
 
-    MapInstantiator mapInstantiator;
-
-    void Awake()
-    {
-        mapInstantiator = FindFirstObjectByType<MapInstantiator>();
-    }
     void Start()
     {
-        //Debug.Log("Helo?");
-        mapInstantiator = FindFirstObjectByType<MapInstantiator>();
         MakeMap();
-    }
-
-    void OnEnable()
-    {
-        //placeObjects.action.Enable();
-        remakeMap.action.Enable();
-        mutateMap.action.Enable();
-        mutatePlacements.action.Enable();
-        mutateContent.action.Enable();
-        placeObjects.action.performed += ctx => { currentMap = PlaceObjects(currentMap); };
-        remakeMap.action.performed += ctx => { currentMap = MakeMap(); };
-        mutateMap.action.performed += ctx => { currentMap = MutateMap(currentMap); };
-        mutatePlacements.action.performed += ctx => { currentMap = MutatePlacements(currentMap); };
-        mutateContent.action.performed += ctx => { currentMap = MutateContent(currentMap); };
     }
 
     private MapInfo PlaceObjects(MapInfo map)
@@ -76,11 +43,7 @@ public class MapGenerator : MonoBehaviour
             enemies = new List<(Vector2Int, int)>(),
             furnishing = new List<(Vector2Int, int)>(),
             floorTiles = new List<Vector2Int>(),
-            enemyBudgetMin = 0,
-            enemyBudgetMax = 0,
             enemyBudget = 0,
-            furnishingBudgetMin = 0,
-            furnishingBudgetMax = 0,
             furnishingBudget = 0,
             distFromPlayerToEnd = 0,
         };
@@ -201,12 +164,8 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }*/
-        map.enemyBudgetMin = (int)(map.floorTiles.Count * 0.01f);
-        map.enemyBudgetMax = (int)(map.floorTiles.Count * 0.035f);
-        map.enemyBudget = UnityEngine.Random.Range(map.enemyBudgetMin, map.enemyBudgetMax+1);
-        map.furnishingBudgetMin = (int)(map.floorTiles.Count * 0.02f);
-        map.furnishingBudgetMax = (int)(map.floorTiles.Count * 0.07f);
-        map.furnishingBudget = UnityEngine.Random.Range(map.furnishingBudgetMin, map.furnishingBudgetMax+1);
+        map.enemyBudget = enemiesBudget;
+        map.furnishingBudget = furnishingBudget;
     
         return map;
     }
@@ -311,7 +270,8 @@ public class MapGenerator : MonoBehaviour
 
             // place enemy
             int enemyType = UnityEngine.Random.Range(0, amountOfEnemyTypes);
-            map.enemies.Add((pos, 6+enemyType));
+            map.enemies.Add((pos, 40+enemyType));
+            occupied.Add(pos);
         }
 
         foreach (var (p, t) in map.enemies)
@@ -338,6 +298,8 @@ public class MapGenerator : MonoBehaviour
         map.enemies.Select(e => e.placement)
         .Concat(map.furnishing.Select(f => f.placement)));
 
+        bool lastPlacedFriendly = false;
+
         foreach (var pos in candidates)
         {
             if (map.furnishing.Count >= map.furnishingBudget)
@@ -355,8 +317,19 @@ public class MapGenerator : MonoBehaviour
             if (tooClose)
                 continue;
 
-            // place funrnishing
-            int furnishType = UnityEngine.Random.Range(0, amountOfFurnishingTypes);
+            // place funrnishing. Insure 50/50 for powerups and obstacles.
+            int furnishType;
+            if (lastPlacedFriendly)
+            {
+                furnishType = UnityEngine.Random.Range(0, amountOfFurnishingTypes-2);
+                lastPlacedFriendly = false;
+            }
+            else
+            {
+                furnishType = UnityEngine.Random.Range(2, amountOfFurnishingTypes);
+                lastPlacedFriendly = true;
+            }
+            occupied.Add(pos);
             map.furnishing.Add((pos, 11+furnishType));
         }
 
@@ -466,50 +439,14 @@ public class MapGenerator : MonoBehaviour
 
     public MapInfo mutateEnemies(MapInfo map)
     {
-        // no enemies to mutate
-        if (map.enemies == null || map.enemies.Count == 0)
-            return map;
-
-        int mutateEnemyBudget = UnityEngine.Random.Range(0, 2);
-        if (mutateEnemyBudget == 1)
+        int amountToMutate = Mathf.CeilToInt(map.enemies.Count * 0.1f);
+        for (int i = 0; i < amountToMutate; i++)
         {
-            int mutateType = UnityEngine.Random.Range(0, 2);
-            int mutateAmount = UnityEngine.Random.Range(5, 16);
-            if (mutateType == 0)
-            {
-                map.enemyBudget = math.max(map.enemyBudgetMin, (int)(map.enemyBudget*(1-(mutateAmount*0.01f))));
-                while(map.enemies.Count > map.enemyBudget)
-                {
-                    int idx = UnityEngine.Random.Range(0, map.enemies.Count);
-                    var (pos, type) = map.enemies[idx];
-                    map.enemies.RemoveAt(idx);
-                    map.mapArray[pos.x, pos.y] = 1;
-                }
-            }
-            else
-            {
-                map.enemyBudget = math.min(map.enemyBudgetMax, (int)(map.enemyBudget*(1+(mutateAmount*0.01f))));
-            }
-    
-        }
-        // pick one to remove
-        /*int idx = UnityEngine.Random.Range(0, map.enemies.Count);
-        var (pos, type) = map.enemies[idx];
-        map.enemies.RemoveAt(idx);
-        map.enemyBudget++;*/
+            int index = UnityEngine.Random.Range(0, map.enemies.Count);
+            var removed = map.enemies[index];
+            map.mapArray[removed.Item1.x, removed.Item1.y] = 1;
+            map.enemies.RemoveAt(index);
 
-        // clear from map
-        int removeEnemies = UnityEngine.Random.Range(0,2);
-        if (removeEnemies == 1)
-        {
-            int amountToRemove = (int)UnityEngine.Random.Range(1, map.enemyBudget*0.15f);
-            for (int i = 0; i<amountToRemove; i++)
-            {
-                int idx = UnityEngine.Random.Range(0, map.enemies.Count);
-                var (pos, type) = map.enemies[idx];
-                map.enemies.RemoveAt(idx);
-                map.mapArray[pos.x, pos.y] = 1;
-            }
         }
         // add replacement
         map = placeEnemies(map);
@@ -519,44 +456,31 @@ public class MapGenerator : MonoBehaviour
 
     public MapInfo mutateFurnishing(MapInfo map)
     {
-        // no furnishing to mutate
-        if (map.furnishing == null || map.furnishing.Count == 0)
-            return map;
-
-
-        int mutateFurnishingBudget = UnityEngine.Random.Range(0, 2);
-        if (mutateFurnishingBudget == 1)
+        // Move 10 %
+        int amountToMutate = Mathf.CeilToInt(map.furnishing.Count * 0.1f);
+        bool lastRemovedFriendly = false;
+        for (int i = 0; i < amountToMutate; i++)
         {
-            int mutateType = UnityEngine.Random.Range(0, 2);
-            int mutateAmount = UnityEngine.Random.Range(5, 16);
-            if (mutateType == 0)
+            int index = UnityEngine.Random.Range(0, map.furnishing.Count);
+            if (lastRemovedFriendly)
             {
-                map.furnishingBudget = math.max(map.furnishingBudgetMin, (int)(map.furnishingBudget*(1-(mutateAmount*0.01f))));
-                while(map.furnishing.Count > map.furnishingBudget)
+                while (map.furnishing[index].Item2 == 13 || map.furnishing[index].Item2 == 14)
                 {
-                    int idx = UnityEngine.Random.Range(0, map.furnishing.Count);
-                    var (pos, type) = map.furnishing[idx];
-                    map.furnishing.RemoveAt(idx);
-                    map.mapArray[pos.x, pos.y] = 1;
+                    index = UnityEngine.Random.Range(0, map.furnishing.Count);
                 }
             }
             else
             {
-                map.furnishingBudget = (int)(map.furnishingBudget*(1+(mutateAmount*0.01f)));
+                while (map.furnishing[index].Item2 == 11 || map.furnishing[index].Item2 == 12)
+                {
+                    index = UnityEngine.Random.Range(0, map.furnishing.Count);
+                }
             }
-    
-        }
-        int removeFurnishing = UnityEngine.Random.Range(0,2);
-        if (removeFurnishing == 1)
-        {
-            int amountToRemove = (int)math.min(UnityEngine.Random.Range(1, map.furnishingBudget*0.15f), map.furnishing.Count);
-            for (int i = 0; i<amountToRemove; i++)
-            {
-                int idx = UnityEngine.Random.Range(0, map.furnishing.Count);
-                var (pos, type) = map.furnishing[idx];
-                map.furnishing.RemoveAt(idx);
-                map.mapArray[pos.x, pos.y] = 1;
-            }
+            lastRemovedFriendly = !lastRemovedFriendly;
+            var removed = map.furnishing[index];
+            map.mapArray[removed.Item1.x, removed.Item1.y] = 1;
+            map.furnishing.RemoveAt(index);
+
         }
 
         // add replacement
@@ -1111,12 +1035,8 @@ public class MapInfo
     public Vector2Int? endPos;
     public float distFromPlayerToEnd;
     public List<Vector2Int> shortestPath;
-    public int enemyBudgetMin;
-
-    public int enemyBudgetMax;
+ 
     public int enemyBudget;
-    public int furnishingBudgetMin;
-    public int furnishingBudgetMax;
     public int furnishingBudget;
 
     // Copy constructor
@@ -1124,11 +1044,7 @@ public class MapInfo
     {
         mapSize = other.mapSize;
         distFromPlayerToEnd = other.distFromPlayerToEnd;
-        enemyBudgetMin = other.enemyBudgetMin;
-        enemyBudgetMax = other.enemyBudgetMax;
         enemyBudget = other.enemyBudget;
-        furnishingBudgetMin = other.furnishingBudgetMin;
-        furnishingBudgetMax = other.furnishingBudgetMax;
         furnishingBudget = other.furnishingBudget;
         playerStartPos = other.playerStartPos;
         endPos = other.endPos;

@@ -438,9 +438,10 @@ MonoBehaviour:
   - {fileID: 6164719104617455019, guid: c2b004bf4911a8a4d8249268205e0aa4, type: 3}
   - {fileID: 7378334077991207350, guid: 6ce7d400bf1a1ce4c89b300c286f1af8, type: 3}
   furnishingPrefabs:
-  - {fileID: 6425840253016552175, guid: af9da458c414f0e4bb1ae36e70b80304, type: 3}
-  - {fileID: 688636583817786477, guid: 118df840cb0a31942800394f8d291676, type: 3}
   - {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
+  - {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
+  - {fileID: 7478037528052263297, guid: ed534ca038c4da141b60375581a40542, type: 3}
+  - {fileID: 7478037528052263297, guid: c82706e725f2f8148bb5e94378943127, type: 3}
   levelManager: {fileID: 0}
   telemetryManager: {fileID: 0}
 --- !u!156049354 &859900374
@@ -503,14 +504,9 @@ MonoBehaviour:
   maxRoomSize: {x: 15, y: 15, z: 0}
   maxRoomAmount: 50
   amountOfEnemyTypes: 5
-  startingBudget: 30
-  maxAmountFurnishing: 20
-  amountOfFurnishingTypes: 7
-  placeObjects: {fileID: -3304523750388687469, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  remakeMap: {fileID: 1708116293339222938, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  mutateMap: {fileID: 101673841628561707, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  mutatePlacements: {fileID: 7610372480146149514, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  mutateContent: {fileID: 1907408436137568603, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  enemiesBudget: 40
+  furnishingBudget: 40
+  amountOfFurnishingTypes: 4
 --- !u!114 &859900379
 MonoBehaviour:
   m_ObjectHideFlags: 0
