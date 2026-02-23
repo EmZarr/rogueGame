@@ -169,7 +169,7 @@ public class MapElite : MonoBehaviour
             //´behavior + fitness
             candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(
                 candidate.mapData,
-                BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, Vector2.zero)
+                BehaviorFunctions.EnemyRoleDiversity(candidate.mapData.enemies, Vector2.zero)
             );
 
             candidate.enemFitness = FitnessFunctions.EnemyFitnessTotal(candidate.mapData, 0.5f, 0.5f);
@@ -341,7 +341,7 @@ public class MapElite : MonoBehaviour
 
             candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(
                 candidate.mapData,
-                BehaviorFunctions.EnemyCombatMix(candidate.mapData.enemies, Vector2.zero)
+                BehaviorFunctions.EnemyRoleDiversity(candidate.mapData.enemies, Vector2.zero)
             );
 
             var key = candidate.CombinedBehavior;
