@@ -81,15 +81,15 @@ public class BehaviorFunctions : MonoBehaviour
 
         if (typeCount <= 1)
         {
-            return new Vector2(behavior.x, 0);
+            return new Vector2(0, behavior.y);
         }
         else if (typeCount <= 3)
         {
-            return new Vector2(behavior.x, 1);
+            return new Vector2(1, behavior.y);
         }
         else
         {
-            return new Vector2(behavior.x, 2);
+            return new Vector2(2, behavior.y);
         }
     }
 
@@ -106,9 +106,14 @@ public class BehaviorFunctions : MonoBehaviour
                 {
                     for (int b = room.YMin; b <=room.YMax; b++)
                     {
-                        if (map.mapArray[a, b] == 6 || map.mapArray[a, b] == 7)
+                        /*if (map.mapArray[a, b] == 6 || map.mapArray[a, b] == 7)
                         {
                             clusterSize ++;
+                        }*/
+                        int value = map.mapArray[a, b];
+                        if (value >= 40 && value <= 44)
+                        {
+                            clusterSize++;
                         }
                     }
                 }
