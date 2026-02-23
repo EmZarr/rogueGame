@@ -247,13 +247,13 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedLoot.Add(
+                        /*spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[3],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
-                        );
+                        );*/
                         break;
                     case 25:
                         tilemapBase.SetTile(cell, tilesGroundDecour[0]);
