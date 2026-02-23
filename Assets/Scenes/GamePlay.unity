@@ -860,9 +860,10 @@ MonoBehaviour:
   - {fileID: 6164719104617455019, guid: abf53ad0b1047f34186039c8e4cc5f35, type: 3}
   - {fileID: 7378334077991207350, guid: b3fc699f49b97c14b9db405607749c2a, type: 3}
   furnishingPrefabs:
-  - {fileID: 7478037528052263297, guid: c82706e725f2f8148bb5e94378943127, type: 3}
-  - {fileID: 7478037528052263297, guid: ed534ca038c4da141b60375581a40542, type: 3}
   - {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
+  - {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
+  - {fileID: 7478037528052263297, guid: ed534ca038c4da141b60375581a40542, type: 3}
+  - {fileID: 7478037528052263297, guid: c82706e725f2f8148bb5e94378943127, type: 3}
   levelManager: {fileID: 1723517302}
   telemetryManager: {fileID: 0}
 --- !u!156049354 &859900374
