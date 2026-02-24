@@ -136,7 +136,7 @@ CircleCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -313,6 +313,7 @@ MonoBehaviour:
   sr: {fileID: 3166946958015635775}
   col: {fileID: 308570761719291188}
   knockBackDistance: 4
+  telemetryManager: {fileID: 0}
 --- !u!50 &3843826912805152104
 Rigidbody2D:
   serializedVersion: 5
