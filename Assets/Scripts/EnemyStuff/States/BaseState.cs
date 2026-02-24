@@ -21,4 +21,22 @@ public abstract class BaseState
     public abstract void ExitState();
     public abstract void Execute();
     public abstract BaseState GetNextState();
+
+    protected bool HasLineOfSight()
+    {
+        Vector2 origin = _agent.transform.position;
+        Vector2 target = _player.transform.position;
+
+        Vector2 direction = (target - origin);
+        float distance = direction.magnitude;
+        direction.Normalize();
+
+        RaycastHit2D hit = Physics2D.Raycast(origin, direction, distance, LayerMask.GetMask("Wall"));
+
+        // If ray hit a wall before reaching player -> blocked
+        if (hit.collider != null)
+            return false;
+
+        return true;
+    }
 }

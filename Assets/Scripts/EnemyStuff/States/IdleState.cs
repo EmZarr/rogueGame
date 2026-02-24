@@ -64,7 +64,7 @@ public class IdleState : BaseState
         if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh)
             return this;
 
-        if (Vector3.Distance(_agent.transform.position, _player.transform.position) < _enemy.GetChaseRange())
+        if (Vector3.Distance(_agent.transform.position, _player.transform.position) < _enemy.GetChaseRange() && HasLineOfSight())
         {
             if (_enemy._data.enemyType == EnemyType.Assassin)
             {

@@ -1,0 +1,4 @@
+session,time_played,enemies_killed_pct,loot_taken_pct,deaths,time_bowman,time_knight,time_berserker, bowman_lightAttacks, bowman_heavyAttacks, bowman_lightDashes, bowman_heavyDashes, bowman_defense, knight_lightAttacks, knight_heavyAttacks, knight_lightDashes, knight_heavyDashes, knight_defense, berserker_lightAttacks, berserker_heavyAttacks, berserker_lightDashes, berserker_heavyDashes, beserker_defense, player_damageTaken_melee_bombs, player_damageTaken_projectiles, player_damageTaken_guardianShields, player_damageTaken_traps
+1,191.298,70.83334,25.5814,0,97.95845,45.33852,48.00191,56,5,7,0,0,29,8,5,0,0,44,5,9,2,2,90,124,55,40
+2,235.8595,83.33334,27.90698,1,40.59464,111.2413,84.02347,32,1,6,1,0,55,19,22,4,0,74,2,27,2,1,80,140,35,30
+3,180.8395,68.42105,22.72727,0,40.08873,102.3985,38.35286,72,4,13,1,0,116,24,43,7,0,121,5,36,3,1,130,190,35,50

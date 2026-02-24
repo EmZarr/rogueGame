@@ -9,14 +9,21 @@ public static class MapArchiveExporter
     {
         public int width;
         public int height;
-        public List<List<int>> tiles; // tiles[y][x]
+
+        // tiles[y][x]
+        public List<List<int>> tiles;
 
         // flattened row-major list: length == width * height
+        // IMPORTANT: this exporter flattens in (y-major, x-minor) order using mapArray[x,y]
         public List<int> flatTiles;
 
-        public float fitness;
+        // Fitness
+        public float fitness;      // combined
+        public float geoFitness;   // slice
+        public float enemyFitness; // slice (maps from candidate.enemFitness)
+        public float furnFitness;  // slice
 
-        // All three behavior axes
+        // Behavior slices
         public List<float> geoBehavior;   // [x, y]
         public List<float> enemyBehavior; // [x, y]
         public List<float> furnBehavior;  // [x, y]
@@ -31,7 +38,6 @@ public static class MapArchiveExporter
         public int wallTiles;
     }
 
-
     [System.Serializable]
     public class MapCollection
     {
@@ -39,58 +45,104 @@ public static class MapArchiveExporter
     }
 
     public static void ExportArchiveToJson(
-    IEnumerable<MapCandidate> candidates,
-    string filename = "archive_maps.json")
+        IEnumerable<MapCandidate> candidates,
+        string filename = "archive_maps.json")
     {
-        var collection = new MapCollection();
-        collection.maps = new List<MapDTO>();
+        var collection = new MapCollection { maps = new List<MapDTO>() };
 
         foreach (var candidate in candidates)
         {
+            if (candidate == null || candidate.mapData == null)
+                continue;
+
             var map = candidate.mapData;
 
             int width = map.mapArray?.GetLength(0) ?? 0;
             int height = map.mapArray?.GetLength(1) ?? 0;
 
-            MapDTO dto = new MapDTO
+            // Defensive: avoid null refs in summary metrics
+            int roomsCount = map.components?.Count ?? 0;
+            int enemiesCount = map.enemies?.Count ?? 0;
+            int furnishingCount = map.furnishing?.Count ?? 0;
+            int walkableTiles = map.floorTiles?.Count ?? 0;
+
+            int wallTiles = (map.mapArray != null) ? CountWallTiles(map.mapArray) : 0;
+
+            var dto = new MapDTO
             {
                 width = width,
                 height = height,
-                tiles = map.mapArray != null ? ConvertMapArrayToNestedList(map.mapArray) : new List<List<int>>(),
-                flatTiles = map.mapArray != null ? FlattenMapArray(map.mapArray) : new List<int>(),
-                fitness = candidate.CombinedFitness,
+                tiles = (map.mapArray != null) ? ConvertMapArrayToNestedList(map.mapArray) : new List<List<int>>(),
+                flatTiles = (map.mapArray != null) ? FlattenMapArray(map.mapArray) : new List<int>(),
 
+                // Fitness: combined + slices
+                fitness = SafeFloat(candidate.CombinedFitness),
+                geoFitness = SafeFloat(candidate.geoFitness),
+                enemyFitness = SafeFloat(candidate.enemFitness),
+                furnFitness = SafeFloat(candidate.furnFitness),
+
+                // Behaviors
                 geoBehavior = ConvertBehaviorToList(candidate.geoBehavior),
                 enemyBehavior = ConvertBehaviorToList(candidate.enemyBehavior),
                 furnBehavior = ConvertBehaviorToList(candidate.furnBehavior),
 
-                roomsCount = map.components?.Count ?? 0,
-                enemiesCount = map.enemies?.Count ?? 0,
-                furnishingCount = map.furnishing?.Count ?? 0,
+                // Summary
+                roomsCount = roomsCount,
+                enemiesCount = enemiesCount,
+                furnishingCount = furnishingCount,
                 enemyBudget = map.enemyBudget,
                 furnishingBudget = map.furnishingBudget,
-                walkableTiles = map.floorTiles.Count,
-                // wallTiles = ... if you have it
+                walkableTiles = walkableTiles,
+                wallTiles = wallTiles
             };
 
             collection.maps.Add(dto);
         }
 
         string json = JsonUtility.ToJson(collection, true);
-
         string path = Path.Combine(Application.dataPath, filename);
         File.WriteAllText(path, json);
+
         Debug.Log($"Archive exported to {path} ({collection.maps.Count} maps)");
     }
 
+    // --------------------
+    // Helper methods
+    // --------------------
 
-    // --- helper methods ---
+    private static float SafeFloat(float v)
+    {
+        if (float.IsNaN(v) || float.IsInfinity(v)) return 0f;
+        return v;
+    }
+
+    private static int CountWallTiles(int[,] mapArray)
+    {
+        // Adjust if you redefine wall IDs.
+        // Based on your instantiator: 3,4,5 are walls, plus corner variants 31,32.
+        int w = mapArray.GetLength(0);
+        int h = mapArray.GetLength(1);
+        int count = 0;
+
+        for (int x = 0; x < w; x++)
+        {
+            for (int y = 0; y < h; y++)
+            {
+                int t = mapArray[x, y];
+                if (t == 3 || t == 4 || t == 5 || t == 31 || t == 32)
+                    count++;
+            }
+        }
+
+        return count;
+    }
 
     private static List<int> FlattenMapArray(int[,] mapArray)
     {
         int width = mapArray.GetLength(0);
         int height = mapArray.GetLength(1);
 
+        // Row-major by y then x (matches dto.tiles[y][x])
         var flat = new List<int>(width * height);
         for (int y = 0; y < height; y++)
         {
@@ -136,24 +188,43 @@ public static class MapArchiveExporter
 
         string json = File.ReadAllText(path);
         var collection = JsonUtility.FromJson<MapCollection>(json);
-        return collection;
+        return collection ?? new MapCollection { maps = new List<MapDTO>() };
     }
 
     public static int[,] MapFromDto(MapDTO dto)
     {
-        // create int[,] from dto.tiles or dto.flatTiles
         var arr = new int[dto.width, dto.height];
-        int i = 0;
-        for (int y = 0; y < dto.height; y++)
+
+        // Prefer flatTiles if valid
+        if (dto.flatTiles != null && dto.flatTiles.Count == dto.width * dto.height)
         {
-            for (int x = 0; x < dto.width; x++)
+            int i = 0;
+            for (int y = 0; y < dto.height; y++)
             {
-                arr[x, y] = dto.flatTiles[i++];
+                for (int x = 0; x < dto.width; x++)
+                {
+                    arr[x, y] = dto.flatTiles[i++];
+                }
+            }
+            return arr;
+        }
+
+        // Fallback to nested list
+        if (dto.tiles != null && dto.tiles.Count == dto.height)
+        {
+            for (int y = 0; y < dto.height; y++)
+            {
+                var row = dto.tiles[y];
+                if (row == null) continue;
+
+                int rowCount = Mathf.Min(row.Count, dto.width);
+                for (int x = 0; x < rowCount; x++)
+                {
+                    arr[x, y] = row[x];
+                }
             }
         }
 
         return arr;
     }
-
 }
-
