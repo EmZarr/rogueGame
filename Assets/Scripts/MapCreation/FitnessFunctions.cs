@@ -1,370 +1,233 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
+using static UnityEngine.EventSystems.EventTrigger;
+using static UnityEditor.PlayerSettings;
+using System.ComponentModel;
+using System;
 
 public class FitnessFunctions : MonoBehaviour 
 {
-    public static float GetGeometryFitness(MapCandidate candidate, (int min, int max, float weight) optimalPathLength, (float min, float max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount, (float min, float max, float weight) optimalCorridorRatio)
+
+    private static bool IsFloor(int i)
     {
-        int pathCount = 0;
-        if (candidate.mapData.shortestPath != null)
+        if (i is (0 or 3 or 4 or 5 or 31 or 32)) return false;
+        return true;
+    }
+    public static float GetGeometryFitness(MapCandidate candidate, (float min, float max, float weight) optimalOpenness,(float min, float max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount, (float min, float max, float weight) optimalCorridorRatio)
+    {
+        if (candidate.mapData.shortestPath == null || candidate.mapData.shortestPath.Count <=0) return 0;
+        int mainCount = 1, optionalCount = 1;
+        foreach (var c in candidate.mapData.components)
         {
-            pathCount = candidate.mapData.shortestPath.Count;
+            if (c.onMainPath) mainCount++;
+            else optionalCount++;
         }
-        float pathLengthScore = ScoreInterval(pathCount, optimalPathLength.min, optimalPathLength.max);
 
-        (int mainCount, int optionalCount) mainAndOptionalCount = (1, 1);
-        foreach (var component in candidate.mapData.components)
-        {
-            if (component.onMainPath)
-            {
-                mainAndOptionalCount.mainCount++;
-            }
-            else
-            {
-                mainAndOptionalCount.optionalCount++;
-            }
-        }
-        float optimalToMainScore = ScoreInterval((float)mainAndOptionalCount.mainCount/mainAndOptionalCount.optionalCount, optimalMainToOptionalComponents.min, optimalMainToOptionalComponents.max);
-
+        float optimalOpennessScore = ScoreInterval(ComputeOpenness(candidate.mapData.mapArray), optimalOpenness.min, optimalOpenness.max);
+        float optimalToMainScore = ScoreInterval((float)mainCount/optionalCount, optimalMainToOptionalComponents.min, optimalMainToOptionalComponents.max);
         float optimalMapSizeScore = ScoreInterval(candidate.mapData.mapSize, optimalMapSize.min, optimalMapSize.max);
-
         float optimalComponentAmountScore = ScoreInterval(candidate.mapData.components.Count, optimalComponentAmount.min, optimalComponentAmount.max);
-
         float optimalCorridorRatioScore = ScoreInterval((float)candidate.mapData.corridorTileCount/candidate.mapData.floorTiles.Count, optimalCorridorRatio.min, optimalCorridorRatio.max);
-
-        return pathLengthScore * optimalPathLength.weight + optimalToMainScore * optimalMainToOptionalComponents.weight + optimalMapSizeScore * optimalMapSize.weight + optimalComponentAmountScore * optimalComponentAmount.weight + optimalCorridorRatioScore * optimalCorridorRatio.weight;
+        return optimalOpennessScore * optimalOpenness.weight + optimalToMainScore * optimalMainToOptionalComponents.weight + optimalMapSizeScore * optimalMapSize.weight + optimalComponentAmountScore * optimalComponentAmount.weight + optimalCorridorRatioScore * optimalCorridorRatio.weight;
     }
 
-    static float ScoreInterval(float value, float min, float max)
+    public static float GetFurnishingFitness(MapCandidate candidate, (int min, int max, float weight) optimalSpread, float atEndWeight)
     {
-        // Reject invalid inputs
+        float atEndScore = LootAtEndFitness(candidate.mapData);
+        float spreadScore = FurnishingSpreadFitness(candidate, optimalSpread.min, optimalSpread.max);
+        return spreadScore * optimalSpread.weight + atEndScore * atEndWeight;
+    }
+
+    public static float GetEnemyFitness(MapCandidate candidate)
+    {
+        return EnemyNotAtStartFitness(candidate.mapData);
+    }
+
+    static float ScoreInterval(float value, float min, float max, float falloff = 1.5f)
+    {
         if (float.IsNaN(value) || float.IsInfinity(value) ||
             float.IsNaN(min) || float.IsNaN(max) ||
-            float.IsInfinity(min) || float.IsInfinity(max) ||
-            min <= 0f || max <= 0f)
-        {
-            return 0f;
-        }
-
-        if (value <= 0f)
+            float.IsInfinity(min) || float.IsInfinity(max))
             return 0f;
 
-        if (value < min)
-            return Mathf.Clamp01(value / min);
+        if (max < min) (min, max) = (max, min);
 
-        if (value > max)
-            return Mathf.Clamp01(max / value);
+        // Exact hit
+        if (value >= min && value <= max) return 1f;
 
-        if (value >= min && value <= max)
-            return 1f;
+        // Distance outside band (normalized)
+        float d = (value < min) ? (min - value) / Mathf.Max(min, 1e-6f)
+                                : (value - max) / Mathf.Max(max, 1e-6f);
 
-        // Fallback 
-        return 0f;
+        // Smooth decay: 1 / (1 + d^falloff)
+        return 1f / (1f + Mathf.Pow(d, falloff));
     }
 
-
-    static float RoomFitnessFurEne(Room room, MapInfo map)
+    static float LocalOpennessAt(int opennessRadius, int posX, int posY, int[,] mapArray)
     {
-        bool hasTrap = false;
-        bool hasEnemy = false;
-        float score = 0;
-        float furnishScore = 0;
-        float maxRoomScore = map.furnishing.Count/map.components.Count + 2.0f;
-        List<Vector2Int> enemyPlacement = new List<Vector2Int>();
-        for (int a = room.XMin; a <= room.XMax; a++)
+        int floorCount = 0;
+        int total = 0;
+
+        // For each tile in R radius square, how many are floor?
+        for (int dx = -opennessRadius; dx <= opennessRadius; dx++)
         {
-            for (int b = room.YMin; b <=room.YMax; b++)
+            for (int dy = -opennessRadius; dy <= opennessRadius; dy++)
             {
-                if (map.mapArray[a, b] == 3 || map.mapArray[a, b] == 4)
-                {
-                    furnishScore += map.furnishing.Count/map.components.Count + 2.0f;
-                }
-                if (map.mapArray[a, b] == 5)
-                {
-                    hasTrap = true;
-                }
-                if (map.mapArray[a, b] == 6 || map.mapArray[a, b] == 7)
-                {
-                    hasEnemy = true;
-                    enemyPlacement.Add(new Vector2Int(a,b));
-                }
+                int x = posX + dx;
+                int y = posY + dy;
+                if (x < 0 || y < 0 || x >= mapArray.GetLength(0) || y >= mapArray.GetLength(1))
+                    continue;
+
+                total++;
+                if (IsFloor(mapArray[x, y]))
+                    floorCount++;
             }
         }
-        foreach (var enemy in enemyPlacement)
+        // Return percentage of floor tiles in radius
+        if (total == 0) return 0f;
+        return (float)floorCount / total;   // 0..1
+    }
+
+
+    static float ComputeOpenness(int[,] mapArray)
+    {
+        float opennessScoreSum = 0f;
+        float amountOfTiles = 0f;
+
+        for (int x = 0; x < mapArray.GetLength(0); x++)
         {
-            if (map.mapArray[enemy.x, enemy.y] == 6 || map.mapArray[enemy.x, enemy.y] == 7)
+            for (int y = 0; y < mapArray.GetLength(1); y++)
             {
-                float xDif;
-                float yDif;
-                if (math.abs(enemy.x - room.XMin) <= math.abs(enemy.x - room.XMax))
+                if (IsFloor(mapArray[x, y]))
                 {
-                    xDif = math.abs(enemy.x - room.XMin);
+                    opennessScoreSum += LocalOpennessAt(5, x, y, mapArray);
+                    amountOfTiles += 1f;
                 }
-                else
-                {
-                     xDif = math.abs(enemy.x - room.XMax);
-                }
-                if (math.abs(enemy.y - room.YMin) <= math.abs(enemy.y - room.YMax))
-                {
-                    yDif = math.abs(enemy.y - room.YMin);
-                }
-                else
-                {
-                    yDif = math.abs(enemy.y - room.YMax);
-                }
-                //Diff less than 2 is irrelevant (keeps some posibility space so it doesn't always try to optimize for melee enemies being next to wall tile)
-                if (xDif < 2)
-                {
-                    xDif = 2;
-                }
-                if (yDif < 2)
-                {
-                    yDif = 2;
-                }
-                if (map.mapArray[enemy.x, enemy.y] == 6)
-                {
-                    score += (1/xDif + 1/yDif)*0.5f;
-                }
-                else
-                {
-                    score += (1/(room.size.x * 0.5f) * xDif + 1/(room.size.y * 0.5f) * yDif) * 0.5f;
-                }
-             
             }
         }
-        if (hasEnemy && hasTrap)
-        {
-            score+=1;
-        }
-        if (furnishScore > maxRoomScore)
-        {
-            furnishScore = maxRoomScore;
-        }
-        score+= furnishScore;
-        return score;
+        return opennessScoreSum / amountOfTiles;  // 0..1
     }
 
 
-    public static float EnemyFitnessTotal(MapInfo map, float EneNotStartWeight, float EneCloseWallWeight)
+    public static float FurnishingSpreadFitness(MapCandidate candidate, int minPerRoom, int maxPerRoom)
     {
-        float scoreWallCloseness = 0;
-        float scoreNotStart = EnemyNotAtStartFitness(map);
-        float tmpScore = 0;
-        List<Vector2Int> checkedEnemies = new List<Vector2Int>();
-        foreach (var component in map.components)
-        {
-            foreach (var room in component.rooms){
-                (tmpScore, checkedEnemies) = EnemiesClosenessToWallFitness(room, map, checkedEnemies);
-                scoreWallCloseness += tmpScore;
-            }
-        }
-        if (map.enemies.Count > 0)
-        {
-            scoreWallCloseness = scoreWallCloseness/map.enemies.Count;
-        }
-        return scoreNotStart * EneNotStartWeight + scoreWallCloseness * EneCloseWallWeight;
-    }
+        var comps = candidate.mapData.components;
 
-    public static float FurnishingFitnessTotal(MapInfo map, float lootEndWeight, float lootDistWeight, float trapPlacementWeight)
-    {
-        float scoreLootEnd = LootAtEndFitness(map);
-        float scoreTotalLootDist = 0;
-        float scoreTotalTrapPlacement = 0;
-        
-        foreach (var component in map.components)
+        if (comps == null || comps.Count == 0)
+            return 0f;
+
+        float totalFitness = 0f;
+        int evaluatedRooms = 0;
+
+        float range = Mathf.Max(1f, maxPerRoom - minPerRoom); // prevent divide-by-zero
+
+        foreach (var c in comps)
         {
-            float scoreLootDist = 0;
-            float trapPlacementScore = 0;
-            scoreLootDist += LootPlacementFitnessRoom(component, map);
-            foreach (var room in component.rooms){
-                trapPlacementScore += TrapPlacementScoreRoom(room, map.mapArray);
+            int count = c.spikeCount + c.lootCount;
+
+            float distance = 0f;
+
+            // below minimum
+            if (count < minPerRoom)
+            {
+                distance = minPerRoom - count;
             }
-            scoreLootDist /= component.rooms.Count;
-            trapPlacementScore /= component.rooms.Count;
-            scoreTotalLootDist += scoreLootDist;
-            scoreTotalTrapPlacement += trapPlacementScore;
-        }
-        scoreTotalLootDist = ScoreInterval(scoreTotalLootDist/map.components.Count, 1, 1); 
-        scoreTotalTrapPlacement /= map.components.Count;
-        return scoreLootEnd * lootEndWeight + scoreTotalLootDist * lootDistWeight + scoreTotalTrapPlacement * trapPlacementWeight;
-    }
-    public static float RoomFitnessTotal(MapInfo map)
-    {
-        float scoreTotal = 0;
-        foreach (var component in map.components)
-        {
-            float roomScore = 0;
-            foreach (var room in component.rooms){
-                roomScore += RoomFitnessFurEne(room, map);
+            // above maximum
+            else if (count > maxPerRoom)
+            {
+                distance = count - maxPerRoom;
             }
-            scoreTotal += roomScore/component.rooms.Count;
+            // inside valid band
+            else
+            {
+                totalFitness += 1f;
+                evaluatedRooms++;
+                continue;
+            }
+
+            // normalize penalty relative to allowed band size
+            float normalizedError = distance / range;
+
+            // convert to fitness (soft penalty)
+            float roomFitness = 1f - normalizedError;
+
+            totalFitness += Mathf.Clamp01(roomFitness);
+            evaluatedRooms++;
         }
-    
-        return scoreTotal/map.components.Count;
+
+        if (evaluatedRooms == 0)
+            return 0f;
+
+        return totalFitness / evaluatedRooms;
     }
 
     public static float LootAtEndFitness(MapInfo map)
     {
-        float distance = 0;
+        float sum = 0f;
+        int count = 0;
+
         foreach (var loot in map.furnishing)
         {
-            if (loot.type != 5)
-            {
-                foreach (var component in map.components)
-                {
-                    if (component.ContainsTile(loot.placement))
-                    {
-                        Vector2 fix = component.entryTile.HasValue? (Vector2)component.entryTile.Value : new Vector2(5000, 5000);
-                        if (fix.x != 5000)
-                        {
-                            distance += (fix - loot.placement).sqrMagnitude;
-                        }
-                        break;
-                    }
-                }
-            }
+            if (loot.type == 0 || loot.type == 1) continue;
+            var c = MapGenerator.GetComponentForTile(map, loot.placement);
+            if (c == null) continue;
+            if (!c.entryTile.HasValue || !c.exitTile.HasValue) continue;
+            float dEntry = Mathf.Abs(loot.placement.x - c.entryTile.Value.x) + Mathf.Abs(loot.placement.y - c.entryTile.Value.y);
+            float dEnd = Mathf.Abs(loot.placement.x - c.exitTile.Value.x) + Mathf.Abs(loot.placement.y - c.exitTile.Value.y);
+            float denom = dEntry + dEnd;
+
+            if (denom <= 0.0001f)
+                continue;
+            float p = dEntry / denom;
+
+            float s = (p >= 0.6f) ? 1f : (p / 0.6f); // 0..1
+            sum += s;
+            count++;
         }
-        if (map.furnishing.Count > 0)
-        {
-            distance = distance/map.furnishing.Count;
-        }
-        return ScoreInterval(distance, 6.0f, 200.0f);;
+
+        if (count == 0) return 1f;
+        return Mathf.Clamp01(sum / count);
     }
+
 
     public static float EnemyNotAtStartFitness(MapInfo map)
     {
-        float distance = 0;
+        if (map == null || map.enemies == null)
+            return 0f;
+
+        if (!map.playerStartPos.HasValue)
+            return 0f;
+
+        if (map.enemies.Count == 0)
+            return 0f;
+
+        float sum = 0f;
+        int count = 0;
+
         foreach (var enemy in map.enemies)
         {
-            foreach (var component in map.components)
-            {
-                if (component.ContainsTile(enemy.placement))
-                {
-                    Vector2 fix = component.entryTile.HasValue? (Vector2)component.entryTile.Value : new Vector2(5000, 5000);
-                    if (fix.x != 5000)
-                    {
-                        float check = (fix - enemy.placement).sqrMagnitude;
-                        //We just don't want enemies too close to the entrance, we're not interested in forcing them to the back of a component. Check values might need to be changed.
-                        if (check > (fix - new Vector2(fix.x+4, fix.y + 4)).sqrMagnitude)
-                        {
-                            check = (fix - new Vector2(fix.x+4, fix.y + 4)).sqrMagnitude;
-                        }
-                        distance += check;
-                        break;
-                    }
-                    
-                    
-                }
-            }
-        }
-        if (map.enemies.Count > 0)
-        {
-            distance = distance/map.enemies.Count;
-        }
-        return ScoreInterval(distance, 32f, 32f);
-    }
+            var c = MapGenerator.GetComponentForTile(map, enemy.placement);
+            if (c == null) continue;
+            if (!c.entryTile.HasValue || !c.exitTile.HasValue) continue;
+            float dEntry = Mathf.Abs(enemy.placement.x - c.entryTile.Value.x) + Mathf.Abs(enemy.placement.y - c.entryTile.Value.y);
+            float dEnd = Mathf.Abs(enemy.placement.x - c.exitTile.Value.x) + Mathf.Abs(enemy.placement.y - c.exitTile.Value.y);
+            float denom = dEntry + dEnd;
 
-    public static (float, List<Vector2Int>) EnemiesClosenessToWallFitness(Room room, MapInfo map, List<Vector2Int> checkedEnemies)
-    {
-        float score = 0;
-        List<Vector2Int> enemyPlacement = new List<Vector2Int>();
-        for (int a = room.XMin; a <= room.XMax; a++)
-        {
-            for (int b = room.YMin; b <=room.YMax; b++)
-            {
-                if ((map.mapArray[a, b] == 6 || map.mapArray[a, b] == 7) && !checkedEnemies.Contains(new Vector2Int(a,b)))
-                {
-                    enemyPlacement.Add(new Vector2Int(a,b));
-                    checkedEnemies.Add(new Vector2Int(a,b));
-                }
-            }
-            }
-        foreach (var enemy in enemyPlacement)
-        {
-            if (map.mapArray[enemy.x, enemy.y] == 6 || map.mapArray[enemy.x, enemy.y] == 7)
-            {
-                float xDif;
-                float yDif;
-                if (math.abs(enemy.x - room.XMin) <= math.abs(enemy.x - room.XMax))
-                {
-                    xDif = math.abs(enemy.x - room.XMin);
-                }
-                else
-                {
-                     xDif = math.abs(enemy.x - room.XMax);
-                }
-                if (math.abs(enemy.y - room.YMin) <= math.abs(enemy.y - room.YMax))
-                {
-                    yDif = math.abs(enemy.y - room.YMin);
-                }
-                else
-                {
-                    yDif = math.abs(enemy.y - room.YMax);
-                }
-                //Diff less than 2 is irrelevant (keeps some posibility space so it doesn't always try to optimize for melee enemies being next to wall tile)
-                if (xDif < 2)
-                {
-                    xDif = 2;
-                }
-                if (yDif < 2)
-                {
-                    yDif = 2;
-                }
-                if (map.mapArray[enemy.x, enemy.y] == 6)
-                {
-                    score += 1/xDif + 1/yDif;
-                }
-                else
-                {
-                    //I think this makes it at most 1, asked chat but chat is retard at math understanding so yolo.
-                    score += (1/(room.size.x * 0.5f )* xDif + 1/(room.size.y * 0.5f) * yDif) * 0.5f;
-                    
-                }
-             
-            }
-        }
-        return (score, checkedEnemies); 
-    }
+            if (denom <= 0.0001f)
+                continue;
+            float p = dEntry / denom;
 
-    public static float LootPlacementFitnessRoom(FloorComponent component, MapInfo map)
-    {
-        float score = 0;
-        foreach (var furnish in map.furnishing)
-        {
-                if (component.ContainsTile(furnish.placement))
-                {
-                    score += 1;
-                }
-        }
-        float min = map.furnishing.Count/map.components.Count * 0.85f;
-        float max =  map.furnishing.Count/map.components.Count * 1.15f;
-        return ScoreInterval(score, min, max);
-    }
+            float wantedDistance;
+            if (enemy.type == 43 || enemy.type == 44) wantedDistance = 0.5f;
+            else wantedDistance = 0.25f;
 
-    public static float TrapPlacementScoreRoom(Room room, int[,] mapArray)
-    {
-        bool hasTrap = false;
-        bool hasEnemy = false;
-        float score = 0;
-        for (int a = room.XMin; a <= room.XMax; a++)
-        {
-            for (int b = room.YMin; b <=room.YMax; b++)
-            {
-                if (mapArray[a, b] == 5)
-                {
-                    hasTrap = true;
-                }
-                if (mapArray[a, b] == 6 || mapArray[a, b] == 7)
-                {
-                    hasEnemy = true;
-                }
-                if (hasTrap && hasEnemy)
-                {
-                    return score = 1;
-                }
-            }
-            } 
-        return score;
+            float s = (p >= wantedDistance) ? 1f : (p / wantedDistance); // 0..1
+            sum += s;
+            count++;
+        }
+
+        if (count == 0) return 1f;
+        return Mathf.Clamp01(sum / count);
     }
 }

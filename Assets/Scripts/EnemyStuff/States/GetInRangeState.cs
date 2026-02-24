@@ -58,7 +58,7 @@ public class GetInRangeState : BaseState
 
         if (dist > _enemy.GetChaseRange())
             return new IdleState(_enemy);
-        if (dist < _enemy.GetAttackRange() && _enemy.GetAttack().IsReady())
+        if (dist < _enemy.GetAttackRange() && _enemy.GetAttack().IsReady() && HasLineOfSight())
             return new AttackState(_enemy);
         return this;
     }

@@ -143,6 +143,7 @@ MonoBehaviour:
   sr: {fileID: 4519643231527515962}
   col: {fileID: 4011872346071171345}
   knockBackDistance: 0
+  telemetryManager: {fileID: 0}
 --- !u!1 &2811616041619152791
 GameObject:
   m_ObjectHideFlags: 0
