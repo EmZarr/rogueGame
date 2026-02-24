@@ -750,6 +750,7 @@ GameObject:
   - component: {fileID: 859900374}
   - component: {fileID: 859900372}
   - component: {fileID: 859900376}
+  - component: {fileID: 859900377}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -908,6 +909,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0b1416730902b644a00944226fbca94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TelemetryManager
+--- !u!114 &859900377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859900371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8d89683a442c9e459dc4e55422f1938, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TelemetrySender
+  webAppUrl: https://script.google.com/macros/s/AKfycbwX-RyBc_R6W6aqRHl6RIzUF2k-wfylj7r6SGQOCJmK04opkUpb92Zpji3OTEMkRB2A/exec
 --- !u!1 &1048831578
 GameObject:
   m_ObjectHideFlags: 0

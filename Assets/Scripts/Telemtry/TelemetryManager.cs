@@ -5,6 +5,8 @@ using System.Globalization;
 
 public class TelemetryManager : MonoBehaviour
 {
+
+    TelemetrySender telemetrySender;
     bool timerStarted;
     float timePlayed;
 
@@ -59,7 +61,7 @@ public class TelemetryManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        telemetrySender = FindFirstObjectByType<TelemetrySender>();
     }
 
     // Update is called once per frame
@@ -128,6 +130,39 @@ public class TelemetryManager : MonoBehaviour
                        berserkerLightAttacks, berserkerHeavyAttacks, berserkerLightDashes, berserkerHeavyDashes, berserkerDefense,
                        damageTaken);
 
+        var telemetryData = new TelemetryData
+        {
+            sessionId = "test",
+            timePlayed = timePlayed,
+            enemiesKilledPct = eneKilledPerc,
+            lootTakenPct = lootGathPerc,
+            deaths = playerDeaths,
+            bowmanTime = timeSpentBowMan,
+            knightTime = timeSpentKnight,
+            berserkerTime = timeSpentBerserker,
+            bowLightAtk = bowmanLightAttacks,
+            bowHeavyAtk = bowmanHeavyAttacks,
+            bowLightDash = bowmanLightDashes,
+            bowHeavyDash = bowmanHeavyDashes,
+            bowDefense = bowmanDefense,
+            knightLightAtk = knightLightAttacks,
+            knightHeavyAtk = knightHeavyAttacks,
+            knightLightDash = knightLightDashes,
+            knightHeavyDash = knightHeavyDashes,
+            knightDefense = knightDefense,
+            berserkLightAtk = berserkerLightAttacks,
+            berserkHeavyAtk = berserkerHeavyAttacks,
+            berserkLightDash = berserkerLightDashes,
+            berserkHeavyDash = berserkerHeavyDashes,
+            berserkDefense = berserkerDefense,
+            damageTakenMelee = damageTaken[0],
+            damageTakenRanged = damageTaken[1],
+            damageTakenGuardianShield = damageTaken[2],
+            damageTakenTraps = damageTaken[3]
+
+        };
+        telemetrySender.SendTelemetry(telemetryData);
+
 
         timePlayed = 0f;
         playerDeaths = 0;
@@ -138,6 +173,27 @@ public class TelemetryManager : MonoBehaviour
         timeSpentBowMan = 0f;
         timeSpentBerserker = 0;
         timeSpentKnight = 0;
+        bowmanLightAttacks = 0;
+        bowmanHeavyAttacks = 0;
+        bowmanLightDashes = 0;
+        bowmanHeavyDashes = 0;
+        bowmanDefense = 0;
+        knightLightAttacks = 0;
+        knightHeavyAttacks = 0;
+        knightLightDashes = 0;
+        knightHeavyDashes = 0;
+        knightDefense = 0;
+        berserkerLightAttacks = 0;
+        berserkerHeavyAttacks = 0;
+        berserkerLightDashes = 0;
+        berserkerHeavyDashes = 0;
+        berserkerDefense = 0;
+        damageTaken[0] = 0;
+        damageTaken[1] = 0;
+        damageTaken[2] = 0;
+        damageTaken[3] = 0;
+
+        
 
     }
 
@@ -330,4 +386,44 @@ public class TelemetryManager : MonoBehaviour
     Debug.Log("Telemetry saved to: " + path);
 }
 
+}
+
+
+[System.Serializable]
+public struct TelemetryData
+{
+    public string sessionId;
+
+    public float timePlayed;
+    public float enemiesKilledPct;
+    public float lootTakenPct;
+    public float deaths;
+
+    public float bowmanTime;
+    public float knightTime;
+    public float berserkerTime;
+
+    public int bowLightAtk;
+    public int bowHeavyAtk;
+    public int bowLightDash;
+    public int bowHeavyDash;
+    public int bowDefense;
+
+    public int knightLightAtk;
+    public int knightHeavyAtk;
+    public int knightLightDash;
+    public int knightHeavyDash;
+    public int knightDefense;
+
+    public int berserkLightAtk;
+    public int berserkHeavyAtk;
+    public int berserkLightDash;
+    public int berserkHeavyDash;
+    public int berserkDefense;
+
+    public float damageTakenMelee;
+
+    public float damageTakenRanged;
+    public float damageTakenGuardianShield;
+    public float damageTakenTraps;
 }
