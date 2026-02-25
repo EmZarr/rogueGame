@@ -132,7 +132,7 @@ public class TelemetryManager : MonoBehaviour
 
         var telemetryData = new TelemetryData
         {
-            sessionId = "test",
+            sessionId = "Oliver",
             timePlayed = timePlayed,
             enemiesKilledPct = eneKilledPerc,
             lootTakenPct = lootGathPerc,
