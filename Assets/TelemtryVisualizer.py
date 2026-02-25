@@ -1,119 +1,146 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 
 sns.set(style="whitegrid")
 
-df = pd.read_csv("telemetry.csv")
-
 # =====================================================
-# GRAPH 1 — Average class time distribution (DONUT)
+# LOAD DATA
 # =====================================================
 
-avg_class_time = df[["time_bowman","time_knight","time_berserker"]].mean()
+df = pd.read_csv("Telemetry_Raw.csv")
 
-# Remove classes never used (fix label overlap)
-avg_class_time = avg_class_time[avg_class_time > 0]
+# Rename columns to match your new telemetry format if needed
+df = df.rename(columns={
+    "sessionId": "session_id",
+    "timePlayed": "time_played",
+    "enemiesKilledPct": "enemies_killed_pct",
+    "lootTakenPct": "loot_taken_pct",
+    "bowmanTime": "bowman_time",
+    "knightTime": "knight_time",
+    "berserkerTime": "berserker_time"
+})
+
+# =====================================================
+# FEATURE VECTOR (ALL NUMERIC TELEMETRY)
+# =====================================================
+
+feature_columns = [
+    "time_played",
+    "enemies_killed_pct",
+    "loot_taken_pct",
+    "deaths",
+
+    "bowman_time",
+    "knight_time",
+    "berserker_time",
+
+    "bowLightAtk", "bowHeavyAtk", "bowLightDash", "bowHeavyDash", "bowDefense",
+    "knightLightAtk", "knightHeavyAtk", "knightLightDash", "knightHeavyDash", "knightDefense",
+    "berserkLightAtk", "beserkHeavyAtk", "beserkLightDash", "beserkHeavyDash", "beserkDefense",
+
+    "damageTaken[0]", "damageTaken[1]", "damageTaken[2]", "damageTaken[3]"
+]
+
+# Keep only existing columns (safety)
+feature_columns = [col for col in feature_columns if col in df.columns]
+
+X = df[feature_columns].fillna(0)
+
+# =====================================================
+# SCALE FEATURES
+# =====================================================
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# =====================================================
+# PCA → REDUCE TO 2D FOR VISUALIZATION
+# =====================================================
+
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# =====================================================
+# KMEANS CLUSTERING
+# =====================================================
+
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+clusters = kmeans.fit_predict(X_scaled)
+
+df["cluster"] = clusters
+
+# =====================================================
+# GRAPH 1 — SESSION VECTOR CLUSTERS (PCA)
+# =====================================================
 
 fig1, ax1 = plt.subplots()
 
-ax1.pie(
+scatter = ax1.scatter(
+    X_pca[:, 0],
+    X_pca[:, 1],
+    c=clusters,
+    s=100
+)
+
+ax1.set_title("Session Vector Clusters (All Telemetry)")
+ax1.set_xlabel("PCA Component 1")
+ax1.set_ylabel("PCA Component 2")
+
+# Annotate session IDs
+for i, session in enumerate(df["session_id"]):
+    ax1.annotate(str(session), (X_pca[i, 0], X_pca[i, 1]), fontsize=8)
+
+# =====================================================
+# GRAPH 2 — AVERAGE CLASS TIME DISTRIBUTION (DONUT)
+# =====================================================
+
+avg_class_time = df[["bowman_time","knight_time","berserker_time"]].mean()
+avg_class_time = avg_class_time[avg_class_time > 0]
+
+fig2, ax2 = plt.subplots()
+
+ax2.pie(
     avg_class_time,
-    labels=avg_class_time.index.str.replace("time_", "").str.capitalize(),
+    labels=avg_class_time.index.str.replace("_time", "").str.capitalize(),
     autopct="%1.1f%%",
     startangle=90,
     pctdistance=0.85
 )
 
-# Donut hole
 centre_circle = plt.Circle((0,0),0.70,fc='white')
-fig1.gca().add_artist(centre_circle)
+fig2.gca().add_artist(centre_circle)
 
-ax1.set_title("Average Class Time Distribution Per Session")
-
-# =====================================================
-# GRAPH 2 — Time Played vs Loot %
-# =====================================================
+ax2.set_title("Average Class Time Distribution Per Session")
 
 # =====================================================
-# GRAPH 2 — Time Played vs Loot % (TIGHT ZOOM)
+# GRAPH 3 — TIME PLAYED vs LOOT % (CLUSTER COLORED)
 # =====================================================
 
-fig2, ax2 = plt.subplots()
+fig3, ax3 = plt.subplots()
+
+sns.scatterplot(
+    data=df,
+    x="time_played",
+    y="loot_taken_pct",
+    hue="cluster",
+    s=100,
+    ax=ax3
+)
 
 sns.regplot(
     data=df,
     x="time_played",
     y="loot_taken_pct",
-    scatter_kws={"s":80},
-    ax=ax2
+    scatter=False,
+    ax=ax3
 )
 
-ax2.set_title("Correlation: Time Played vs Loot Collected")
-ax2.set_xlabel("Time Played (seconds)")
-ax2.set_ylabel("Loot Collected (%)")
+ax3.set_title("Time Played vs Loot Collected (Clustered)")
+ax3.set_xlabel("Time Played (seconds)")
+ax3.set_ylabel("Loot Collected (%)")
 
-# ---- FIXED ZOOM (fit axes to data) ----
-x_min, x_max = df["time_played"].min(), df["time_played"].max()
-y_min, y_max = df["loot_taken_pct"].min(), df["loot_taken_pct"].max()
-
-x_margin = (x_max - x_min) * 0.1
-y_margin = (y_max - y_min) * 0.1
-
-ax2.set_xlim(x_min - x_margin, x_max + x_margin)
-ax2.set_ylim(y_min - y_margin, y_max + y_margin)
-
-# Correlation value on graph
-correlation = df["time_played"].corr(df["loot_taken_pct"])
-ax2.text(
-    0.05, 0.95,
-    f"Pearson r = {correlation:.2f}",
-    transform=ax2.transAxes,
-    fontsize=12,
-    verticalalignment='top'
-)
-
-# =====================================================
-# GRAPH 3 — Class Time vs Enemies Killed %
-# =====================================================
-
-fig3, ax3 = plt.subplots()
-
-classes = {
-    "Bowman": "time_bowman",
-    "Knight": "time_knight",
-    "Berserker": "time_berserker"
-}
-
-for class_name, column in classes.items():
-    
-    # Skip class if never used
-    if df[column].sum() == 0:
-        continue
-
-    # Scatter + regression
-    sns.regplot(
-        data=df,
-        x=column,
-        y="enemies_killed_pct",
-        scatter_kws={"s":60},
-        label=class_name,
-        ax=ax3
-    )
-
-    # Calculate correlation
-    if df[column].nunique() > 1:
-        r = df[column].corr(df["enemies_killed_pct"])
-        print(f"{class_name} correlation r = {r:.2f}")
-
-ax3.set_title("Time Spent Per Class vs Enemies Killed %")
-ax3.set_xlabel("Time Spent (seconds)")
-ax3.set_ylabel("Enemies Killed (%)")
-ax3.legend()
-
-
-
-# =====================================================
-# SHOW BOTH GRAPHS
-# =====================================================
 plt.show()
