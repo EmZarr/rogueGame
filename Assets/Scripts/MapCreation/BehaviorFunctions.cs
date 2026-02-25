@@ -4,12 +4,16 @@ using Unity.Mathematics;
 
 public class BehaviorFunctions : MonoBehaviour 
 {
-    
+
     // compute amount of components
     public static int GetComponentCountBehavior(MapCandidate candidate, int resolution)
     {
         int componentCount = candidate.mapData.components.Count;
-        float normalized = Mathf.Clamp01((componentCount - 1f) / 5f);
+
+        const int maxComponents = 20;   // max amount of components
+
+        float normalized = Mathf.Clamp01((componentCount - 1f) / (maxComponents - 1f));
+
         return GetBehaviorRange(resolution, normalized);
     }
 
@@ -21,38 +25,6 @@ public class BehaviorFunctions : MonoBehaviour
             bin = resolution - 1;
 
         return bin;
-    }
-
-    //Simple version for now, could be change to check for each room and do some sort of pseudo hashing clamped to intervals later
-    public static Vector2 EnemyCombatMix(List<(Vector2Int placement, int type)> enemies, Vector2 behavior)
-    {
-        float RangedCount = 0;
-        float MeleeCount = 0;
-        float behaviorScore = 0;
-        foreach (var enemy in enemies)
-        {
-            if (enemy.type == 6)
-            {
-                MeleeCount++;
-            }
-            else
-            {
-                RangedCount++;
-            }
-        }
-        if (RangedCount/MeleeCount <= 0.5)
-        {
-            return new Vector2(0, behavior.y);
-        }
-        else if (RangedCount/MeleeCount <= 1.0)
-        {
-            return new Vector2(1, behavior.y);
-        }
-        else 
-        {
-            return new Vector2(2, behavior.y);
-        }
-        
     }
 
     public static Vector2 EnemyRoleDiversity(List<(Vector2Int placement, int type)> enemies, Vector2 behavior)
@@ -162,91 +134,40 @@ public class BehaviorFunctions : MonoBehaviour
         }
     }
 
-
-    public static Vector2 FurnishingBehaviorPickupDanger(MapInfo map, Vector2 behavior)
+    public static int FurnishingBehaviorExploration(MapInfo map)
     {
-        float averageDistance = 0;
-        int counter = 0;
-        //I hate, but I must zzzz (check each enemy/trap for each loot)
+        float lootCountOnMain = 0f;
+        float lootCountOptional = 0f;
+
         foreach (var loot in map.furnishing)
         {
-            float distance = 100.0f;
-            if (loot.type == 3 || loot.type == 4)
-            {
-                foreach (var enemy in map.enemies)
-                {
-                    if((loot.placement - enemy.placement).sqrMagnitude < distance)
-                    {
-                        distance = (loot.placement - enemy.placement).sqrMagnitude;
-                    }
-                }
+            // keep your exclusions
+            if (loot.type == 0 || loot.type == 1)
+                continue;
 
-                foreach (var trap in map.furnishing)
-                {
-                    if (trap.type == 5)
-                    {
-                        if((loot.placement - trap.placement).sqrMagnitude < distance)
-                    {
-                        distance = (loot.placement - trap.placement).sqrMagnitude;
-                    }
-                    }
-                }
-            }
-            averageDistance += distance;
-            counter++;
-        }
-        averageDistance = averageDistance/counter;
-        if (averageDistance <= 2)
-        {
-            return new Vector2(0, behavior.y);
-        }
-        else if (averageDistance <= 4)
-        {
-            return new Vector2(1, behavior.y);
-        }
-        else
-        {
-            return new Vector2(2, behavior.y);
-        }
-    }
+            var c = MapGenerator.GetComponentForTile(map, loot.placement);
+            if (c == null)
+                continue;
 
-    public static Vector2 FurnishingBehaviorExploration(MapInfo map, Vector2 behavior)
-    {
-        float lootCountOnMain = 0;
-        float lootCountOptional = 0;
-        foreach (var loot in map.furnishing)
-        {
-            if (loot.type != 5)
-            {
-                foreach (var component in map.components)
-                {
-                    if (component.ContainsTile(loot.placement))
-                    {
-                        if (component.onMainPath)
-                        {
-                            lootCountOnMain++;
-                        }
-                        else
-                        {
-                            lootCountOptional++;
-                        }
-                        break;
-                    }
-                }
-            }
+            if (c.onMainPath) lootCountOnMain++;
+            else lootCountOptional++;
         }
-        float ratio = lootCountOnMain/lootCountOptional;
-        if (ratio <= 0.6f)
-        {
-            return new Vector2(behavior.x, 0);
-        }
-        else if (ratio <= 1.1f)
-        {
-            return new Vector2(behavior.x, 1);
-        }
-        else
-        {
-            return new Vector2(behavior.x, 2);
-        }
+
+        float total = lootCountOnMain + lootCountOptional;
+
+        // No relevant loot found
+        if (total <= 0f)
+            return 5;
+
+        float optionalShare = lootCountOptional / total;
+
+        int score;
+        if (optionalShare >= 0.80f) score = 0;
+        else if (optionalShare >= 0.60f) score = 1;
+        else if (optionalShare >= 0.40f) score = 2;
+        else if (optionalShare >= 0.20f) score = 3;
+        else score = 4;
+
+        return score;
     }
 }

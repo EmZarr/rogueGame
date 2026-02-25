@@ -247,10 +247,7 @@ public class MapElite : MonoBehaviour
             }
 
             // behavior + fitness 
-            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(
-                candidate.mapData,
-                BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, Vector2.zero)
-            );
+            candidate.furnBehavior = new Vector2 (BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), 0);
 
             candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate, (1, 6, 0.5f), 0.5f);
 
@@ -329,14 +326,11 @@ public class MapElite : MonoBehaviour
 
             // Behaviors
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.GetComponentCountBehavior(candidate, 10),
+                BehaviorFunctions.GetComponentCountBehavior(candidate, 5),
                 0
             );
 
-            candidate.furnBehavior = BehaviorFunctions.FurnishingBehaviorPickupDanger(
-                candidate.mapData,
-                BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData, Vector2.zero)
-            );
+            candidate.furnBehavior = new Vector2(BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), 0);
 
             candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(
                 candidate.mapData,
