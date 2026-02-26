@@ -452,6 +452,16 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!212 &674036306 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3523722488733466209, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
+  m_PrefabInstance: {fileID: 3534769319121184608}
+  m_PrefabAsset: {fileID: 0}
+--- !u!58 &674036308 stripped
+CircleCollider2D:
+  m_CorrespondingSourceObject: {fileID: 1572313058800679081, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
+  m_PrefabInstance: {fileID: 3534769319121184608}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &720047733
 GameObject:
   m_ObjectHideFlags: 0
@@ -910,6 +920,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0b1416730902b644a00944226fbca94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TelemetryManager
+  loadOutNumber: 0
+  mostRecentAttackType: 0
 --- !u!114 &859900377
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1362,16 +1374,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1478728564}
   m_CullTransparentMesh: 1
---- !u!212 &1544769768 stripped
-SpriteRenderer:
-  m_CorrespondingSourceObject: {fileID: 3523722488733466209, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
-  m_PrefabInstance: {fileID: 3534769319121184608}
-  m_PrefabAsset: {fileID: 0}
---- !u!58 &1544769770 stripped
-CircleCollider2D:
-  m_CorrespondingSourceObject: {fileID: 1572313058800679081, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
-  m_PrefabInstance: {fileID: 3534769319121184608}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1723517302 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9028142192441550925, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
@@ -1788,11 +1790,11 @@ PrefabInstance:
     - target: {fileID: 5664547084240846887, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
       propertyPath: col
       value: 
-      objectReference: {fileID: 1544769770}
+      objectReference: {fileID: 674036308}
     - target: {fileID: 5664547084240846887, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
       propertyPath: sprite
       value: 
-      objectReference: {fileID: 1544769768}
+      objectReference: {fileID: 674036306}
     - target: {fileID: 5664547084240846887, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
       propertyPath: mapInstantiator
       value: 

@@ -103,10 +103,14 @@ public class LevelManager : MonoBehaviour
             Take(map, geo, enem, furn);
         }
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
+        var playMap = finalMaps.Dequeue();
+        mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
         //mapInstantiator.makeTestMap();
         _hasSpawnPos = false;
         CacheSpawnAndHookPlayer();
         machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
+        float[] behaviors = new float[5] {playMap.geoBehavior[0], playMap.furnBehavior[0], playMap.furnBehavior[1], playMap.enemyBehavior[0], playMap.enemyBehavior[1]};
+        telemetryManager.SetBehavior(behaviors);
     }
 
     private void Update()
@@ -163,6 +167,7 @@ public class LevelManager : MonoBehaviour
         // Trigger new run
         if (!noMaps)
         {
+            telemetryManager.SetPlayerStats(_player.AttackSpeedMultiplier, _player.MovementSpeedMultiplier, _player.DamageMultiplier);
             telemetryManager.UploadData();
         }
         if(finalMaps.Count==0)
@@ -170,8 +175,11 @@ public class LevelManager : MonoBehaviour
             noMaps = true;
         }
         else {
-            mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
+            var playMap = finalMaps.Dequeue();
+            mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
             machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
+            float[] behaviors = new float[5] {playMap.geoBehavior[0], playMap.furnBehavior[0], playMap.furnBehavior[1], playMap.enemyBehavior[0], playMap.enemyBehavior[1]};
+            telemetryManager.SetBehavior(behaviors);
         }
         
 

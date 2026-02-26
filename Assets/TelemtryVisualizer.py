@@ -1,146 +1,110 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+import hashlib
 
-sns.set(style="whitegrid")
+# ==========================
+# CONFIG
+# ==========================
+CSV_PATH = "Telemetry_Raw.csv"
+N_CLUSTERS = 5   # Adjust if needed
 
-# =====================================================
+
+# ==========================
 # LOAD DATA
-# =====================================================
+# ==========================
+df = pd.read_csv(CSV_PATH)
 
-df = pd.read_csv("Telemetry_Raw.csv")
+# Remove sessionId from features used for clustering
+feature_columns = [col for col in df.columns if col != "sessionId"]
 
-# Rename columns to match your new telemetry format if needed
-df = df.rename(columns={
-    "sessionId": "session_id",
-    "timePlayed": "time_played",
-    "enemiesKilledPct": "enemies_killed_pct",
-    "lootTakenPct": "loot_taken_pct",
-    "bowmanTime": "bowman_time",
-    "knightTime": "knight_time",
-    "berserkerTime": "berserker_time"
-})
+X = df[feature_columns].values
 
-# =====================================================
-# FEATURE VECTOR (ALL NUMERIC TELEMETRY)
-# =====================================================
-
-feature_columns = [
-    "time_played",
-    "enemies_killed_pct",
-    "loot_taken_pct",
-    "deaths",
-
-    "bowman_time",
-    "knight_time",
-    "berserker_time",
-
-    "bowLightAtk", "bowHeavyAtk", "bowLightDash", "bowHeavyDash", "bowDefense",
-    "knightLightAtk", "knightHeavyAtk", "knightLightDash", "knightHeavyDash", "knightDefense",
-    "berserkLightAtk", "beserkHeavyAtk", "beserkLightDash", "beserkHeavyDash", "beserkDefense",
-
-    "damageTaken[0]", "damageTaken[1]", "damageTaken[2]", "damageTaken[3]"
-]
-
-# Keep only existing columns (safety)
-feature_columns = [col for col in feature_columns if col in df.columns]
-
-X = df[feature_columns].fillna(0)
-
-# =====================================================
+# ==========================
 # SCALE FEATURES
-# =====================================================
-
+# ==========================
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# =====================================================
-# PCA → REDUCE TO 2D FOR VISUALIZATION
-# =====================================================
-
-pca = PCA(n_components=2)
-X_pca = pca.fit_transform(X_scaled)
-
-# =====================================================
-# KMEANS CLUSTERING
-# =====================================================
-
-kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+# ==========================
+# CLUSTERING
+# ==========================
+kmeans = KMeans(n_clusters=N_CLUSTERS, random_state=42)
 clusters = kmeans.fit_predict(X_scaled)
 
-df["cluster"] = clusters
+# ==========================
+# PCA FOR 2D VISUALIZATION
+# ==========================
+pca = PCA(n_components=2)
+X_2d = pca.fit_transform(X_scaled)
 
-# =====================================================
-# GRAPH 1 — SESSION VECTOR CLUSTERS (PCA)
-# =====================================================
+# ==========================
+# COLOR MAPPING (per sessionId)
+# ==========================
+unique_sessions = df["sessionId"].unique()
+session_color_map = {}
 
-fig1, ax1 = plt.subplots()
+# Generate consistent color from hash
+def session_to_color(session_id):
+    hash_val = int(hashlib.md5(session_id.encode()).hexdigest(), 16)
+    np.random.seed(hash_val % (2**32))
+    return np.random.rand(3,)
 
-scatter = ax1.scatter(
-    X_pca[:, 0],
-    X_pca[:, 1],
-    c=clusters,
-    s=100
-)
+for session in unique_sessions:
+    session_color_map[session] = session_to_color(session)
 
-ax1.set_title("Session Vector Clusters (All Telemetry)")
-ax1.set_xlabel("PCA Component 1")
-ax1.set_ylabel("PCA Component 2")
+colors = df["sessionId"].map(session_color_map)
 
-# Annotate session IDs
-for i, session in enumerate(df["session_id"]):
-    ax1.annotate(str(session), (X_pca[i, 0], X_pca[i, 1]), fontsize=8)
+# ==========================
+# SHAPE MAPPING (per behavior combination)
+# ==========================
+behavior_columns = [
+    "GeometryBehavior",
+    "FurnishingBehaviorSpread",
+    "FurnishingBehaviorRatio",
+    "EnemyBehaviorRatio",
+    "EnemyBehaviorDifficulty"
+]
 
-# =====================================================
-# GRAPH 2 — AVERAGE CLASS TIME DISTRIBUTION (DONUT)
-# =====================================================
+# Create a tuple per row to represent behavior combination
+behavior_combinations = df[behavior_columns].apply(tuple, axis=1)
+unique_behaviors = behavior_combinations.unique()
 
-avg_class_time = df[["bowman_time","knight_time","berserker_time"]].mean()
-avg_class_time = avg_class_time[avg_class_time > 0]
+markers = ['o', 's', '^', 'D', 'P', 'X', '*', 'v', '<', '>']
+behavior_marker_map = {}
 
-fig2, ax2 = plt.subplots()
+for i, behavior in enumerate(unique_behaviors):
+    behavior_marker_map[behavior] = markers[i % len(markers)]
 
-ax2.pie(
-    avg_class_time,
-    labels=avg_class_time.index.str.replace("_time", "").str.capitalize(),
-    autopct="%1.1f%%",
-    startangle=90,
-    pctdistance=0.85
-)
+# ==========================
+# PLOT
+# ==========================
+plt.figure(figsize=(12, 8))
 
-centre_circle = plt.Circle((0,0),0.70,fc='white')
-fig2.gca().add_artist(centre_circle)
+for behavior in unique_behaviors:
+    idx = behavior_combinations == behavior
+    plt.scatter(
+        X_2d[idx, 0],
+        X_2d[idx, 1],
+        c=list(colors[idx]),
+        marker=behavior_marker_map[behavior],
+        label=f"Behavior {behavior}",
+        alpha=0.7,
+        edgecolors='k'
+    )
 
-ax2.set_title("Average Class Time Distribution Per Session")
+plt.title("Telemetry Clustering (Color=SessionID, Shape=Behavior Combo)")
+plt.xlabel("PCA Component 1")
+plt.ylabel("PCA Component 2")
+plt.grid(True)
 
-# =====================================================
-# GRAPH 3 — TIME PLAYED vs LOOT % (CLUSTER COLORED)
-# =====================================================
+# Avoid duplicate legend entries
+handles, labels = plt.gca().get_legend_handles_labels()
+unique = dict(zip(labels, handles))
+plt.legend(unique.values(), unique.keys(), bbox_to_anchor=(1.05, 1), loc='upper left')
 
-fig3, ax3 = plt.subplots()
-
-sns.scatterplot(
-    data=df,
-    x="time_played",
-    y="loot_taken_pct",
-    hue="cluster",
-    s=100,
-    ax=ax3
-)
-
-sns.regplot(
-    data=df,
-    x="time_played",
-    y="loot_taken_pct",
-    scatter=False,
-    ax=ax3
-)
-
-ax3.set_title("Time Played vs Loot Collected (Clustered)")
-ax3.set_xlabel("Time Played (seconds)")
-ax3.set_ylabel("Loot Collected (%)")
-
+plt.tight_layout()
 plt.show()
