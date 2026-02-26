@@ -18,6 +18,8 @@ public class Player : MonoBehaviour
     Shield _shield;
     UI _ui;
     float _score = 0;
+
+    TelemetryManager telemetryManager;
     private Coroutine _tempBuffCo;
     public event Action<GameObject /*killer*/> OnDied;
     public static Player Instance { get; private set; }
@@ -58,6 +60,7 @@ public class Player : MonoBehaviour
     {
         _ui = FindAnyObjectByType<UI>();
         _shield = GetComponentInChildren<Shield>();
+        telemetryManager = FindFirstObjectByType<TelemetryManager>();
     }
     public void TakeDamage(float damage, GameObject attacker)
     {
@@ -165,10 +168,12 @@ public class Player : MonoBehaviour
             if (_isStunning)
             {
                 enemy.ApplyStun(_stunDuration);
+                telemetryManager.loadoutToEnemy[1, 2, (int)enemy._data.enemyType] += 1;
             }
             if (_isDealingDmg)
             {
                 enemy.TakeDamage(_damage);
+                telemetryManager.loadoutToEnemy[2, 2, (int)enemy._data.enemyType] += 1;
             }
         }
     }

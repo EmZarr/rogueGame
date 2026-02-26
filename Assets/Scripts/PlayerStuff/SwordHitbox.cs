@@ -27,6 +27,8 @@ public class SwordHitbox : MonoBehaviour
     protected int _frontID;
     protected int _alphaID;
 
+    TelemetryManager telemetryManager;
+
     void Awake()
     {
         _mpb = new MaterialPropertyBlock();
@@ -36,12 +38,14 @@ public class SwordHitbox : MonoBehaviour
         // start disabled if you want
         if (sr) sr.enabled = false;
         if (col) col.enabled = false;
+        
     }
 
     public void Activate(float dmg, float duration)
     {
         damage = dmg;
         hit.Clear();
+        telemetryManager = FindFirstObjectByType<TelemetryManager>();
 
         if (sr) sr.enabled = true;
         if (col) col.enabled = true;
@@ -121,8 +125,17 @@ public class SwordHitbox : MonoBehaviour
         else
         {
             var enemy = other.GetComponentInParent<Enemy>();
+            telemetryManager = FindFirstObjectByType<TelemetryManager>();
             if (enemy != null && hit.Add(enemy))
+            {
                 enemy.TakeDamage(damage);
+                Debug.Log("loadout: " + (telemetryManager.loadOutNumber-1));
+                Debug.Log("loadout: " + (telemetryManager.mostRecentAttackType-1));
+
+                telemetryManager.loadoutToEnemy[telemetryManager.loadOutNumber-1, telemetryManager.mostRecentAttackType-1, (int)enemy._data.enemyType] +=1;
+            }
+                
+                //Debug.Log((int)enemy._data.enemyType-1);
         }
     }
 }

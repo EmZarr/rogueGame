@@ -2,6 +2,8 @@ using UnityEngine;
 using System.IO;
 using System.Text;
 using System.Globalization;
+using System.Collections.Generic;
+using System;
 
 public class TelemetryManager : MonoBehaviour
 {
@@ -24,7 +26,12 @@ public class TelemetryManager : MonoBehaviour
     float timeSpentBerserker;
     float timeSpentBowMan;
 
-    int loadOutNumber;
+    //1 Bowman, 2 Knight, 3 Berserker
+    public int loadOutNumber;
+
+
+    //1 light, 2 heavy, 3 heavy dash
+    public int mostRecentAttackType;
 
     int bowmanLightAttacks;
 
@@ -57,6 +64,8 @@ public class TelemetryManager : MonoBehaviour
     int berserkerDefense;
 
     float[] damageTaken = new float[4];
+
+    public int[,,] loadoutToEnemy = new int[3,3,5];
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -158,7 +167,54 @@ public class TelemetryManager : MonoBehaviour
             damageTakenMelee = damageTaken[0],
             damageTakenRanged = damageTaken[1],
             damageTakenGuardianShield = damageTaken[2],
-            damageTakenTraps = damageTaken[3]
+            damageTakenTraps = damageTaken[3],
+            BowLightAttacksMeleeEnemy = loadoutToEnemy[0,0,0],
+            BowHeavyAttacksMeleeEnemy = loadoutToEnemy[0,1,0],
+            BowHeavyDashesMeleeEnemy = loadoutToEnemy[0,2,0],
+            BowLightAttacksRangedEnemy = loadoutToEnemy[0,0,1],
+            BowHeavyAttacksRangedEnemy = loadoutToEnemy[0,1,1],
+            BowHeavyDashesRangedEnemy = loadoutToEnemy[0,2,1],
+            BowLightAttacksBomberEnemy = loadoutToEnemy[0,0,2],
+            BowHeavyAttacksBomberEnemy = loadoutToEnemy[0,1,2],
+            BowHeavyDashesBomberEnemy = loadoutToEnemy[0,2,2],
+            BowLightAttacksAssassinEnemy = loadoutToEnemy[0,0,3],
+            BowHeavyAttacksAssassinEnemy = loadoutToEnemy[0,1,3],
+            BowHeavyDashesAssassinEnemy = loadoutToEnemy[0,2,3],
+            BowLightAttacksGuardianEnemy = loadoutToEnemy[0,0,4],
+            BowHeavyAttacksGuardianEnemy = loadoutToEnemy[0,1,4],
+            BowHeavyDashesGuardianEnemy = loadoutToEnemy[0,2,4],
+            KnightLightAttacksMeleeEnemy = loadoutToEnemy[1,0,0],
+            KnightHeavyAttacksMeleeEnemy = loadoutToEnemy[1,1,0],
+            KnightHeavyDashesMeleeEnemy = loadoutToEnemy[1,2,0],
+            KnightLightAttacksRangedEnemy = loadoutToEnemy[1,0,1],
+            KnightHeavyAttacksRangedEnemy = loadoutToEnemy[1,1,1],
+            KnightHeavyDashesRangedEnemy = loadoutToEnemy[1,2,1],
+            KnightLightAttacksBomberEnemy = loadoutToEnemy[1,0,2],
+            KnightHeavyAttacksBomberEnemy = loadoutToEnemy[1,1,2],
+            KnightHeavyDashesBomberEnemy = loadoutToEnemy[1,2,2],
+            KnightLightAttacksAssassinEnemy = loadoutToEnemy[1,0,3],
+            KnightHeavyAttacksAssassinEnemy = loadoutToEnemy[1,1,3],
+            KnightHeavyDashesAssassinEnemy = loadoutToEnemy[1,2,3],
+            KnightLightAttacksGuardianEnemy = loadoutToEnemy[1,0,4],
+            KnightHeavyAttacksGuardianEnemy = loadoutToEnemy[1,1,4],
+            KnightHeavyDashesGuardianEnemy = loadoutToEnemy[1,2,4],
+            BerserkerLightAttacksMeleeEnemy = loadoutToEnemy[2,0,0],
+            BerserkerHeavyAttacksMeleeEnemy = loadoutToEnemy[2,1,0],
+            BerserkerHeavyDashesMeleeEnemy = loadoutToEnemy[2,2,0],
+            BerserkerLightAttacksRangedEnemy = loadoutToEnemy[2,0,1],
+            BerserkerHeavyAttacksRangedEnemy = loadoutToEnemy[2,1,1],
+            BerserkerHeavyDashesRangedEnemy = loadoutToEnemy[2,2,1],
+            BerserkerLightAttacksBomberEnemy = loadoutToEnemy[2,0,2],
+            BerserkerHeavyAttacksBomberEnemy = loadoutToEnemy[2,1,2],
+            BerserkerHeavyDashesBomberEnemy = loadoutToEnemy[2,2,2],
+            BerserkerLightAttacksAssassinEnemy = loadoutToEnemy[2,0,3],
+            BerserkerHeavyAttacksAssassinEnemy = loadoutToEnemy[2,1,3],
+            BerserkerHeavyDashesAssassinEnemy = loadoutToEnemy[2,2,3],
+            BerserkerLightAttacksGuardianEnemy = loadoutToEnemy[2,0,4],
+            BerserkerHeavyAttacksGuardianEnemy = loadoutToEnemy[2,1,4],
+            BerserkerHeavyDashesGuardianEnemy = loadoutToEnemy[2,2,4],
+
+
 
         };
         telemetrySender.SendTelemetry(telemetryData);
@@ -306,7 +362,10 @@ public class TelemetryManager : MonoBehaviour
         damageTaken[type]+= damage;
     }
 
-
+    public void SetMostRecentAttack(int type)
+    {
+        mostRecentAttackType = type;
+    }
 
     void SaveTelemetryToCSV(
     float timePlayed,
@@ -386,6 +445,7 @@ public class TelemetryManager : MonoBehaviour
     Debug.Log("Telemetry saved to: " + path);
 }
 
+
 }
 
 
@@ -426,4 +486,49 @@ public struct TelemetryData
     public float damageTakenRanged;
     public float damageTakenGuardianShield;
     public float damageTakenTraps;
+    public int BowLightAttacksMeleeEnemy;
+    public int BowHeavyAttacksMeleeEnemy;
+    public int BowHeavyDashesMeleeEnemy;
+    public int BowLightAttacksRangedEnemy;
+    public int BowHeavyAttacksRangedEnemy;
+    public int BowHeavyDashesRangedEnemy;
+    public int BowLightAttacksBomberEnemy;
+    public int BowHeavyAttacksBomberEnemy;
+    public int BowHeavyDashesBomberEnemy;
+    public int BowLightAttacksAssassinEnemy;
+    public int BowHeavyAttacksAssassinEnemy;
+    public int BowHeavyDashesAssassinEnemy;
+    public int BowLightAttacksGuardianEnemy;
+    public int BowHeavyAttacksGuardianEnemy;
+    public int BowHeavyDashesGuardianEnemy;
+    public int KnightLightAttacksMeleeEnemy;
+    public int KnightHeavyAttacksMeleeEnemy;
+    public int KnightHeavyDashesMeleeEnemy;
+    public int KnightLightAttacksRangedEnemy;
+    public int KnightHeavyAttacksRangedEnemy;
+    public int KnightHeavyDashesRangedEnemy;
+    public int KnightLightAttacksBomberEnemy;
+    public int KnightHeavyAttacksBomberEnemy;
+    public int KnightHeavyDashesBomberEnemy;
+    public int KnightLightAttacksAssassinEnemy;
+    public int KnightHeavyAttacksAssassinEnemy;
+    public int KnightHeavyDashesAssassinEnemy;
+    public int KnightLightAttacksGuardianEnemy;
+    public int KnightHeavyAttacksGuardianEnemy;
+    public int KnightHeavyDashesGuardianEnemy;
+    public int BerserkerLightAttacksMeleeEnemy;
+    public int BerserkerHeavyAttacksMeleeEnemy;
+    public int BerserkerHeavyDashesMeleeEnemy;
+    public int BerserkerLightAttacksRangedEnemy;
+    public int BerserkerHeavyAttacksRangedEnemy;
+    public int BerserkerHeavyDashesRangedEnemy;
+    public int BerserkerLightAttacksBomberEnemy;
+    public int BerserkerHeavyAttacksBomberEnemy;
+    public int BerserkerHeavyDashesBomberEnemy;
+    public int BerserkerLightAttacksAssassinEnemy;
+    public int BerserkerHeavyAttacksAssassinEnemy;
+    public int BerserkerHeavyDashesAssassinEnemy;
+    public int BerserkerLightAttacksGuardianEnemy;
+    public int BerserkerHeavyAttacksGuardianEnemy;
+    public int BerserkerHeavyDashesGuardianEnemy;
 }

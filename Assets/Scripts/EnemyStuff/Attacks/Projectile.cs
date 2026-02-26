@@ -9,17 +9,20 @@ public class Projectile : MonoBehaviour
     float _damage;
     bool _allied;
 
+    int attackType;
+
     GameObject _instigator;
 
     TelemetryManager telemetryManager;
 
     public void SetInstigator(GameObject instigator) => _instigator = instigator;
-    public void Init(float damage, Vector2 dir, bool allied)
+    public void Init(float damage, Vector2 dir, bool allied, int type)
     {
         _damage = damage;
         _dir = dir.sqrMagnitude > 0.000001f ? dir.normalized : Vector2.right;
         _allied = allied;
         telemetryManager = FindFirstObjectByType<TelemetryManager>();
+        attackType = type;
     }
 
     public void Reflect(Vector2 newDir)
@@ -54,6 +57,7 @@ public class Projectile : MonoBehaviour
         if (_allied && other.TryGetComponent<Enemy>(out Enemy enemy))
         {
             enemy.TakeDamage(_damage);
+            telemetryManager.loadoutToEnemy[0, attackType, (int)enemy._data.enemyType] +=1;
             Destroy(gameObject);
         }
         else if (_allied && other.TryGetComponent<GuardianProtectZone>(out GuardianProtectZone guardianProtectZone))
