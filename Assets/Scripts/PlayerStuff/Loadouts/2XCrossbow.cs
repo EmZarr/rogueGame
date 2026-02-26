@@ -29,11 +29,11 @@ public class TwoCrossbow : LoadoutBase {
     public override IEnumerator LightAttack(Vector2 direction)
     {
         yield return new WaitForSeconds(GetLightAttackWindup());
-        yield return LightAttackAttack(direction);
+        yield return LightAttackAttack(direction, 0);
         yield return new WaitForSeconds(GetLightAttackDuration() - GetLightAttackWindup());
     }
 
-    public IEnumerator LightAttackAttack(Vector2 direction)
+    public IEnumerator LightAttackAttack(Vector2 direction, int type)
     {
 
         GameObject arrowObj = UnityEngine.GameObject.Instantiate(ArrowProjectile, _player.transform.position, Quaternion.identity);
@@ -42,23 +42,23 @@ public class TwoCrossbow : LoadoutBase {
         _arrowRenderer.enabled = true;
         _arrowCollider.enabled = true;
         var arrow = arrowObj.GetComponent<Projectile>();
-        arrow.Init(getLightDamage(), direction, true);
+        arrow.Init(getLightDamage(), direction, true, type);
         yield return null;
     }
 
     public override IEnumerator HeavyAttack(Vector2 direction)
     {
           for(int i = 0; i<6; i++){
-          yield return LightAttackAttack(direction);
+          yield return LightAttackAttack(direction, 1);
           yield return new WaitForSeconds(_lightAttackDuration*0.5f);
           }
     }
 
     public override IEnumerator LightDash(Vector2 direction, Transform transform, Vector2 mousePos)
     {
-        yield return LightAttackAttack(mousePos);
+        yield return LightAttackAttack(mousePos, 0);
         yield return new WaitForSeconds(0.1f);
-        yield return LightAttackAttack(mousePos);
+        yield return LightAttackAttack(mousePos, 0);
         yield return base.LightDash(direction, transform, mousePos);
     }
 
@@ -95,7 +95,7 @@ public class TwoCrossbow : LoadoutBase {
                 counter += Time.deltaTime/dashDuration;
                 if (counter > 0.2f)
                 {
-                    yield return LightAttackAttack(-direction);
+                    yield return LightAttackAttack(-direction, 2);
                     counter = 0f;
                 }
                 

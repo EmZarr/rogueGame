@@ -149,6 +149,7 @@ public class LoadoutState : MonoBehaviour
                     yield return RunAction(loadout.GetLightAttackDuration(), loadout.LightAttack(getMouseDir()), ActionType.AttackLight, "Attack");
                     nextAttackTime = Time.time + loadout.GetLightAttackDuration();
                     telemetryManager.LightAttackCount(loadoutNumber);
+                    telemetryManager.SetMostRecentAttack(1);
                     break;
 
                 case ActionType.AttackHeavy:
@@ -160,6 +161,7 @@ public class LoadoutState : MonoBehaviour
                     nextAttackTime = Time.time + loadout.GetLightAttackDuration();
                     currentSpeed = player.GetMoveSpeed();
                     telemetryManager.HeavyAttackCount(loadoutNumber);
+                    telemetryManager.SetMostRecentAttack(2);
                     break;
 
                 case ActionType.DashLight:
@@ -177,6 +179,7 @@ public class LoadoutState : MonoBehaviour
                     nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
                     SetMovementBlocked(false);
                     telemetryManager.HeavyDashCount(loadoutNumber);
+                    telemetryManager.SetMostRecentAttack(3);
                     //yield return DoDash(heavy: true);
                     break;
 
