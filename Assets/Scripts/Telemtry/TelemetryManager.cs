@@ -67,6 +67,12 @@ public class TelemetryManager : MonoBehaviour
 
     public int[,,] loadoutToEnemy = new int[3,3,5];
 
+    float[] mapBehaviors = new float[5];
+
+    float AttackSpeedMultiplier;
+    float MovementSpeedMultiplier;
+    float DamageMultiplier;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -213,8 +219,14 @@ public class TelemetryManager : MonoBehaviour
             BerserkerLightAttacksGuardianEnemy = loadoutToEnemy[2,0,4],
             BerserkerHeavyAttacksGuardianEnemy = loadoutToEnemy[2,1,4],
             BerserkerHeavyDashesGuardianEnemy = loadoutToEnemy[2,2,4],
-
-
+            GeometryBehavior = mapBehaviors[0],
+            FurnishingBehaviorSpread = mapBehaviors[1],
+            FurnishingBehaviorRatio = mapBehaviors[2],
+            EnemyBehaviorRatio = mapBehaviors[3],
+            EnemyBehaviorDifficulty = mapBehaviors[4],
+            AttackSpeedMultiplier = AttackSpeedMultiplier,
+            MovementSpeedMultiplier = MovementSpeedMultiplier,
+            DamageMultiplier = DamageMultiplier
 
         };
         telemetrySender.SendTelemetry(telemetryData);
@@ -248,6 +260,59 @@ public class TelemetryManager : MonoBehaviour
         damageTaken[1] = 0;
         damageTaken[2] = 0;
         damageTaken[3] = 0;
+        loadoutToEnemy[0,0,0] = 0;
+        loadoutToEnemy[0,1,0] = 0;
+        loadoutToEnemy[0,2,0] = 0;
+        loadoutToEnemy[0,0,1] = 0;
+        loadoutToEnemy[0,1,1] = 0;
+        loadoutToEnemy[0,2,1] = 0;
+        loadoutToEnemy[0,0,2] = 0;
+        loadoutToEnemy[0,1,2] = 0;
+        loadoutToEnemy[0,2,2] = 0;
+        loadoutToEnemy[0,0,3] = 0;
+        loadoutToEnemy[0,1,3] = 0;
+        loadoutToEnemy[0,2,3] = 0;
+        loadoutToEnemy[0,0,4] = 0;
+        loadoutToEnemy[0,1,4] = 0;
+        loadoutToEnemy[0,2,4] = 0;
+        loadoutToEnemy[1,0,0] = 0;
+        loadoutToEnemy[1,1,0] = 0;
+        loadoutToEnemy[1,2,0] = 0;
+        loadoutToEnemy[1,0,1] = 0;
+        loadoutToEnemy[1,1,1] = 0;
+        loadoutToEnemy[1,2,1] = 0;
+        loadoutToEnemy[1,0,2] = 0;
+        loadoutToEnemy[1,1,2] = 0;
+        loadoutToEnemy[1,2,2] = 0;
+        loadoutToEnemy[1,0,3] = 0;
+        loadoutToEnemy[1,1,3] = 0;
+        loadoutToEnemy[1,2,3] = 0;
+        loadoutToEnemy[1,0,4] = 0;
+        loadoutToEnemy[1,1,4] = 0;
+        loadoutToEnemy[1,2,4] = 0;
+        loadoutToEnemy[2,0,0] = 0;
+        loadoutToEnemy[2,1,0] = 0;
+        loadoutToEnemy[2,2,0] = 0;
+        loadoutToEnemy[2,0,1] = 0;
+        loadoutToEnemy[2,1,1] = 0;
+        loadoutToEnemy[2,2,1] = 0;
+        loadoutToEnemy[2,0,2] = 0;
+        loadoutToEnemy[2,1,2] = 0;
+        loadoutToEnemy[2,2,2] = 0;
+        loadoutToEnemy[2,0,3] = 0;
+        loadoutToEnemy[2,1,3] = 0;
+        loadoutToEnemy[2,2,3] = 0;
+        loadoutToEnemy[2,0,4] = 0;
+        loadoutToEnemy[2,1,4] = 0;
+        loadoutToEnemy[2,2,4] = 0;
+        mapBehaviors[0] = 0;
+        mapBehaviors[1] = 0;
+        mapBehaviors[2] = 0;
+        mapBehaviors[3] = 0;
+        mapBehaviors[4] = 0;
+        AttackSpeedMultiplier = 0;
+        MovementSpeedMultiplier = 0;
+        DamageMultiplier = 0;
 
         
 
@@ -365,6 +430,18 @@ public class TelemetryManager : MonoBehaviour
     public void SetMostRecentAttack(int type)
     {
         mostRecentAttackType = type;
+    }
+
+    public void SetBehavior(float[] behaviors)
+    {
+        mapBehaviors = behaviors;
+    }
+
+    public void SetPlayerStats(float attackSpeed, float movementSpeed, float attackDamage)
+    {
+        AttackSpeedMultiplier = attackSpeed;
+        MovementSpeedMultiplier = movementSpeed;
+        DamageMultiplier = attackDamage;
     }
 
     void SaveTelemetryToCSV(
@@ -531,4 +608,12 @@ public struct TelemetryData
     public int BerserkerLightAttacksGuardianEnemy;
     public int BerserkerHeavyAttacksGuardianEnemy;
     public int BerserkerHeavyDashesGuardianEnemy;
+    public float GeometryBehavior;
+    public float FurnishingBehaviorSpread;
+    public float FurnishingBehaviorRatio;
+    public float EnemyBehaviorRatio;
+    public float EnemyBehaviorDifficulty;
+    public float AttackSpeedMultiplier;
+    public float MovementSpeedMultiplier;
+    public float DamageMultiplier;
 }

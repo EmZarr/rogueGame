@@ -290,6 +290,7 @@ public class Player : MonoBehaviour
     public float GetMoveSpeed() {
         return _maxSpeed * _moveSpeedMultiplier;
     }
+    public float MovementSpeedMultiplier => _moveSpeedMultiplier;
     public float ActiveTempMultiplier => _activeTempMultiplier;
 
 }
