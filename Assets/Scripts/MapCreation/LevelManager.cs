@@ -13,9 +13,9 @@ public class LevelManager : MonoBehaviour
     [SerializeField] SpriteRenderer sprite;
     private StateMachine[] machines;
     public Queue<MapArchiveExporter.MapDTO> finalMaps;
-    private List<Vector2> takenGeoBehaviors;
-    private List<Vector2> takenEnemBehaviors;
-    private List<Vector2> takenFurnBehaviors;
+    private List<Vector2Int> takenGeoBehaviors;
+    private List<Vector2Int> takenEnemBehaviors;
+    private List<Vector2Int> takenFurnBehaviors;
 
     [SerializeField] GameObject playerPrefab;
     Vector3 _playerSpawnPos;
@@ -24,6 +24,8 @@ public class LevelManager : MonoBehaviour
     bool _inCombat = false;
 
     bool noMaps = false;
+    float minFitness = 2.7f;
+    int targetCount = 5;
     private void OnEnable() => MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
     private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
 
@@ -51,34 +53,56 @@ public class LevelManager : MonoBehaviour
         //var archive = MapArchiveExporter.LoadArchiveFromJson("furnArchive_maps.json");
         //var archive = MapArchiveExporter.LoadArchiveFromJson("combArchive_maps.json");
         finalMaps = new Queue<MapArchiveExporter.MapDTO>();
-        takenGeoBehaviors = new List<Vector2>();
-        takenEnemBehaviors = new List<Vector2>();
-        takenFurnBehaviors = new List<Vector2>();
+        takenGeoBehaviors = new List<Vector2Int>();
+        takenEnemBehaviors = new List<Vector2Int>();
+        takenFurnBehaviors = new List<Vector2Int>();
 
-        Shuffle(archive.maps);
+        //Shuffle(archive.maps);
+
+        var orderedRules = new List<System.Func<Vector2Int, Vector2Int, Vector2Int, MapArchiveExporter.MapDTO, bool>>
+        {
+            (geo, enem, furn, map) => enem.y == 1,
+            (geo, enem, furn, map) => enem.y == 3,
+            (geo, enem, furn, map) => geo.x == 1,
+            (geo, enem, furn, map) => geo.x == 9,
+            (geo, enem, furn, map) => enem.x == 1,
+
+            // You can mix anything:
+            // (geo, enem, furn, map) => geo.x == 5,
+            // (geo, enem, furn, map) => furn == new Vector2Int(5,0),
+            // (geo, enem, furn, map) => enem.x == 126 && geo.y == 0,
+        };
+
+        // Apply ordered hard-picks
+        for (int r = 0; r < orderedRules.Count && finalMaps.Count < targetCount; r++)
+        {
+            var rule = orderedRules[r];
+            bool found = false;
+
+            foreach (var map in archive.maps)
+            {
+                if (finalMaps.Count >= targetCount) break;
+                if (!CanTake(map, out var geo, out var enem, out var furn)) continue;
+                if (!rule(geo, enem, furn, map)) continue;
+
+                Debug.Log($"Ordered pick #{r + 1}: geo={geo}, enem={enem}, furn={furn}, fitness={map.fitness}");
+                Take(map, geo, enem, furn);
+                found = true;
+                break; //exactly one map per ordered rule
+            }
+
+            if (!found)
+                Debug.LogWarning($"No eligible map found for ordered rule #{r + 1}.");
+        }
+        // Fill rest
         foreach (var map in archive.maps)
         {
-            if (finalMaps.Count < 5)
-            {
+            if (finalMaps.Count >= targetCount) break;
 
-                Vector2 geoBehavior = new Vector2(map.geoBehavior[0], map.geoBehavior[1]);
-                Vector2 enemBehavior = new Vector2(map.enemyBehavior[0], map.enemyBehavior[1]);
-                Vector2 furnBehavior = new Vector2(map.furnBehavior[0], map.furnBehavior[1]);
-                if (map.fitness > 2.75f && !takenGeoBehaviors.Contains(geoBehavior) && !takenEnemBehaviors.Contains(enemBehavior) && !takenFurnBehaviors.Contains(furnBehavior))
-                {
-
-                    finalMaps.Enqueue(map);
-                    takenGeoBehaviors.Add(geoBehavior);
-                    takenEnemBehaviors.Add(enemBehavior);
-                    takenFurnBehaviors.Add(furnBehavior);
-                }
-            }
-            else
-            {
-                break;
-            }
+            if (!CanTake(map, out var geo, out var enem, out var furn)) continue;
+            Take(map, geo, enem, furn);
         }
-
+        mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
         var playMap = finalMaps.Dequeue();
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
         //mapInstantiator.makeTestMap();
@@ -170,5 +194,28 @@ public class LevelManager : MonoBehaviour
             int j = Random.Range(0, i + 1); // UnityEngine.Random
             (list[i], list[j]) = (list[j], list[i]);
         }
+    }
+
+    bool CanTake(MapArchiveExporter.MapDTO map, out Vector2Int geo, out Vector2Int enem, out Vector2Int furn)
+    {
+        geo = new Vector2Int(Mathf.RoundToInt(map.geoBehavior[0]), Mathf.RoundToInt(map.geoBehavior[1]));
+        enem = new Vector2Int(Mathf.RoundToInt(map.enemyBehavior[0]), Mathf.RoundToInt(map.enemyBehavior[1]));
+        furn = new Vector2Int(Mathf.RoundToInt(map.furnBehavior[0]), Mathf.RoundToInt(map.furnBehavior[1]));
+
+        if (map.fitness <= minFitness) return false;
+
+        if (takenGeoBehaviors.Contains(geo)) return false;
+        if (takenEnemBehaviors.Contains(enem)) return false;
+        if (takenFurnBehaviors.Contains(furn)) return false;
+
+        return true;
+    }
+
+    void Take(MapArchiveExporter.MapDTO map, Vector2Int geo, Vector2Int enem, Vector2Int furn)
+    {
+        finalMaps.Enqueue(map);
+        takenGeoBehaviors.Add(geo);
+        takenEnemBehaviors.Add(enem);
+        takenFurnBehaviors.Add(furn);
     }
 }
