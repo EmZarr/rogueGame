@@ -150,7 +150,7 @@ public class MapElite : MonoBehaviour
         var sb = new StringBuilder();
         sb.AppendLine("iterations, archive avg enemy fitness, archive avg total fitness, avg delta total fitness, elites total, elites enemFitness above 0.8");
 
-        for (int i = 0; i < totalIterations; i++)
+        for (int i = 0; i < totalIterations*2; i++)
         {
             // Generate candidate
             MapCandidate candidate;
@@ -166,10 +166,7 @@ public class MapElite : MonoBehaviour
             }
 
             //behavior + fitness
-            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(
-                candidate.mapData,
-                BehaviorFunctions.EnemyRoleDiversity(candidate.mapData.enemies, Vector2.zero)
-            );
+            candidate.enemyBehavior = new Vector2(BehaviorFunctions.EnemyRoleCompositionBehavior(candidate.mapData.enemies, 20), BehaviorFunctions.EnemyDifficultyBehavior(candidate.mapData));
 
             candidate.enemFitness = FitnessFunctions.GetEnemyFitness(candidate);
 
@@ -247,7 +244,7 @@ public class MapElite : MonoBehaviour
             }
 
             // behavior + fitness 
-            candidate.furnBehavior = new Vector2 (BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), 0);
+            candidate.furnBehavior = new Vector2 (BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), BehaviorFunctions.FurnishingBehaviorSafety(candidate.mapData));
 
             candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate, (1, 6, 0.5f), 0.5f);
 
@@ -330,12 +327,9 @@ public class MapElite : MonoBehaviour
                 0
             );
 
-            candidate.furnBehavior = new Vector2(BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), 0);
+            candidate.furnBehavior = new Vector2(BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), BehaviorFunctions.FurnishingBehaviorSafety(candidate.mapData));
 
-            candidate.enemyBehavior = BehaviorFunctions.EnemyClusterBehavior(
-                candidate.mapData,
-                BehaviorFunctions.EnemyRoleDiversity(candidate.mapData.enemies, Vector2.zero)
-            );
+            candidate.enemyBehavior = new Vector2(BehaviorFunctions.EnemyRoleCompositionBehavior(candidate.mapData.enemies, 20), BehaviorFunctions.EnemyDifficultyBehavior(candidate.mapData));
 
             var key = candidate.CombinedBehavior;
 

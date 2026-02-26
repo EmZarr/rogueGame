@@ -172,7 +172,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }*/
-        map.enemyBudget = enemiesBudget;
+        map.enemyBudget = Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
         map.furnishingBudget = furnishingBudget;
     
         return map;
@@ -318,48 +318,39 @@ public class MapGenerator : MonoBehaviour
             var componentBudget = GetComponentEnemyBudget(map.mainRoomsAmount, c.tiles.Count, c.orderIndex, map.enemyBudget, c.lootCount);
             componentBudget -= c.enemiesCount;
             if (componentBudget <= 0) continue;
-            for (int i = 0; i < componentBudget; i++)
+            int remaining = componentBudget;
+            int tries = 0;
+
+            while (remaining > 0 && tries < 1000)
             {
-                bool placed = false;
-                int tries = 0;
-
-                while (tries < 1000)
+                Vector2Int tile = c.tiles[Random.Range(0, c.tiles.Count-1)];
+                if (!occupied.Add(tile)) { tries++; continue; }
+                int enemyType;
+                // If component too small, forbid guardian (type 0)
+                if (c.tiles.Count <= 200)
                 {
-                    Vector2Int tile = c.tiles[Random.Range(0, c.tiles.Count-1)];
-                    if (occupied.Add(tile))
+                    enemyType = Random.Range(1, amountOfEnemyTypes); // excludes 0
+                }
+                else
+                {
+                    // normal roll
+                    enemyType = Random.Range(0, amountOfEnemyTypes);
+                    // make guardian twice as rare
+                    if (enemyType == 0 && Random.value < 0.5f)
                     {
-                        int enemyType;
-
-                        // If component too small, forbid guardian (type 0)
-                        if (c.tiles.Count <= 200)
-                        {
-                            enemyType = Random.Range(1, amountOfEnemyTypes); // excludes 0
-                        }
-                        else
-                        {
-                            // normal roll
-                            enemyType = Random.Range(0, amountOfEnemyTypes);
-                            // make guardian twice as rare
-                            if (enemyType == 0 && Random.value < 0.5f)
-                            {
-                                enemyType = Random.Range(1, amountOfEnemyTypes); // reroll to non-0
-                            }
-                        }
-                        map.enemies.Add((tile, 40 + enemyType));
-                        // guardian costs twice
-                        c.enemiesCount += (enemyType == 0) ? 2 : 1;
-                        placed = true;
-                        break;
+                        enemyType = Random.Range(1, amountOfEnemyTypes); // reroll to non-0
                     }
-                    tries++;
                 }
-
-                if (!placed)
-                {
-                    Debug.Log("a component was filled to the brim");
-                    break; // component is completely filled; stop trying to add more
-                }
+                // guardian costs twice
+                int cost = (enemyType == 0) ? 2 : 1;
+                if (cost > remaining)
+                    continue;
+                map.enemies.Add((tile, 40 + enemyType));
+                c.enemiesCount += cost;
+                remaining-=cost;
+                tries++;
             }
+
         }
 
         foreach (var (p, t) in map.enemies)
@@ -531,7 +522,20 @@ public class MapGenerator : MonoBehaviour
 
     public MapInfo mutateEnemies(MapInfo map)
     {
+        int newBudget;
+        // 10% chance change budget
+        if (Random.value < 0.10f)
+        {
+            newBudget = Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
+        }
+        else
+        {
+            newBudget = map.enemyBudget;
+        }
+        // Remove and readd 20%
         int amountToMutate = Mathf.CeilToInt(map.enemies.Count * 0.2f);
+
+        map.enemyBudget = newBudget;
         for (int i = 0; i < amountToMutate; i++)
         {
             int index = UnityEngine.Random.Range(0, map.enemies.Count);
@@ -539,7 +543,8 @@ public class MapGenerator : MonoBehaviour
             map.mapArray[removed.Item1.x, removed.Item1.y] = 1;
             map.enemies.RemoveAt(index);
             var c = GetComponentForTile(map, removed.placement);
-            c.enemiesCount--;
+            int cost = (removed.type == 0) ? 2 : 1;
+            c.enemiesCount = Mathf.Max(0, c.enemiesCount - cost);
         }
         // add replacement
         map = placeEnemies(map);

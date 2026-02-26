@@ -1362,6 +1362,16 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1478728564}
   m_CullTransparentMesh: 1
+--- !u!212 &1544769768 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 3523722488733466209, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
+  m_PrefabInstance: {fileID: 3534769319121184608}
+  m_PrefabAsset: {fileID: 0}
+--- !u!58 &1544769770 stripped
+CircleCollider2D:
+  m_CorrespondingSourceObject: {fileID: 1572313058800679081, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
+  m_PrefabInstance: {fileID: 3534769319121184608}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1723517302 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9028142192441550925, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
@@ -1775,6 +1785,14 @@ PrefabInstance:
       propertyPath: m_SortingOrder
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 5664547084240846887, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
+      propertyPath: col
+      value: 
+      objectReference: {fileID: 1544769770}
+    - target: {fileID: 5664547084240846887, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
+      propertyPath: sprite
+      value: 
+      objectReference: {fileID: 1544769768}
     - target: {fileID: 5664547084240846887, guid: 4e7bd215991a3d3479716a9031da14fc, type: 3}
       propertyPath: mapInstantiator
       value: 

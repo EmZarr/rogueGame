@@ -103,4 +103,6 @@ public class StateMachine : MonoBehaviour
         _stunApplied = false;
     }
 
+    public BaseState GetState() { return _currentState; }
+
 }

@@ -437,25 +437,31 @@ public class MapInstantiator : MonoBehaviour
                         levelManager.transform.position = tilemapBase.GetCellCenterWorld(cell);
                         break;
                     case 100:
-                        switch (mapStyle)
                         {
-                            case 0:
-                                tilemapBase.SetTile(cell, tilesGroundBase[0]);
-                                break;
-                            case 1:
-                                tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                                break;
-                            case 2:
-                                tilemapBase.SetTile(cell, tilesForestBase[0]);
-                                break;
-                        }
-                        var playerGO = Instantiate(playerPrefab, tilemapBase.GetCellCenterWorld(cell), Quaternion.identity);
-                        spawnedObjects.Add(playerGO);
+                            // Ensure base tile
+                            switch (mapStyle)
+                            {
+                                case 0: tilemapBase.SetTile(cell, tilesGroundBase[0]); break;
+                                case 1: tilemapBase.SetTile(cell, tilesFarmBase[0]); break;
+                                case 2: tilemapBase.SetTile(cell, tilesForestBase[0]); break;
+                            }
 
-                        var player = playerGO.GetComponent<Player>();
-                        CurrentPlayer = player;
-                        OnPlayerSpawned?.Invoke(player);
-                        break;
+                            Vector3 spawnPos = tilemapBase.GetCellCenterWorld(cell);
+
+                            if (CurrentPlayer == null)
+                            {
+                                var playerGO = Instantiate(playerPrefab, spawnPos, Quaternion.identity);
+
+                                CurrentPlayer = playerGO.GetComponent<Player>();
+                                OnPlayerSpawned?.Invoke(CurrentPlayer);
+                            }
+                            else
+                            {
+                                CurrentPlayer.transform.SetPositionAndRotation(spawnPos, Quaternion.identity);
+                            }
+
+                            break;
+                        }
                     case 98:
                         tilemapBase.SetTile(cell, testTile);
                         break;

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
+using System;
 
 public class BehaviorFunctions : MonoBehaviour 
 {
@@ -27,111 +28,163 @@ public class BehaviorFunctions : MonoBehaviour
         return bin;
     }
 
-    public static Vector2 EnemyRoleDiversity(List<(Vector2Int placement, int type)> enemies, Vector2 behavior)
+    public static int EnemyDifficultyBehavior(MapInfo map)
     {
-        bool has0 = false;
-        bool has1 = false;
-        bool has2 = false;
-        bool has3 = false;
-        bool has4 = false;
+        if (map == null || map.components == null || map.components.Count == 0)
+            return 0;
 
-        foreach (var enemy in enemies)
+        float sumDensity = 0f;
+        int counted = 0;
+
+        foreach (var c in map.components)
         {
-            if (enemy.type == 0) has0 = true;
-            else if (enemy.type == 1) has1 = true;
-            else if (enemy.type == 2) has2 = true;
-            else if (enemy.type == 3) has3 = true;
-            else if (enemy.type == 4) has4 = true;
+            int tiles = (c.tiles != null) ? c.tiles.Count : 0;
+            if (tiles <= 0) continue;
+
+            // counts components with 0 enemies too: density will be 0
+            float density = c.enemiesCount / (float)tiles;
+            sumDensity += density;
+            counted++;
         }
 
-        float typeCount = 0;
-        if (has0) typeCount++;
-        if (has1) typeCount++;
-        if (has2) typeCount++;
-        if (has3) typeCount++;
-        if (has4) typeCount++;
+        if (counted == 0)
+            return 0;
 
-        if (typeCount <= 1)
-        {
-            return new Vector2(0, behavior.y);
-        }
-        else if (typeCount <= 3)
-        {
-            return new Vector2(1, behavior.y);
-        }
-        else
-        {
-            return new Vector2(2, behavior.y);
-        }
+        float avgDensity = sumDensity / counted;
+
+        // 4 bins (tune thresholds)
+        if (avgDensity < 0.005f) return 0;
+        if (avgDensity < 0.010f) return 1;
+        if (avgDensity < 0.020f) return 2;
+        return 3;
     }
 
-
-    public static Vector2 EnemyClusterBehavior(MapInfo map, Vector2 behavior)
+    // Not sure how it works, but uses composition ranking to reduce search space to 1000 for resolution 10, 126 for resolution 20
+    public static int EnemyRoleCompositionBehavior(List<(Vector2Int placement, int type)> enemies, int resolution)
     {
-        float averageClusterSize = 0;
-        float clusterAmount = 0;
-        foreach (var component in map.components)
+        if (enemies == null || enemies.Count == 0)
+            return 0;
+
+        // Count amount of each (types 0..4)
+        int[] counts = new int[5];
+        int total = 0;
+
+        foreach (var e in enemies)
         {
-            foreach (var room in component.rooms){
-                float clusterSize = 0;
-                for (int a = room.XMin; a <= room.XMax; a++)
-                {
-                    for (int b = room.YMin; b <=room.YMax; b++)
-                    {
-                        /*if (map.mapArray[a, b] == 6 || map.mapArray[a, b] == 7)
-                        {
-                            clusterSize ++;
-                        }*/
-                        /*
-                         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣤⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠔⠊⠉⠀⠀⠀⠀⠀⠈⠉⠒⢤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡤⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠤⠔⠒⠒⠛⠘⠓⠒⠲⠦⢄⠀⠀⠀⠀
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⢞⡴⠍⠊⠉⠑⠂⡇⠀⡠⠀⡀⠀⠀⠀⠀⠀⠀⠙⢆⠀⠀
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⢀⠤⠒⠉⢈⠈⠁⠶⣤⠖⢠⠇⠀⠀⠀⠇⣆⠀⠀⠀⠀⠀⠀⠈⢧⠀
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡤⢫⠂⠀⠀⠀⠀⢼⠀⠀⠀⠀⣄⠘⢦⡀⠀⠀⠀⠀⠀⠈⡆
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠠⢖⣭⡾⠒⠈⠁⠀⠀⠀⠀⠀⠀⠀⠈⢣⠀⠀⠀⠈⠓⢄⠱⠀⠀⠀⠀⠀⠀⡇
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⡔⠀⠀⡴⠛⠲⡴⢳⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠈⣃⠤⠀⠀⠀⠀⢀⡇
-                        ⠀⠀⠀⠀⠀⠀⠀⠀⡰⠁⠀⠀⢑⡤⠀⠁⠸⡀⠀⢀⡔⠊⠓⠒⠤⢄⣀⣀⣀⡴⠃⠀⠀⠀⠀⠐⠫⢄⣒⠤⠔⠀⢸⠁
-                        ⠀⠀⠀⠀⠀⠀⠀⡸⠁⠀⠀⠰⡁⠀⡀⠀⠀⢧⠀⠸⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⣠⠃⠀
-                        ⠀⠀⠀⠀⠀⠀⣰⠁⠀⠀⠀⠀⠈⠉⢱⡀⠀⠈⢣⣀⠈⠒⠢⠤⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡴⠃⠀⠀
-                        ⠀⠀⠀⠀⠀⢰⠃⠀⠀⠀⠀⠀⠀⠀⠀⢣⠀⠀⠀⠈⠉⠑⠒⠊⠁⠙⠦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠴⡎⠀⠀⠀⠀
-                        ⠀⠀⠀⠀⢀⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠀⠈⠉⠛⠒⠒⠒⠒⠚⠉⠀⠀⡇⠀⠀⠀⠀
-                        ⠀⠀⠀⠀⣸⠀⠀⠀⠀⠀⠀⢠⠀⠀⠀⠀⠘⠢⣄⠀⠀⠀⠀⠀⠀⠸⠅⠙⠔⠒⠒⡄⠀⠀⠀⠀⠀⠀⠀⡁⠀⠀⠀⠀
-                        ⠀⠀⢀⣀⡇⠀⠀⠀⠀⠀⠀⠈⢦⠀⠀⠀⠀⠀⠀⠉⠙⠒⠒⠒⠤⠖⠁⠀⠀⠠⡤⠃⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀
-                        ⠀⡎⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠳⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠔⢆⣀⠜⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀
-                        ⠀⡳⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠉⠒⠒⠒⢺⠋⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠁⠀⠀⠀⠀
-                        ⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡘⠀⠀⠀⠀⠀
-                         */
+            int t = e.type;
+            if (t >= 40 && t <= 44) t -= 40;
+            if (t < 0 || t > 4) continue;
+            counts[t]++;
+            total++;
+        }
 
+        if (total == 0)
+            return 0;
 
-                        int value = map.mapArray[a, b];
-                        if (value >= 40 && value <= 44)
-                        {
-                            clusterSize++;
-                        }
-                    }
-                }
-                if (clusterSize > 0)
-                {
-                    averageClusterSize += clusterSize;
-                    clusterAmount += 1;
-                }
+        // Step size in percent (e.g. 10 => 10% steps) => N units total
+        // N must be an integer, so resolution must divide 100.
+        if (resolution <= 0 || (100 % resolution) != 0)
+        {
+            Debug.LogWarning($"EnemyRoleCompositionBehavior: resolution must be a positive divisor of 100. Got {resolution}.");
+            return 0;
+        }
+
+        int N = 100 / resolution; // e.g. 10 units for 10% steps
+
+        // Quantize ratios into integer units that sum EXACTLY to N (largest remainder)
+        int[] units = QuantizeToUnitsLargestRemainder(counts, total, N);
+        // Encode composition uniquely into 0..C(N+4,4)-1
+        return (int)RankWeakComposition(units, N);
+    }
+
+    static int[] QuantizeToUnitsLargestRemainder(int[] counts, int total, int N)
+    {
+        int k = counts.Length; // 5
+        int[] units = new int[k];
+        float[] rema = new float[k];
+
+        int sum = 0;
+        for (int i = 0; i < k; i++)
+        {
+            float exact = (counts[i] / (float)total) * N; // exact units in [0..N]
+            int floor = Mathf.FloorToInt(exact);
+            units[i] = floor;
+            rema[i] = exact - floor;
+            sum += floor;
+        }
+
+        // Distribute remaining units to largest remainders until sum == N
+        int remaining = N - sum;
+        while (remaining > 0)
+        {
+            int best = 0;
+            for (int i = 1; i < k; i++)
+                if (rema[i] > rema[best]) best = i;
+
+            units[best]++;
+            rema[best] = -1f; // mark consumed for this pass
+            remaining--;
+        }
+
+        return units;
+    }
+
+    // Rank of a weak composition of N into k parts (here k=5).
+    // Uses stars-and-bars: map composition -> combination of bar positions -> combinadic rank.
+    static long RankWeakComposition(int[] parts, int N)
+    {
+        int k = parts.Length;
+        int sum = 0;
+        for (int i = 0; i < k; i++) sum += parts[i];
+        if (sum != N) throw new ArgumentException($"Parts must sum to {N} (got {sum}).");
+
+        int nSlots = N + k - 1; // stars + bars
+        int r = k - 1;          // number of bars
+
+        // bar positions (0-indexed): b_i = (p0+...+p_i) + i   for i=0..k-2
+        int[] bars = new int[r];
+        int prefix = 0;
+        for (int i = 0; i < r; i++)
+        {
+            prefix += parts[i];
+            bars[i] = prefix + i;
+        }
+
+        return RankCombination(nSlots, r, bars);
+    }
+
+    // Lexicographic rank of the chosen indices (combinadic-style).
+    static long RankCombination(int n, int r, int[] chosen)
+    {
+        long rank = 0;
+        int prev = -1;
+
+        for (int i = 0; i < r; i++)
+        {
+            for (int x = prev + 1; x < chosen[i]; x++)
+            {
+                rank += nCk(n - 1 - x, r - 1 - i);
             }
+            prev = chosen[i];
         }
-        averageClusterSize = averageClusterSize/clusterAmount;
-        if (averageClusterSize <= 2)
+
+        return rank;
+    }
+
+    static long nCk(int n, int k)
+    {
+        if (k < 0 || k > n) return 0;
+        if (k == 0 || k == n) return 1;
+
+        k = Math.Min(k, n - k);
+        long result = 1;
+
+        for (int i = 1; i <= k; i++)
         {
-            return new Vector2(behavior.x, 0);
+            result = (result * (n - (k - i))) / i;
         }
-        else if (averageClusterSize <= 3)
-        {
-            return new Vector2(behavior.x, 1);
-        }
-        else
-        {
-            return new Vector2(behavior.x, 2);
-        }
+
+        return result;
     }
 
     public static int FurnishingBehaviorExploration(MapInfo map)
@@ -141,7 +194,7 @@ public class BehaviorFunctions : MonoBehaviour
 
         foreach (var loot in map.furnishing)
         {
-            // keep your exclusions
+            // fuck spikes
             if (loot.type == 0 || loot.type == 1)
                 continue;
 
@@ -170,4 +223,58 @@ public class BehaviorFunctions : MonoBehaviour
 
         return score;
     }
+
+    public static int FurnishingBehaviorSafety(MapInfo map)
+    {
+        float healthCount = 0f;
+        float powerCount = 0f;
+
+        foreach (var loot in map.furnishing)
+        {
+            // keep your exclusions
+            if (loot.type == 0 || loot.type == 1)
+                continue;
+            if (loot.type == 2) healthCount++;
+            else if (loot.type == 3) powerCount++;
+        }
+
+        float total = healthCount + powerCount;
+
+        // No relevant loot found
+        if (total <= 0f)
+            return 5;
+
+        float powerShare = powerCount / total;
+
+        int score;
+        if (powerShare >= 0.80f) score = 0;
+        else if (powerShare >= 0.60f) score = 1;
+        else if (powerShare >= 0.40f) score = 2;
+        else if (powerShare >= 0.20f) score = 3;
+        else score = 4;
+
+        return score;
+    }
+
+    /*
+                         ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣤⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠔⠊⠉⠀⠀⠀⠀⠀⠈⠉⠒⢤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡤⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠤⠔⠒⠒⠛⠘⠓⠒⠲⠦⢄⠀⠀⠀⠀
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⢞⡴⠍⠊⠉⠑⠂⡇⠀⡠⠀⡀⠀⠀⠀⠀⠀⠀⠙⢆⠀⠀
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⢀⠤⠒⠉⢈⠈⠁⠶⣤⠖⢠⠇⠀⠀⠀⠇⣆⠀⠀⠀⠀⠀⠀⠈⢧⠀
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡤⢫⠂⠀⠀⠀⠀⢼⠀⠀⠀⠀⣄⠘⢦⡀⠀⠀⠀⠀⠀⠈⡆
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠠⢖⣭⡾⠒⠈⠁⠀⠀⠀⠀⠀⠀⠀⠈⢣⠀⠀⠀⠈⠓⢄⠱⠀⠀⠀⠀⠀⠀⡇
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⠀⡔⠀⠀⡴⠛⠲⡴⢳⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠈⣃⠤⠀⠀⠀⠀⢀⡇
+                        ⠀⠀⠀⠀⠀⠀⠀⠀⡰⠁⠀⠀⢑⡤⠀⠁⠸⡀⠀⢀⡔⠊⠓⠒⠤⢄⣀⣀⣀⡴⠃⠀⠀⠀⠀⠐⠫⢄⣒⠤⠔⠀⢸⠁
+                        ⠀⠀⠀⠀⠀⠀⠀⡸⠁⠀⠀⠰⡁⠀⡀⠀⠀⢧⠀⠸⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⣠⠃⠀
+                        ⠀⠀⠀⠀⠀⠀⣰⠁⠀⠀⠀⠀⠈⠉⢱⡀⠀⠈⢣⣀⠈⠒⠢⠤⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡴⠃⠀⠀
+                        ⠀⠀⠀⠀⠀⢰⠃⠀⠀⠀⠀⠀⠀⠀⠀⢣⠀⠀⠀⠈⠉⠑⠒⠊⠁⠙⠦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠴⡎⠀⠀⠀⠀
+                        ⠀⠀⠀⠀⢀⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠀⠈⠉⠛⠒⠒⠒⠒⠚⠉⠀⠀⡇⠀⠀⠀⠀
+                        ⠀⠀⠀⠀⣸⠀⠀⠀⠀⠀⠀⢠⠀⠀⠀⠀⠘⠢⣄⠀⠀⠀⠀⠀⠀⠸⠅⠙⠔⠒⠒⡄⠀⠀⠀⠀⠀⠀⠀⡁⠀⠀⠀⠀
+                        ⠀⠀⢀⣀⡇⠀⠀⠀⠀⠀⠀⠈⢦⠀⠀⠀⠀⠀⠀⠉⠙⠒⠒⠒⠤⠖⠁⠀⠀⠠⡤⠃⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀
+                        ⠀⡎⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠳⢤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠔⢆⣀⠜⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀
+                        ⠀⡳⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠉⠒⠒⠒⢺⠋⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠁⠀⠀⠀⠀
+                        ⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡘⠀⠀⠀⠀⠀
+                         */
 }
