@@ -29,6 +29,8 @@ public static class MapArchiveExporter
         public List<float> furnBehavior;  // [x, y]
 
         // Summary metrics
+
+        public List<Vector2Int?> optionalComponents;
         public int roomsCount;
         public int enemiesCount;
         public int furnishingCount;
@@ -68,6 +70,16 @@ public static class MapArchiveExporter
 
             int wallTiles = (map.mapArray != null) ? CountWallTiles(map.mapArray) : 0;
 
+            List<Vector2Int?> optComp = new List<Vector2Int?>();
+
+            foreach (var component in candidate.mapData.components)
+                {
+                    if(component.onMainPath || component.orderIndex == 0)
+                    {
+                        optComp.Add(component.entryTile);
+                    }
+                }
+
             var dto = new MapDTO
             {
                 width = width,
@@ -87,6 +99,8 @@ public static class MapArchiveExporter
                 furnBehavior = ConvertBehaviorToList(candidate.furnBehavior),
 
                 // Summary
+                
+                optionalComponents = optComp,
                 roomsCount = roomsCount,
                 enemiesCount = enemiesCount,
                 furnishingCount = furnishingCount,

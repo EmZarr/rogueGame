@@ -28,6 +28,8 @@ public class LoadoutState : MonoBehaviour
 
     TelemetryManager telemetryManager;
 
+    LevelManager levelManager;
+
     [Header("Input Buffer")]
     [SerializeField] private float bufferWindow = 0.20f; // 200ms is typical
     private readonly Queue<BufferedAction> buffer = new Queue<BufferedAction>(4);
@@ -93,6 +95,7 @@ public class LoadoutState : MonoBehaviour
         chargeUpBar = GameObject.FindWithTag("ChargeBar").GetComponent<ChargeUp>();
         nextHeavyDashTime = Time.time;
         telemetryManager = FindFirstObjectByType<TelemetryManager>();
+        levelManager = FindFirstObjectByType<LevelManager>();
         telemetryManager.SetLoadOut(2);
 
     }
@@ -252,6 +255,10 @@ public class LoadoutState : MonoBehaviour
         loadout = new TwoCrossbow(player);
         loadoutNumber = 1;
         telemetryManager.SetLoadOut(loadoutNumber);
+        if (levelManager.IsInCombat())
+        {   
+            telemetryManager.ChangedFormInCombat();
+        }
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
@@ -260,6 +267,10 @@ public class LoadoutState : MonoBehaviour
         loadout = new SwordAndShield(player);
         loadoutNumber = 2;
         telemetryManager.SetLoadOut(loadoutNumber);
+        if (levelManager.IsInCombat())
+        {   
+            telemetryManager.ChangedFormInCombat();
+        }
     }
 
     void OnLoadout3(InputAction.CallbackContext ctx)
@@ -268,6 +279,10 @@ public class LoadoutState : MonoBehaviour
         loadout = new DualSwords(player);
         loadoutNumber = 3;
         telemetryManager.SetLoadOut(loadoutNumber);
+        if (levelManager.IsInCombat())
+        {
+            telemetryManager.ChangedFormInCombat();
+        }
     }
 
     void OnAttackStarted(InputAction.CallbackContext ctx)

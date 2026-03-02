@@ -20,6 +20,11 @@ public class LevelManager : MonoBehaviour
     [SerializeField] GameObject playerPrefab;
     Vector3 _playerSpawnPos;
     Player _player;
+
+    MapArchiveExporter.MapDTO playMap;
+
+    List<FloorComponent> optComps = new List<FloorComponent>();
+
     bool _hasSpawnPos;
     bool _inCombat = false;
 
@@ -30,6 +35,8 @@ public class LevelManager : MonoBehaviour
     private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
 
     void HandlePlayerSpawned(Player p) => _player = p;
+
+    public bool IsInCombat() => _inCombat;
 
 
     void Awake()
@@ -103,7 +110,7 @@ public class LevelManager : MonoBehaviour
             Take(map, geo, enem, furn);
         }
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
-        var playMap = finalMaps.Dequeue();
+        playMap = finalMaps.Dequeue();
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
         //mapInstantiator.makeTestMap();
         _hasSpawnPos = false;
@@ -111,11 +118,21 @@ public class LevelManager : MonoBehaviour
         machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
         float[] behaviors = new float[5] {playMap.geoBehavior[0], playMap.furnBehavior[0], playMap.furnBehavior[1], playMap.enemyBehavior[0], playMap.enemyBehavior[1]};
         telemetryManager.SetBehavior(behaviors);
+        telemetryManager.SetTotalAmountOfOptionalComponents(playMap.optionalComponents.Count);
     }
 
     private void Update()
     {
         bool anyInCombat = false;
+
+        /*foreach (var entryTile in playMap.optionalComponents)
+        {
+            if (entryTile == new Vector2Int((int)_player.transform.position.x, (int)_player.transform.position.z))
+            {
+                telemetryManager.OptionalComponentEntered();
+            }
+        }*/
+        
 
         foreach (var m in machines)
         {
@@ -175,7 +192,7 @@ public class LevelManager : MonoBehaviour
             noMaps = true;
         }
         else {
-            var playMap = finalMaps.Dequeue();
+            playMap = finalMaps.Dequeue();
             mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
             machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
             float[] behaviors = new float[5] {playMap.geoBehavior[0], playMap.furnBehavior[0], playMap.furnBehavior[1], playMap.enemyBehavior[0], playMap.enemyBehavior[1]};

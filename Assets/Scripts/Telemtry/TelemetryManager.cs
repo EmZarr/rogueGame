@@ -73,6 +73,23 @@ public class TelemetryManager : MonoBehaviour
     float MovementSpeedMultiplier;
     float DamageMultiplier;
 
+    public int[,] defenseToEnemy = new int[3,5];
+
+    float averageDistanceToEnemies;
+    float averageDistanceToWall;
+    float averageDistanceToMainPath;
+    
+    int optionalComponentsEntered;
+
+    int amountOptionalComponentsOnMap = 0;
+
+    int formChangeAmount;
+    int formChangeAmountInCombat;
+
+    int distanceCounterRoad = 1;
+
+    int distanceCounterWall = 1;
+    int distanceCounterEnemy = 1;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -226,8 +243,28 @@ public class TelemetryManager : MonoBehaviour
             EnemyBehaviorDifficulty = mapBehaviors[4],
             AttackSpeedMultiplier = AttackSpeedMultiplier,
             MovementSpeedMultiplier = MovementSpeedMultiplier,
-            DamageMultiplier = DamageMultiplier
-
+            DamageMultiplier = DamageMultiplier,
+            FormChangeCount = formChangeAmount,
+            FormChangeCountInCombat = formChangeAmountInCombat,
+            OptionalRoomPercentage = optionalComponentsEntered+1/(amountOptionalComponentsOnMap+1) * 100f,
+            AverageDistanceToMainPath = averageDistanceToMainPath/distanceCounterRoad,
+            AverageDistanceToWall = averageDistanceToWall/distanceCounterWall,
+            AverageDistanceToEnemies = averageDistanceToEnemies/distanceCounterEnemy,
+            BowDefenseToMelee = defenseToEnemy[0,0],
+            BowDefenseToRanged = defenseToEnemy[0,1],
+            BowDefenseToBomber = defenseToEnemy[0,2],
+            BowDefenseToAssasssin = defenseToEnemy[0,3],
+            BowDefenseToGuardian = defenseToEnemy[0,4],
+            KnightDefenseToMelee = defenseToEnemy[1,0],
+            KnightDefenseToRanged = defenseToEnemy[1,1],
+            KnightDefenseToBomber = defenseToEnemy[1,2],
+            KnightDefenseToAssasssin = defenseToEnemy[1,3],
+            KnightDefenseToGuardian = defenseToEnemy[1,4],
+            BerserkerDefenseToMelee = defenseToEnemy[2,0],
+            BerserkerDefenseToRanged = defenseToEnemy[2,1],
+            BerserkerDefenseToBomber = defenseToEnemy[2,2],
+            BerserkerDefenseToAssasssin = defenseToEnemy[2,3],
+            BerserkerDefenseToGuardian = defenseToEnemy[2,4]
         };
         telemetrySender.SendTelemetry(telemetryData);
 
@@ -313,9 +350,31 @@ public class TelemetryManager : MonoBehaviour
         AttackSpeedMultiplier = 0;
         MovementSpeedMultiplier = 0;
         DamageMultiplier = 0;
-
-        
-
+        formChangeAmount = 0;
+        formChangeAmountInCombat = 0;
+        amountOptionalComponentsOnMap = 0;
+        optionalComponentsEntered = 0;
+        distanceCounterRoad = 1;
+        averageDistanceToMainPath = 0;
+        averageDistanceToWall = 0;
+        distanceCounterWall = 1;
+        averageDistanceToEnemies = 0;
+        defenseToEnemy[0,0] = 0;
+        defenseToEnemy[0,1] = 0;
+        defenseToEnemy[0,2] = 0;
+        defenseToEnemy[0,3] = 0;
+        defenseToEnemy[0,4] = 0;
+        defenseToEnemy[1,0] = 0;
+        defenseToEnemy[1,1] = 0;
+        defenseToEnemy[1,2] = 0;
+        defenseToEnemy[1,3] = 0;
+        defenseToEnemy[1,4] = 0;
+        defenseToEnemy[2,0] = 0;
+        defenseToEnemy[2,1] = 0;
+        defenseToEnemy[2,2] = 0;
+        defenseToEnemy[2,3] = 0;
+        defenseToEnemy[2,4] = 0;
+    
     }
 
     public float LootTakenPercentage()
@@ -336,6 +395,7 @@ public class TelemetryManager : MonoBehaviour
     public void SetLoadOut(int loadout)
     {
         loadOutNumber = loadout;
+        formChangeAmount+=1;
     }
 
     public void LightAttackCount(int loadout)
@@ -443,6 +503,40 @@ public class TelemetryManager : MonoBehaviour
         MovementSpeedMultiplier = movementSpeed;
         DamageMultiplier = attackDamage;
     }
+
+    public void ChangedFormInCombat()
+    {
+        formChangeAmountInCombat +=1;
+    }
+
+    public void OptionalComponentEntered()
+    {
+        optionalComponentsEntered+=1;
+    }
+
+    public void SetTotalAmountOfOptionalComponents(int amount)
+    {
+        amountOptionalComponentsOnMap = amount;
+    }
+
+    public void DistanceToPath(float distance)
+    {
+        averageDistanceToMainPath +=distance;
+        distanceCounterRoad += 1;
+    }
+
+    public void DistanceToWall(float distance)
+    {
+        averageDistanceToWall += distance;
+        distanceCounterWall +=1;
+    }
+
+    public void DistanceToEnemy(float distance)
+    {
+        averageDistanceToEnemies += distance;
+        distanceCounterEnemy +=1;
+    }
+
 
     void SaveTelemetryToCSV(
     float timePlayed,
@@ -616,4 +710,27 @@ public struct TelemetryData
     public float AttackSpeedMultiplier;
     public float MovementSpeedMultiplier;
     public float DamageMultiplier;
+    public int FormChangeCount;
+    public int FormChangeCountInCombat;
+    public float OptionalRoomPercentage;
+    public float AverageDistanceToMainPath;
+    public float AverageDistanceToWall;
+    public float AverageDistanceToEnemies;
+    public int BowDefenseToMelee;
+    public int BowDefenseToRanged;
+    public int BowDefenseToBomber;
+    public int BowDefenseToAssasssin;
+    public int BowDefenseToGuardian;
+    public int KnightDefenseToMelee;
+    public int KnightDefenseToRanged;
+    public int KnightDefenseToBomber;
+    public int KnightDefenseToAssasssin;
+    public int KnightDefenseToGuardian;
+    public int BerserkerDefenseToMelee;
+    public int BerserkerDefenseToRanged;
+    public int BerserkerDefenseToBomber;
+    public int BerserkerDefenseToAssasssin;
+    public int BerserkerDefenseToGuardian;
+
+
 }
