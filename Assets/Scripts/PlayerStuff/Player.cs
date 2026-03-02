@@ -62,9 +62,68 @@ public class Player : MonoBehaviour
         _shield = GetComponentInChildren<Shield>();
         telemetryManager = FindFirstObjectByType<TelemetryManager>();
     }
+
+    void Update()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 30f,LayerMask.GetMask("Road"));
+        float shortestDistance = 100f;
+        foreach (var hit in hits)
+        {
+            Vector2 closestPoint = hit.ClosestPoint(transform.position);
+            float distance = Vector2.Distance(transform.position, closestPoint);
+            if(shortestDistance > distance)
+            {
+                shortestDistance = distance;
+            }
+        }
+        if(shortestDistance < 100f)
+        {
+            telemetryManager.DistanceToPath(shortestDistance);
+        }
+        
+        Collider2D[] wallHits = Physics2D.OverlapCircleAll(transform.position, 20f,LayerMask.GetMask("Wall"));
+        shortestDistance = 100f;
+        foreach (var hit in wallHits)
+        {
+            Vector2 closestPoint = hit.ClosestPoint(transform.position);
+            float distance = Vector2.Distance(transform.position, closestPoint);
+            if(shortestDistance > distance)
+            {
+                shortestDistance = distance;
+            }
+        }
+        if(shortestDistance < 100f)
+        {
+            telemetryManager.DistanceToWall(shortestDistance);
+        }
+        
+
+        Collider2D[] enemyHits = Physics2D.OverlapCircleAll(transform.position, 20f,LayerMask.GetMask("Enemies"));
+        float totalDistance = 0f;
+        var counter = 1;
+        foreach (var hit in enemyHits)
+        {
+            float distance = Vector2.Distance(transform.position, hit.transform.position);
+            totalDistance += distance;
+            counter++;
+            if(shortestDistance > distance)
+            {
+                shortestDistance = distance;
+            }
+        }
+        totalDistance = totalDistance/counter;
+        if(totalDistance > 0)
+        {
+            telemetryManager.DistanceToEnemy(totalDistance);
+        }
+        
+    }
     public void TakeDamage(float damage, GameObject attacker)
     {
-        if (_isInvinsible) return;
+        if (_isInvinsible) {
+            telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType]+=1;
+            return;
+        }
 
         bool shieldIntercepts = attacker != null && AttackLineHitsShield(attacker.transform);
 
@@ -74,12 +133,14 @@ public class Player : MonoBehaviour
             if (enemy != null && enemy._data.enemyType != EnemyType.Ranged)
             {
                 enemy.ApplyStun(_parryStunDuration);
+                telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)enemy._data.enemyType]+=1;
             }
             return;
         }
 
         if (_shield.isBlocking && shieldIntercepts)
         {
+            telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType]+=1;
             return;
         }
         _flash.Flash();

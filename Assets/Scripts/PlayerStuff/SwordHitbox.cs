@@ -27,7 +27,7 @@ public class SwordHitbox : MonoBehaviour
     protected int _frontID;
     protected int _alphaID;
 
-    TelemetryManager telemetryManager;
+    public TelemetryManager telemetryManager;
 
     void Awake()
     {
@@ -129,8 +129,6 @@ public class SwordHitbox : MonoBehaviour
             if (enemy != null && hit.Add(enemy))
             {
                 enemy.TakeDamage(damage);
-                Debug.Log("loadout: " + (telemetryManager.loadOutNumber-1));
-                Debug.Log("loadout: " + (telemetryManager.mostRecentAttackType-1));
 
                 telemetryManager.loadoutToEnemy[telemetryManager.loadOutNumber-1, telemetryManager.mostRecentAttackType-1, (int)enemy._data.enemyType] +=1;
             }

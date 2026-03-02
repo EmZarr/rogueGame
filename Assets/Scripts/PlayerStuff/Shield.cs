@@ -11,6 +11,8 @@ public class Shield : MonoBehaviour
     [SerializeField] private Collider2D col;
     [SerializeField] private LoadoutState loadoutState;
 
+    TelemetryManager telemetryManager;
+
     private void Update()
     {
         if (isParrying || isBlocking)
@@ -37,6 +39,7 @@ public class Shield : MonoBehaviour
         isBlocking = true;
         CancelInvoke();
         Invoke(nameof(Deactivate), duration);
+        telemetryManager = FindFirstObjectByType<TelemetryManager>();
     }
 
     void Deactivate()
@@ -54,10 +57,12 @@ public class Shield : MonoBehaviour
             if (!isParrying)
             {
                 Destroy(other.gameObject);
+                telemetryManager.defenseToEnemy[1, 2]+=1;
             }
             else
             {
                 projectile.Reflect(loadoutState.getMouseDir());
+                telemetryManager.defenseToEnemy[2, 2]+=1;
             }
         }
         else if (isParrying)
@@ -66,6 +71,7 @@ public class Shield : MonoBehaviour
             if (bomb != null)
             {
                 bomb.Reflect((Vector2)transform.position + (10f*loadoutState.getMouseDir()));
+                telemetryManager.defenseToEnemy[2, 3]+=1;
             }
         }
     }

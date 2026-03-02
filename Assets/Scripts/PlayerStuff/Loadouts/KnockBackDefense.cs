@@ -9,6 +9,7 @@ public class KnockBackDefense : SwordHitbox
         {
             var direction = enemy.transform.position - transform.parent.position;
             enemy.GetKnockedBack(direction, 3.0f);
+            base.telemetryManager.defenseToEnemy[0, (int) enemy._data.enemyType]+=1;
         }
     }
 }
