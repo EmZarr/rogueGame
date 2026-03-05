@@ -101,7 +101,7 @@ public class FitnessFunctions : MonoBehaviour
             {
                 if (IsFloor(mapArray[x, y]))
                 {
-                    opennessScoreSum += LocalOpennessAt(5, x, y, mapArray);
+                    opennessScoreSum += LocalOpennessAt(4, x, y, mapArray);
                     amountOfTiles += 1f;
                 }
             }

@@ -79,7 +79,7 @@ public class MapElite : MonoBehaviour
 
             // behavior + fitness
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.GetComponentCountBehavior(candidate, 10),
+                BehaviorFunctions.OpennessByRoomSizeShare(candidate.mapData, 5),
                 0
             );
 
@@ -323,7 +323,7 @@ public class MapElite : MonoBehaviour
 
             // Behaviors
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.GetComponentCountBehavior(candidate, 5),
+                BehaviorFunctions.OpennessByRoomSizeShare(candidate.mapData, 5),
                 0
             );
 

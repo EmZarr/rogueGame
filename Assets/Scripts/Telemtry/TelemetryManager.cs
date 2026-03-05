@@ -160,7 +160,7 @@ public class TelemetryManager : MonoBehaviour
         Debug.Log("% entered: " + optionalComponentsEntered/amountOptionalComponentsOnMap * 100f);
         var telemetryData = new TelemetryData
         {
-            sessionId = "OptCompTest",
+            sessionId = SystemInfo.deviceUniqueIdentifier,
             timePlayed = timePlayed,
             enemiesKilledPct = eneKilledPerc,
             lootTakenPct = lootGathPerc,
