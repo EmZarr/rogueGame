@@ -532,17 +532,19 @@ public class MapGenerator : MonoBehaviour
     public MapInfo mutateEnemies(MapInfo map)
     {
         int newBudget;
-        // 10% chance change budget
-        if (Random.value < 0.10f)
+        float additionalToRemove = 0.2f;
+        // 20% chance change budget
+        if (Random.value < 0.20f)
         {
             newBudget = Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
+            additionalToRemove = Mathf.Max((map.enemyBudget-newBudget) / map.enemyBudget, 0f);
         }
         else
         {
             newBudget = map.enemyBudget;
         }
-        // Remove and readd 20%
-        int amountToMutate = Mathf.CeilToInt(map.enemies.Count * 0.2f);
+        // Remove and re-add 20%
+        int amountToMutate = Mathf.CeilToInt(map.enemies.Count * additionalToRemove);
 
         map.enemyBudget = newBudget;
         for (int i = 0; i < amountToMutate; i++)

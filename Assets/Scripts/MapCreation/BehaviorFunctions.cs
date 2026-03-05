@@ -7,15 +7,30 @@ public class BehaviorFunctions : MonoBehaviour
 {
 
     // compute amount of components
-    public static int GetComponentCountBehavior(MapCandidate candidate, int resolution)
+    public static int OpennessByRoomSizeShare(MapInfo map, int resolution)
     {
-        int componentCount = candidate.mapData.components.Count;
+        if (map?.components == null || map.components.Count == 0) return 0;
 
-        const int maxComponents = 20;   // max amount of components
+        int totalTiles = 0;
+        List<int> sizes = new();
 
-        float normalized = Mathf.Clamp01((componentCount - 1f) / (maxComponents - 1f));
+        foreach (var c in map.components)
+        {
+            int s = (c.tiles != null) ? c.tiles.Count : 0;
+            if (s <= 0) continue;
+            sizes.Add(s);
+            totalTiles += s;
+        }
+        if (sizes.Count == 0 || totalTiles == 0) return 0;
 
-        return GetBehaviorRange(resolution, normalized);
+        sizes.Sort((a, b) => b.CompareTo(a)); // descending
+        int k = Mathf.Min(3, sizes.Count);
+        int top = 0;
+        for (int i = 0; i < k; i++) top += sizes[i];
+
+        float topShare = top / (float)totalTiles; // 0..1
+                                                  // Interpret: higher topShare => fewer/larger rooms (more open-feeling)
+        return GetBehaviorRange(resolution, Mathf.Clamp01(topShare));
     }
 
     static int GetBehaviorRange(int resolution, double value)
@@ -54,8 +69,8 @@ public class BehaviorFunctions : MonoBehaviour
 
         // 4 bins (tune thresholds)
         if (avgDensity < 0.005f) return 0;
-        if (avgDensity < 0.010f) return 1;
-        if (avgDensity < 0.020f) return 2;
+        if (avgDensity < 0.015f) return 1;
+        if (avgDensity < 0.030f) return 2;
         return 3;
     }
 
