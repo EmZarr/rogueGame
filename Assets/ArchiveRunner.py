@@ -1,13 +1,14 @@
 import json
 import os
 import textwrap
+import hashlib
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 JSON_FILENAME = "enemArchive_maps.json"
-OUT_IMG_PREFIX = "map_"
+ICON_DIR = "icons"              # must match the visualizer
 BASE_FONT_SIZE = 18
 BANNER_MARGIN = 8
 
@@ -20,8 +21,8 @@ ROAD_TILES = {2}
 WALL_TILES = {3, 4, 5, 31, 32}
 DECOR_TILES = {25, 26, 27}
 
-LOOT_TILES = {11, 12}     # loot/pickups
-SPIKE_TILES = {13, 14}    # spikes
+LOOT_TILES = {11, 12}
+SPIKE_TILES = {13, 14}
 RANGED_ENEMIES = {40, 41, 42}
 MELEE_ENEMIES = {43, 44}
 EXIT_TILE = 99
@@ -37,13 +38,12 @@ COLORS = {
     "wall": (120, 120, 120),
     "decor": (144, 238, 144),
 
-    # Marker colors (per your spec)
-    "loot": (0, 80, 255),          # blue
-    "spike": (255, 0, 0),          # red
-    "enemy_ranged": (255, 255, 0), # yellow
-    "enemy_melee": (160, 32, 240), # purple
-    "player": (255, 255, 255),     # white
-    "exit": (0, 0, 0),             # black
+    "loot": (0, 80, 255),
+    "spike": (255, 0, 0),
+    "enemy_ranged": (255, 255, 0),
+    "enemy_melee": (160, 32, 240),
+    "player": (255, 255, 255),
+    "exit": (0, 0, 0),
 }
 
 
@@ -53,68 +53,42 @@ def load_json(path: Path):
 
 
 def reconstruct_array(m: dict) -> np.ndarray:
-    """
-    Reconstruct a 2D array shaped (h, w) such that arr[y, x] corresponds to Unity map[x, y].
-    Supports either:
-      - flatTiles: flattened list length w*h
-      - tiles: 2D list
-    """
     w = int(m.get("width", 0))
     h = int(m.get("height", 0))
     if w <= 0 or h <= 0:
         return np.zeros((0, 0), dtype=int)
 
-    # Case 1: flatTiles present
     if m.get("flatTiles") is not None:
         flat = np.array(m["flatTiles"], dtype=int).reshape(-1)
         if flat.size != w * h:
-            # best-effort fallback
             size = min(flat.size, w * h)
             flat = flat[:size]
             if size < w * h:
                 pad = np.zeros((w * h - size,), dtype=int)
                 flat = np.concatenate([flat, pad], axis=0)
 
-        # Try row-major (h,w) first
         arr = flat.reshape((h, w))
-
-        # Quick sanity check: expect at least some floor/wall if map is non-empty
-        # If it looks "too empty", try the transpose interpretation.
-        nonzero = np.count_nonzero(arr)
-        if nonzero == 0:
-            arr2 = flat.reshape((w, h)).T
-            return arr2
-
-        # If there are *some* tiles but orientation might be wrong, we still keep arr (h,w).
+        if np.count_nonzero(arr) == 0:
+            return flat.reshape((w, h)).T
         return arr
 
-    # Case 2: tiles present
     if m.get("tiles") is not None:
         arr = np.array(m["tiles"], dtype=int)
-
-        # If already (h,w), great
         if arr.shape == (h, w):
             return arr
-
-        # If (w,h), transpose to (h,w)
         if arr.shape == (w, h):
             return arr.T
-
-        # Otherwise try reshape (h,w)
         try:
-            flat = arr.reshape(-1)
-            return flat.reshape((h, w))
+            return arr.reshape(-1).reshape((h, w))
         except Exception:
-            # last resort
             return np.zeros((h, w), dtype=int)
 
     return np.zeros((h, w), dtype=int)
 
 
 def _text_size(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont):
-    """Robust text size measurement across Pillow versions. Returns (w, h)."""
     try:
-        bbox = draw.textbbox((0, 0), text, font=font)  # Pillow >= 8
+        bbox = draw.textbbox((0, 0), text, font=font)
         return bbox[2] - bbox[0], bbox[3] - bbox[1]
     except Exception:
         try:
@@ -125,20 +99,62 @@ def _text_size(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont):
             return approx_w, approx_h
 
 
+# ==========================
+# NAMING CONVENTION (md5(repr(tuple))[:8])
+# ==========================
+def behavior_tuple_from_json(m: dict) -> tuple:
+    """
+    Canonical INT behavior tuple for hashing:
+      (GeometryBehavior, geoY, FurnishingBehaviorSpread, FurnishingBehaviorRatio,
+       EnemyBehaviorRatio, EnemyBehaviorDifficulty)
+
+    Where:
+      GeometryBehavior == geo.x
+      geoY is always 0 (matches your Unity code for geometry behavior)
+      FurnishingBehaviorSpread == furn.x
+      FurnishingBehaviorRatio  == furn.y
+      EnemyBehaviorRatio       == enemy.x
+      EnemyBehaviorDifficulty  == enemy.y
+    """
+    def v2_int(name):
+        v = m.get(name, None)
+        if not isinstance(v, (list, tuple)) or len(v) < 2:
+            raise KeyError(f"Map missing '{name}' [x,y].")
+        return int(round(float(v[0]))), int(round(float(v[1])))
+
+    geo_x, geo_y = v2_int("geoBehavior")
+    furn_x, furn_y = v2_int("furnBehavior")
+    enem_x, enem_y = v2_int("enemyBehavior")
+
+    # if geo_y is always 0 in your pipeline, force it:
+    geo_y = 0
+
+    return (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
+
+
+def behavior_hash8(t: tuple) -> str:
+    s = repr(tuple(t))  # now repr is like '(3, 0, 5, 1, 2, 1)'
+    return hashlib.md5(s.encode("utf-8")).hexdigest()[:8]
+
+
+def out_path_for_map(m: dict) -> str:
+    bt = behavior_tuple_from_json(m)
+    h = behavior_hash8(bt)
+    return os.path.join(ICON_DIR, f"behavior_{h}.png")
+
+
 def render_map(arr: np.ndarray, dto: dict, out_path: str):
     if arr.size == 0:
         return
 
-    h, w = arr.shape  # (h, w) => y, x
-
-    # choose scale so tiles are visible but image not insanely large
+    h, w = arr.shape
     max_dim = max(w, h, 1)
     scale = max(8, min(18, int(900 / max_dim)))
     img_w = w * scale
     img_h = h * scale
 
     canvas = np.zeros((img_h, img_w, 3), dtype=np.uint8)
-    markers = []  # (cx, cy, color)
+    markers = []
 
     for y in range(h):
         for x in range(w):
@@ -146,7 +162,6 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
             x0, y0 = x * scale, y * scale
             block = slice(y0, y0 + scale), slice(x0, x0 + scale)
 
-            # Base layer
             if t == EMPTY_TILE:
                 base = COLORS["empty"]
             elif t in WALL_TILES:
@@ -156,15 +171,11 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
             elif t in DECOR_TILES:
                 base = COLORS["decor"]
             else:
-                # floor, furnishing, enemies, exit, player sit on ground
                 base = COLORS["ground"]
-
             canvas[block] = base
 
-            # Markers (draw later for visibility)
             cx = x0 + scale // 2
             cy = y0 + scale // 2
-
             if t in LOOT_TILES:
                 markers.append((cx, cy, COLORS["loot"]))
             elif t in SPIKE_TILES:
@@ -181,27 +192,20 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
     img = Image.fromarray(canvas)
     draw = ImageDraw.Draw(img)
 
-    # grid lines
     grid_color = (45, 45, 45)
     line_width = max(1, scale // 12)
-
     for gx in range(w + 1):
         xx = gx * scale
         draw.line([(xx, 0), (xx, img_h)], fill=grid_color, width=line_width)
-
     for gy in range(h + 1):
         yy = gy * scale
         draw.line([(0, yy), (img_w, yy)], fill=grid_color, width=line_width)
 
-    # markers as filled circles
     marker_r = max(3, int(scale * 0.45))
     for cx, cy, color in markers:
         bbox = [cx - marker_r, cy - marker_r, cx + marker_r, cy + marker_r]
         draw.ellipse(bbox, fill=color)
 
-    # -----------------------------
-    # Banner text
-    # -----------------------------
     def _fmt_vec(v):
         if not v or len(v) == 0:
             return "[]"
@@ -211,12 +215,10 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
     enemy_b = dto.get("enemyBehavior", [])
     furn_b = dto.get("furnBehavior", [])
 
-    # per-domain fitness fields only if present
     geo_fit = dto.get("geoFitness", None)
     enemy_fit = dto.get("enemyFitness", None)
     furn_fit = dto.get("furnFitness", None)
 
-    # base fitness string
     fit_str = f"fitness={dto.get('fitness', 0):.2f}"
     if (geo_fit is not None) and (enemy_fit is not None) and (furn_fit is not None):
         try:
@@ -231,14 +233,12 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
     ]
     full_text = "   ".join(text_lines)
 
-    # font
     font_size = BASE_FONT_SIZE
     try:
         font = ImageFont.truetype("arial.ttf", font_size)
     except Exception:
         font = ImageFont.load_default()
 
-    # shrink font until it fits width (or hits min)
     max_text_width = img_w - BANNER_MARGIN * 2
     text_width, _ = _text_size(draw, full_text, font)
     while text_width > max_text_width and font_size > 8:
@@ -249,7 +249,6 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
             font = ImageFont.load_default()
         text_width, _ = _text_size(draw, full_text, font)
 
-    # wrap if still too wide
     if text_width > max_text_width:
         sample = "abcdefghijklmnopqrstuvwxyz"
         sample_w, _ = _text_size(draw, sample, font)
@@ -259,12 +258,10 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
     else:
         wrapped = [full_text]
 
-    # banner size
     _, line_h = _text_size(draw, "Ay", font)
     line_height = int(line_h * 1.15)
     banner_h = BANNER_MARGIN * 2 + line_height * len(wrapped)
 
-    # draw banner
     draw.rectangle([0, 0, img_w, banner_h], fill=(255, 255, 255))
     y_text = BANNER_MARGIN
     for line in wrapped:
@@ -286,12 +283,33 @@ def main():
         print("No maps found in JSON.")
         return
 
+    os.makedirs(ICON_DIR, exist_ok=True)
+
+    saved = 0
+    skipped = 0
+    seen = set()
+
     for i, m in enumerate(maps):
         arr = reconstruct_array(m)
 
-        out_file = f"{OUT_IMG_PREFIX}{i}.png"
+        try:
+            bt = behavior_tuple_from_json(m)
+        except KeyError as e:
+            print(f"[SKIP map index {i}] {e}")
+            skipped += 1
+            continue
+
+        # One icon per unique behavior tuple (optional but usually what you want)
+        if bt in seen:
+            continue
+        seen.add(bt)
+
+        out_file = os.path.join(ICON_DIR, f"behavior_{behavior_hash8(bt)}.png")
         render_map(arr, m, out_file)
+        saved += 1
         print(f"Saved {out_file} (w={m.get('width')}, h={m.get('height')})")
+
+    print(f"\nDone. Saved={saved}, skipped={skipped}, unique_behaviors={len(seen)}")
 
 
 if __name__ == "__main__":
