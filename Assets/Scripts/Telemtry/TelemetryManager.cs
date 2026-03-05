@@ -79,9 +79,9 @@ public class TelemetryManager : MonoBehaviour
     float averageDistanceToWall;
     float averageDistanceToMainPath;
     
-    int optionalComponentsEntered;
+    float optionalComponentsEntered;
 
-    int amountOptionalComponentsOnMap = 0;
+    float amountOptionalComponentsOnMap = 0;
 
     int formChangeAmount;
     int formChangeAmountInCombat;
@@ -147,13 +147,6 @@ public class TelemetryManager : MonoBehaviour
         timerStarted = false;
         float eneKilledPerc = EnemiesKilledPercentage();
         float lootGathPerc = LootTakenPercentage();
-        Debug.Log("Time played: " + timePlayed);
-        Debug.Log("Enemies killed % " + eneKilledPerc);
-        Debug.Log("Loot taken % " + lootGathPerc);
-        Debug.Log("Player deaths: " + playerDeaths);
-        Debug.Log("Time spent Bowman: " + timeSpentBowMan);
-        Debug.Log("Time spent Knight: " + timeSpentKnight);
-        Debug.Log("Time spent Berserker: " + timeSpentBerserker);
 
         SaveTelemetryToCSV(timePlayed, eneKilledPerc, lootGathPerc,
                        playerDeaths, timeSpentBowMan,
@@ -162,9 +155,12 @@ public class TelemetryManager : MonoBehaviour
                        berserkerLightAttacks, berserkerHeavyAttacks, berserkerLightDashes, berserkerHeavyDashes, berserkerDefense,
                        damageTaken);
 
+        Debug.Log("amount of opt rooms total: " + amountOptionalComponentsOnMap);
+        Debug.Log("amount of opt rooms entered: " + optionalComponentsEntered);
+        Debug.Log("% entered: " + optionalComponentsEntered/amountOptionalComponentsOnMap * 100f);
         var telemetryData = new TelemetryData
         {
-            sessionId = "Oliver",
+            sessionId = SystemInfo.deviceUniqueIdentifier,
             timePlayed = timePlayed,
             enemiesKilledPct = eneKilledPerc,
             lootTakenPct = lootGathPerc,
@@ -246,7 +242,7 @@ public class TelemetryManager : MonoBehaviour
             DamageMultiplier = DamageMultiplier,
             FormChangeCount = formChangeAmount,
             FormChangeCountInCombat = formChangeAmountInCombat,
-            OptionalRoomPercentage = optionalComponentsEntered+1/(amountOptionalComponentsOnMap+1) * 100f,
+            OptionalRoomPercentage = optionalComponentsEntered/amountOptionalComponentsOnMap * 100f,
             AverageDistanceToMainPath = averageDistanceToMainPath/distanceCounterRoad,
             AverageDistanceToWall = averageDistanceToWall/distanceCounterWall,
             AverageDistanceToEnemies = averageDistanceToEnemies/distanceCounterEnemy,
@@ -268,112 +264,8 @@ public class TelemetryManager : MonoBehaviour
         };
         telemetrySender.SendTelemetry(telemetryData);
 
-
-        timePlayed = 0f;
-        playerDeaths = 0;
-        totalEnemies = 0;
-        totalLoot = 0;
-        lootTaken = 0;
-        enemiesKilled = 0;
-        timeSpentBowMan = 0f;
-        timeSpentBerserker = 0;
-        timeSpentKnight = 0;
-        bowmanLightAttacks = 0;
-        bowmanHeavyAttacks = 0;
-        bowmanLightDashes = 0;
-        bowmanHeavyDashes = 0;
-        bowmanDefense = 0;
-        knightLightAttacks = 0;
-        knightHeavyAttacks = 0;
-        knightLightDashes = 0;
-        knightHeavyDashes = 0;
-        knightDefense = 0;
-        berserkerLightAttacks = 0;
-        berserkerHeavyAttacks = 0;
-        berserkerLightDashes = 0;
-        berserkerHeavyDashes = 0;
-        berserkerDefense = 0;
-        damageTaken[0] = 0;
-        damageTaken[1] = 0;
-        damageTaken[2] = 0;
-        damageTaken[3] = 0;
-        loadoutToEnemy[0,0,0] = 0;
-        loadoutToEnemy[0,1,0] = 0;
-        loadoutToEnemy[0,2,0] = 0;
-        loadoutToEnemy[0,0,1] = 0;
-        loadoutToEnemy[0,1,1] = 0;
-        loadoutToEnemy[0,2,1] = 0;
-        loadoutToEnemy[0,0,2] = 0;
-        loadoutToEnemy[0,1,2] = 0;
-        loadoutToEnemy[0,2,2] = 0;
-        loadoutToEnemy[0,0,3] = 0;
-        loadoutToEnemy[0,1,3] = 0;
-        loadoutToEnemy[0,2,3] = 0;
-        loadoutToEnemy[0,0,4] = 0;
-        loadoutToEnemy[0,1,4] = 0;
-        loadoutToEnemy[0,2,4] = 0;
-        loadoutToEnemy[1,0,0] = 0;
-        loadoutToEnemy[1,1,0] = 0;
-        loadoutToEnemy[1,2,0] = 0;
-        loadoutToEnemy[1,0,1] = 0;
-        loadoutToEnemy[1,1,1] = 0;
-        loadoutToEnemy[1,2,1] = 0;
-        loadoutToEnemy[1,0,2] = 0;
-        loadoutToEnemy[1,1,2] = 0;
-        loadoutToEnemy[1,2,2] = 0;
-        loadoutToEnemy[1,0,3] = 0;
-        loadoutToEnemy[1,1,3] = 0;
-        loadoutToEnemy[1,2,3] = 0;
-        loadoutToEnemy[1,0,4] = 0;
-        loadoutToEnemy[1,1,4] = 0;
-        loadoutToEnemy[1,2,4] = 0;
-        loadoutToEnemy[2,0,0] = 0;
-        loadoutToEnemy[2,1,0] = 0;
-        loadoutToEnemy[2,2,0] = 0;
-        loadoutToEnemy[2,0,1] = 0;
-        loadoutToEnemy[2,1,1] = 0;
-        loadoutToEnemy[2,2,1] = 0;
-        loadoutToEnemy[2,0,2] = 0;
-        loadoutToEnemy[2,1,2] = 0;
-        loadoutToEnemy[2,2,2] = 0;
-        loadoutToEnemy[2,0,3] = 0;
-        loadoutToEnemy[2,1,3] = 0;
-        loadoutToEnemy[2,2,3] = 0;
-        loadoutToEnemy[2,0,4] = 0;
-        loadoutToEnemy[2,1,4] = 0;
-        loadoutToEnemy[2,2,4] = 0;
-        mapBehaviors[0] = 0;
-        mapBehaviors[1] = 0;
-        mapBehaviors[2] = 0;
-        mapBehaviors[3] = 0;
-        mapBehaviors[4] = 0;
-        AttackSpeedMultiplier = 0;
-        MovementSpeedMultiplier = 0;
-        DamageMultiplier = 0;
-        formChangeAmount = 0;
-        formChangeAmountInCombat = 0;
-        amountOptionalComponentsOnMap = 0;
-        optionalComponentsEntered = 0;
-        distanceCounterRoad = 1;
-        averageDistanceToMainPath = 0;
-        averageDistanceToWall = 0;
-        distanceCounterWall = 1;
-        averageDistanceToEnemies = 0;
-        defenseToEnemy[0,0] = 0;
-        defenseToEnemy[0,1] = 0;
-        defenseToEnemy[0,2] = 0;
-        defenseToEnemy[0,3] = 0;
-        defenseToEnemy[0,4] = 0;
-        defenseToEnemy[1,0] = 0;
-        defenseToEnemy[1,1] = 0;
-        defenseToEnemy[1,2] = 0;
-        defenseToEnemy[1,3] = 0;
-        defenseToEnemy[1,4] = 0;
-        defenseToEnemy[2,0] = 0;
-        defenseToEnemy[2,1] = 0;
-        defenseToEnemy[2,2] = 0;
-        defenseToEnemy[2,3] = 0;
-        defenseToEnemy[2,4] = 0;
+        ResetStats(true);
+        
     
     }
 
@@ -537,6 +429,118 @@ public class TelemetryManager : MonoBehaviour
         distanceCounterEnemy +=1;
     }
 
+    public void ResetStats(bool levelCleared)
+    {
+        timePlayed = 0f;
+        if (levelCleared)
+        {
+            playerDeaths = 0;
+        }
+        totalEnemies = 0;
+        totalLoot = 0;
+        lootTaken = 0;
+        enemiesKilled = 0;
+        timeSpentBowMan = 0f;
+        timeSpentBerserker = 0;
+        timeSpentKnight = 0;
+        bowmanLightAttacks = 0;
+        bowmanHeavyAttacks = 0;
+        bowmanLightDashes = 0;
+        bowmanHeavyDashes = 0;
+        bowmanDefense = 0;
+        knightLightAttacks = 0;
+        knightHeavyAttacks = 0;
+        knightLightDashes = 0;
+        knightHeavyDashes = 0;
+        knightDefense = 0;
+        berserkerLightAttacks = 0;
+        berserkerHeavyAttacks = 0;
+        berserkerLightDashes = 0;
+        berserkerHeavyDashes = 0;
+        berserkerDefense = 0;
+        damageTaken[0] = 0;
+        damageTaken[1] = 0;
+        damageTaken[2] = 0;
+        damageTaken[3] = 0;
+        loadoutToEnemy[0,0,0] = 0;
+        loadoutToEnemy[0,1,0] = 0;
+        loadoutToEnemy[0,2,0] = 0;
+        loadoutToEnemy[0,0,1] = 0;
+        loadoutToEnemy[0,1,1] = 0;
+        loadoutToEnemy[0,2,1] = 0;
+        loadoutToEnemy[0,0,2] = 0;
+        loadoutToEnemy[0,1,2] = 0;
+        loadoutToEnemy[0,2,2] = 0;
+        loadoutToEnemy[0,0,3] = 0;
+        loadoutToEnemy[0,1,3] = 0;
+        loadoutToEnemy[0,2,3] = 0;
+        loadoutToEnemy[0,0,4] = 0;
+        loadoutToEnemy[0,1,4] = 0;
+        loadoutToEnemy[0,2,4] = 0;
+        loadoutToEnemy[1,0,0] = 0;
+        loadoutToEnemy[1,1,0] = 0;
+        loadoutToEnemy[1,2,0] = 0;
+        loadoutToEnemy[1,0,1] = 0;
+        loadoutToEnemy[1,1,1] = 0;
+        loadoutToEnemy[1,2,1] = 0;
+        loadoutToEnemy[1,0,2] = 0;
+        loadoutToEnemy[1,1,2] = 0;
+        loadoutToEnemy[1,2,2] = 0;
+        loadoutToEnemy[1,0,3] = 0;
+        loadoutToEnemy[1,1,3] = 0;
+        loadoutToEnemy[1,2,3] = 0;
+        loadoutToEnemy[1,0,4] = 0;
+        loadoutToEnemy[1,1,4] = 0;
+        loadoutToEnemy[1,2,4] = 0;
+        loadoutToEnemy[2,0,0] = 0;
+        loadoutToEnemy[2,1,0] = 0;
+        loadoutToEnemy[2,2,0] = 0;
+        loadoutToEnemy[2,0,1] = 0;
+        loadoutToEnemy[2,1,1] = 0;
+        loadoutToEnemy[2,2,1] = 0;
+        loadoutToEnemy[2,0,2] = 0;
+        loadoutToEnemy[2,1,2] = 0;
+        loadoutToEnemy[2,2,2] = 0;
+        loadoutToEnemy[2,0,3] = 0;
+        loadoutToEnemy[2,1,3] = 0;
+        loadoutToEnemy[2,2,3] = 0;
+        loadoutToEnemy[2,0,4] = 0;
+        loadoutToEnemy[2,1,4] = 0;
+        loadoutToEnemy[2,2,4] = 0;
+        mapBehaviors[0] = 0;
+        mapBehaviors[1] = 0;
+        mapBehaviors[2] = 0;
+        mapBehaviors[3] = 0;
+        mapBehaviors[4] = 0;
+        AttackSpeedMultiplier = 0;
+        MovementSpeedMultiplier = 0;
+        DamageMultiplier = 0;
+        formChangeAmount = 0;
+        formChangeAmountInCombat = 0;
+        amountOptionalComponentsOnMap = 0;
+        optionalComponentsEntered = 0;
+        distanceCounterRoad = 1;
+        averageDistanceToMainPath = 0;
+        averageDistanceToWall = 0;
+        distanceCounterWall = 1;
+        averageDistanceToEnemies = 0;
+        defenseToEnemy[0,0] = 0;
+        defenseToEnemy[0,1] = 0;
+        defenseToEnemy[0,2] = 0;
+        defenseToEnemy[0,3] = 0;
+        defenseToEnemy[0,4] = 0;
+        defenseToEnemy[1,0] = 0;
+        defenseToEnemy[1,1] = 0;
+        defenseToEnemy[1,2] = 0;
+        defenseToEnemy[1,3] = 0;
+        defenseToEnemy[1,4] = 0;
+        defenseToEnemy[2,0] = 0;
+        defenseToEnemy[2,1] = 0;
+        defenseToEnemy[2,2] = 0;
+        defenseToEnemy[2,3] = 0;
+        defenseToEnemy[2,4] = 0;
+    }
+
 
     void SaveTelemetryToCSV(
     float timePlayed,
@@ -612,8 +616,6 @@ public class TelemetryManager : MonoBehaviour
     sb.AppendLine(row);
 
     File.AppendAllText(path, sb.ToString());
-
-    Debug.Log("Telemetry saved to: " + path);
 }
 
 

@@ -6,7 +6,7 @@ using UnityEngine.Tilemaps;
 
 public class MapInstantiator : MonoBehaviour
 {
-    [SerializeField] Tilemap tilemapBase;
+    [SerializeField] public Tilemap tilemapBase;
     [SerializeField] Tilemap tilemapRoad;
     [SerializeField] Tilemap tilemapDecour;
     [SerializeField] Tilemap tilemapWall;
@@ -417,7 +417,9 @@ public class MapInstantiator : MonoBehaviour
                             )
                         );
                         break;
-
+                    case 55:
+                        tilemapBase.SetTile(cell, tilesForestBase[0]);
+                        break;
                     case 99:
                         tileIndex = Random.Range(0,3);
                         switch (mapStyle)

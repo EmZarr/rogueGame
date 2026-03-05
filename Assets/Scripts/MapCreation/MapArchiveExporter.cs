@@ -4,6 +4,13 @@ using UnityEngine;
 
 public static class MapArchiveExporter
 {
+
+    [System.Serializable]
+    public class Vector2IntList
+    {
+        public List<Vector2Int> tiles;
+    }
+
     [System.Serializable]
     public class MapDTO
     {
@@ -30,7 +37,8 @@ public static class MapArchiveExporter
 
         // Summary metrics
 
-        public List<Vector2Int?> optionalComponents;
+        public List<Vector2IntList> optionalComponents;  
+        public List<Vector2Int> optionalComponentTiles;
         public int roomsCount;
         public int enemiesCount;
         public int furnishingCount;
@@ -70,15 +78,21 @@ public static class MapArchiveExporter
 
             int wallTiles = (map.mapArray != null) ? CountWallTiles(map.mapArray) : 0;
 
-            List<Vector2Int?> optComp = new List<Vector2Int?>();
+            List<List<Vector2Int>> optComp = new List<List<Vector2Int>>();
+            HashSet<Vector2Int> optCompTiles = new HashSet<Vector2Int>();
 
             foreach (var component in candidate.mapData.components)
                 {
-                    if(component.onMainPath || component.orderIndex == 0)
+                    if(!component.onMainPath || component.orderIndex == 0)
                     {
-                        optComp.Add(component.entryTile);
+                        foreach(var tile in component.tiles)
+                        {
+                            optCompTiles.Add(tile);
+                        }
+                        optComp.Add(component.tiles);
                     }
                 }
+            Debug.Log("are they added? " + optComp.Count);
 
             var dto = new MapDTO
             {
@@ -99,8 +113,8 @@ public static class MapArchiveExporter
                 furnBehavior = ConvertBehaviorToList(candidate.furnBehavior),
 
                 // Summary
-                
-                optionalComponents = optComp,
+                optionalComponents = OptionalComponents(optComp),
+                optionalComponentTiles = OptTiles(optCompTiles),
                 roomsCount = roomsCount,
                 enemiesCount = enemiesCount,
                 furnishingCount = furnishingCount,
@@ -124,6 +138,25 @@ public static class MapArchiveExporter
     // Helper methods
     // --------------------
 
+    private static List<Vector2IntList> OptionalComponents(List<List<Vector2Int>> components)
+    {
+        var result = new List<Vector2IntList>();
+        var counter = 0;
+
+        foreach (var comp in components)
+        {
+            result.Add(new Vector2IntList { tiles = comp });
+            counter+=comp.Count;
+        }
+        Debug.Log("Amount of opt comp tiles counted from components: " + counter);
+        return result;
+    }
+
+    private static List<Vector2Int> OptTiles(HashSet<Vector2Int> tiles)
+    {
+        Debug.Log("Amount of opt comp tiles counted from tiles: " + tiles.Count);
+        return new List<Vector2Int>(tiles);
+    }
     private static float SafeFloat(float v)
     {
         if (float.IsNaN(v) || float.IsInfinity(v)) return 0f;

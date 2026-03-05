@@ -39,7 +39,7 @@ public class MapElite : MonoBehaviour
         RunMapElitesFurnishing();
         MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
         RunMapElitesEnemies();
-        MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
+        MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemTestArchive_maps.json");
         //RunMapElitesCombined();
         //MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
         
@@ -79,7 +79,7 @@ public class MapElite : MonoBehaviour
 
             // behavior + fitness
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.GetComponentCountBehavior(candidate, 10),
+                BehaviorFunctions.OpennessByRoomSizeShare(candidate.mapData, 5),
                 0
             );
 
@@ -323,7 +323,7 @@ public class MapElite : MonoBehaviour
 
             // Behaviors
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.GetComponentCountBehavior(candidate, 5),
+                BehaviorFunctions.OpennessByRoomSizeShare(candidate.mapData, 5),
                 0
             );
 

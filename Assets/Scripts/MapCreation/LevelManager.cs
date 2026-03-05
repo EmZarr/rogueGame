@@ -13,9 +13,13 @@ public class LevelManager : MonoBehaviour
     [SerializeField] SpriteRenderer sprite;
     private StateMachine[] machines;
     public Queue<MapArchiveExporter.MapDTO> finalMaps;
+
+    public List<MapArchiveExporter.MapDTO> playedMaps;
     private List<Vector2Int> takenGeoBehaviors;
     private List<Vector2Int> takenEnemBehaviors;
     private List<Vector2Int> takenFurnBehaviors;
+
+    float checkTimer;
 
     [SerializeField] GameObject playerPrefab;
     Vector3 _playerSpawnPos;
@@ -23,7 +27,9 @@ public class LevelManager : MonoBehaviour
 
     MapArchiveExporter.MapDTO playMap;
 
-    List<FloorComponent> optComps = new List<FloorComponent>();
+    List<List<Vector2Int>> optComps = new List<List<Vector2Int>>();
+
+    HashSet<Vector2Int> optTiles = new HashSet<Vector2Int>();
 
     bool _hasSpawnPos;
     bool _inCombat = false;
@@ -55,11 +61,12 @@ public class LevelManager : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        string path = Path.Combine(Application.streamingAssetsPath, "enemArchive_maps.json");
+        string path = Path.Combine(Application.streamingAssetsPath, "enemTestArchive_maps.json");
         var archive = MapArchiveExporter.LoadArchiveFromJson(path);
         //var archive = MapArchiveExporter.LoadArchiveFromJson("furnArchive_maps.json");
         //var archive = MapArchiveExporter.LoadArchiveFromJson("combArchive_maps.json");
         finalMaps = new Queue<MapArchiveExporter.MapDTO>();
+        playedMaps = new List<MapArchiveExporter.MapDTO>();
         takenGeoBehaviors = new List<Vector2Int>();
         takenEnemBehaviors = new List<Vector2Int>();
         takenFurnBehaviors = new List<Vector2Int>();
@@ -109,10 +116,9 @@ public class LevelManager : MonoBehaviour
             if (!CanTake(map, out var geo, out var enem, out var furn)) continue;
             Take(map, geo, enem, furn);
         }
-        mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(finalMaps.Dequeue()));
         playMap = finalMaps.Dequeue();
+        FixOptComps(playMap);
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
-        //mapInstantiator.makeTestMap();
         _hasSpawnPos = false;
         CacheSpawnAndHookPlayer();
         machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
@@ -124,14 +130,28 @@ public class LevelManager : MonoBehaviour
     private void Update()
     {
         bool anyInCombat = false;
-
-        /*foreach (var entryTile in playMap.optionalComponents)
+        checkTimer += Time.deltaTime;
+        if(checkTimer >= 1.0f)
         {
-            if (entryTile == new Vector2Int((int)_player.transform.position.x, (int)_player.transform.position.z))
+            var playPos = new Vector2Int((int)_player.transform.position.x, (int)_player.transform.position.y);
+            if (optTiles.Contains(playPos))
             {
                 telemetryManager.OptionalComponentEntered();
+                Debug.Log(playPos);
+                foreach(var component in optComps)
+                {
+                    if (component.Contains(playPos))
+                    {
+                        foreach(var tile in component)
+                        {
+                            optTiles.Remove(tile);
+                        }
+                    }
+                }
             }
-        }*/
+        checkTimer = 0f;
+        }
+        
         
 
         foreach (var m in machines)
@@ -167,7 +187,7 @@ public class LevelManager : MonoBehaviour
 
     void HandlePlayerDied(GameObject killer)
     {
-        _player.TeleportTo(_playerSpawnPos);
+        //_player.TeleportTo(_playerSpawnPos);
 
         var rb = _player.GetComponent<Rigidbody2D>();
         if (rb != null)
@@ -176,6 +196,19 @@ public class LevelManager : MonoBehaviour
             rb.angularVelocity = 0f;
         }
         telemetryManager.PlayerDied();
+        telemetryManager.UploadData();
+        //telemetryManager.ResetStats(false);
+        finalMaps.Clear();
+        foreach(var map in playedMaps)
+        {
+            finalMaps.Enqueue(map);
+        }
+        //finalMaps = playedMaps;
+        Debug.Log("Played maps: " + playedMaps.Count);
+        Debug.Log("Final maps: " + finalMaps.Count);
+        playMap = finalMaps.Dequeue();
+        FixOptComps(playMap);
+        mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -231,8 +264,28 @@ public class LevelManager : MonoBehaviour
     void Take(MapArchiveExporter.MapDTO map, Vector2Int geo, Vector2Int enem, Vector2Int furn)
     {
         finalMaps.Enqueue(map);
+        playedMaps.Add(map);
         takenGeoBehaviors.Add(geo);
         takenEnemBehaviors.Add(enem);
         takenFurnBehaviors.Add(furn);
+    }
+
+    void FixOptComps(MapArchiveExporter.MapDTO map)
+    {
+        foreach(var tile in map.optionalComponentTiles)
+        {
+            var actualTile = mapInstantiator.tilemapBase.GetCellCenterWorld(new Vector3Int(tile.x, tile.y, 0));
+            optTiles.Add(new Vector2Int((int)actualTile.x, (int)actualTile.y));
+        }
+        foreach(var component in map.optionalComponents)
+        {
+            var comp = new List<Vector2Int>();
+            foreach(var compTile in component.tiles)
+            {
+                var correctedTile = mapInstantiator.tilemapBase.GetCellCenterWorld(new Vector3Int(compTile.x, compTile.y, 0));
+                comp.Add(new Vector2Int((int)correctedTile.x, (int)correctedTile.y));
+            }
+            optComps.Add(comp);
+        }
     }
 }

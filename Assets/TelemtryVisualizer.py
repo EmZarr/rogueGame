@@ -1,12 +1,13 @@
 # TelemtryVisualizer.py
 # ------------------------------------------------------------
-# Matplotlib plot with a custom right-side panel:
-# - KMeans clustering + PCA
+# 3D PCA telemetry plot with a custom right-side panel:
+# - KMeans clustering + PCA (3D)
 # - Color per sessionId (deterministic)
-# - Marker shape per behavior combination
-# - Right panel has TWO sections:
-#     1) Behaviors (2 columns): marker shape + named rows; click text to expand icon
+# - Marker shape per behavior combination (deterministic by first-seen order)
+# - Right panel has THREE sections:
+#     1) Behaviors (2 columns): marker + named rows; click text to expand icon
 #     2) Sessions (collapsible): click header to expand/collapse sessionId -> color list
+#     3) PCA interpretation text box
 #
 # Icons:
 # - Put behavior icons in ICON_DIR:
@@ -16,6 +17,7 @@
 
 import os
 import hashlib
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,6 +26,7 @@ import matplotlib.image as mpimg
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from scipy.spatial import ConvexHull
 
 
 # ==========================
@@ -35,6 +38,7 @@ N_CLUSTERS = 5
 ICON_DIR = "icons"
 PANEL_WIDTH = 0.33  # fraction of figure width reserved for the right panel
 
+# Columns used to build the behavior tuple
 behavior_columns = [
     "GeometryBehavior",
     "FurnishingBehaviorSpread",
@@ -43,9 +47,9 @@ behavior_columns = [
     "EnemyBehaviorDifficulty",
 ]
 
-# NOTE: This maps the tuple positions you DISPLAY.
-# Your behavior tuple is (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
-# but geo_y is forced 0. If you don't want to display it, keep it omitted here.
+# Display mapping for behavior tuple fields.
+# behavior tuple is: (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
+# geo_y is forced to 0 to match your icon generator.
 BEHAVIOR_FIELDS = [
     ("Room Amount Tier", 0, 10),
     ("Loot on Main Ratio", 2, 5),
@@ -104,6 +108,19 @@ def open_expanded(image_path: str, title: str):
     f2.show()
 
 
+def csv_behavior_tuple(row) -> tuple:
+    """
+    Build the canonical behavior tuple used for marker mapping + icon hashing.
+    """
+    geo_x = int(row["GeometryBehavior"])
+    geo_y = 0  # forced to match your icon generator
+    furn_x = int(row["FurnishingBehaviorSpread"])
+    furn_y = int(row["FurnishingBehaviorRatio"])
+    enem_x = int(row["EnemyBehaviorRatio"])
+    enem_y = int(row["EnemyBehaviorDifficulty"])
+    return (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
+
+
 # ==========================
 # LOAD DATA
 # ==========================
@@ -116,17 +133,10 @@ missing_beh = [c for c in behavior_columns if c not in df.columns]
 if missing_beh:
     raise ValueError(f"Missing behavior columns in CSV: {missing_beh}")
 
+# Drop timestamp if present (your 'main' branch did this)
+df = df.drop(columns=["timestamp"], errors="ignore")
 
-def csv_behavior_tuple(row) -> tuple:
-    geo_x = int(row["GeometryBehavior"])
-    geo_y = 0  # matches forced geo_y in icon generator
-    furn_x = int(row["FurnishingBehaviorSpread"])
-    furn_y = int(row["FurnishingBehaviorRatio"])
-    enem_x = int(row["EnemyBehaviorRatio"])
-    enem_y = int(row["EnemyBehaviorDifficulty"])
-    return (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
-
-
+# Build behavior tuples per row (used for markers + icons)
 behavior_combinations = df.apply(csv_behavior_tuple, axis=1)
 unique_behaviors = behavior_combinations.unique()
 
@@ -143,10 +153,11 @@ if feature_df.shape[1] == 0:
     )
 
 X = feature_df.to_numpy()
+feature_columns = list(feature_df.columns)
 print(f"Using {feature_df.shape[1]} numeric feature columns for clustering.")
 
 # ==========================
-# SCALE / CLUSTER / PCA
+# SCALE / KMEANS
 # ==========================
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
@@ -155,8 +166,82 @@ kmeans = KMeans(n_clusters=N_CLUSTERS, random_state=42)
 clusters = kmeans.fit_predict(X_scaled)
 df["Cluster"] = clusters
 
-pca = PCA(n_components=2, random_state=42)
-X_2d = pca.fit_transform(X_scaled)
+# ==========================
+# PCA (3D)
+# ==========================
+pca = PCA(n_components=3, random_state=42)
+X_3d = pca.fit_transform(X_scaled)
+explained_variance = pca.explained_variance_ratio_
+
+print("\nExplained Variance Ratio:")
+for i, var in enumerate(explained_variance):
+    print(f"PC{i+1}: {var:.4f} ({var*100:.2f}%)")
+print("\nTotal variance captured:", sum(explained_variance) * 100, "%")
+
+# ==========================
+# PCA COMPONENT WEIGHTS / INTERPRETATION (prints)
+# ==========================
+loadings = pd.DataFrame(
+    pca.components_.T,
+    columns=["PC1", "PC2", "PC3"],
+    index=feature_columns,
+)
+
+for pc in ["PC1", "PC2", "PC3"]:
+    print(f"\nTop contributing features for {pc}:")
+    sorted_features = loadings[pc].abs().sort_values(ascending=False)
+    for feature in sorted_features.head(10).index:
+        weight = loadings.loc[feature, pc]
+        print(f"{feature}: {weight:.4f}")
+
+print("\n==============================")
+print("CLUSTER BEHAVIOR PROFILES")
+print("==============================")
+
+cluster_df = df.copy()
+cluster_df["cluster"] = clusters
+
+cluster_means = cluster_df.groupby("cluster")[feature_columns].mean()
+global_mean = df[feature_columns].mean()
+
+for c in range(N_CLUSTERS):
+    print(f"\nCluster {c}")
+    diffs = cluster_means.loc[c] - global_mean
+    diffs = diffs.sort_values(key=lambda x: abs(x), ascending=False)
+
+    print("Dominant characteristics:")
+    for feature in diffs.head(6).index:
+        val = cluster_means.loc[c, feature]
+        delta = diffs.loc[feature]
+        direction = "higher" if delta > 0 else "lower"
+        print(f"  {feature}: {val:.3f} ({direction} than average)")
+
+print("\n==============================")
+print("PCA DIMENSION INTERPRETATION")
+print("==============================")
+
+for pc in ["PC1", "PC2", "PC3"]:
+    print(f"\n{pc} represents:")
+    sorted_features = loadings[pc].sort_values(key=lambda x: abs(x), ascending=False)
+    for f in sorted_features.head(6).index:
+        weight = loadings.loc[f, pc]
+        direction = "increases with" if weight > 0 else "decreases with"
+        print(f"  {direction} {f} ({weight:.3f})")
+
+
+def build_pc_interpretation(pc_name: str) -> str:
+    sorted_features = loadings[pc_name].sort_values(key=lambda x: abs(x), ascending=False)
+    lines = []
+    for feature in sorted_features.head(4).index:
+        weight = loadings.loc[feature, pc_name]
+        sign = "+" if weight > 0 else "-"
+        lines.append(f"{sign} {feature}")
+    return "\n".join(lines)
+
+
+pc1_text = build_pc_interpretation("PC1")
+pc2_text = build_pc_interpretation("PC2")
+pc3_text = build_pc_interpretation("PC3")
 
 # ==========================
 # COLOR + SHAPE MAPPING
@@ -165,40 +250,83 @@ unique_sessions = df["sessionId"].unique()
 session_color_map = {s: session_to_color(s) for s in unique_sessions}
 colors = df["sessionId"].map(session_color_map).to_numpy()
 
-# marker assignment depends on first-seen order of unique behaviors in the CSV
+# Marker assignment depends on first-seen order of unique behaviors in the CSV
 behavior_marker_map = {b: MARKERS[i % len(MARKERS)] for i, b in enumerate(unique_behaviors)}
+
+# ==========================
+# CLUSTER CENTROIDS (PCA SPACE)
+# ==========================
+centroids_scaled = kmeans.cluster_centers_
+centroids_pca = pca.transform(centroids_scaled)
 
 # ==========================
 # FIGURE LAYOUT
 # ==========================
-fig = plt.figure(figsize=(14, 8))
+fig = plt.figure(figsize=(16, 10))
 
-# Main plot axis (left)
-ax = fig.add_axes([0.07, 0.10, 0.88 - PANEL_WIDTH, 0.83])
+# Left: 3D main plot axis
+ax = fig.add_axes([0.07, 0.10, 0.88 - PANEL_WIDTH, 0.83], projection="3d")
 
-# Right panel axis
+# Right: panel axis
 panel = fig.add_axes([0.07 + (0.88 - PANEL_WIDTH) + 0.02, 0.10, PANEL_WIDTH - 0.04, 0.83])
 panel.set_axis_off()
 
 # ==========================
-# MAIN SCATTER PLOT
+# CLUSTER HULLS (wireframe)
+# ==========================
+cluster_colors = plt.cm.tab10(np.linspace(0, 1, N_CLUSTERS))
+
+for i in range(N_CLUSTERS):
+    points = X_3d[clusters == i]
+    if len(points) < 4:
+        continue
+
+    hull = ConvexHull(points)
+    for simplex in hull.simplices:
+        ax.plot(
+            points[simplex, 0],
+            points[simplex, 1],
+            points[simplex, 2],
+            color=cluster_colors[i],
+            alpha=0.25,
+        )
+
+# ==========================
+# MAIN 3D SCATTER
 # ==========================
 for b in unique_behaviors:
     idx = (behavior_combinations == b).to_numpy()
     ax.scatter(
-        X_2d[idx, 0],
-        X_2d[idx, 1],
+        X_3d[idx, 0],
+        X_3d[idx, 1],
+        X_3d[idx, 2],
         c=list(colors[idx]),
         marker=behavior_marker_map[b],
+        s=45,
         alpha=0.7,
-        edgecolors="k",
-        linewidths=0.6,
+        edgecolors="black",
+        linewidth=0.3,
     )
 
-ax.set_title("Telemetry Clustering (Color=SessionID, Shape=Behavior Combo)")
-ax.set_xlabel("PCA Component 1")
-ax.set_ylabel("PCA Component 2")
-ax.grid(True)
+# Cluster centers
+ax.scatter(
+    centroids_pca[:, 0],
+    centroids_pca[:, 1],
+    centroids_pca[:, 2],
+    c="black",
+    s=200,
+    marker="X",
+    label="Cluster Centers",
+)
+
+ax.set_xlabel(f"PC1 ({explained_variance[0]*100:.1f}%)")
+ax.set_ylabel(f"PC2 ({explained_variance[1]*100:.1f}%)")
+ax.set_zlabel(f"PC3 ({explained_variance[2]*100:.1f}%)")
+
+ax.set_title(
+    "Telemetry Behaviour Clustering (PCA Projection)\n"
+    "Color = Session | Shape = Behavior Configuration"
+)
 
 # ==========================
 # RIGHT PANEL UI
@@ -217,18 +345,15 @@ panel.text(
     weight="bold",
 )
 
-# ---- Two-column behavior layout
-# Column geometry (in axes fraction)
+# Two-column behavior layout
 col1_x_marker, col1_x_text = 0.02, 0.08
 col2_x_marker, col2_x_text = 0.52, 0.58
 
-# Each behavior card is multiline, so step with a larger row height.
 row_h_beh = 0.17
 top_beh = 0.93
 
-# Reserve space below behaviors for sessions; tweak this to push sessions further down.
-# (Higher cutoff => more room for sessions; lower cutoff => more room for behaviors)
-behaviors_bottom_cutoff = 0.40
+# Leave room for sessions + PCA text
+behaviors_bottom_cutoff = 0.44
 
 for i, b in enumerate(unique_behaviors):
     col = i % 2
@@ -241,7 +366,6 @@ for i, b in enumerate(unique_behaviors):
     if y < behaviors_bottom_cutoff:
         break
 
-    # marker sample aligned to the top of the behavior block
     panel.scatter(
         x_marker,
         y - 0.01,
@@ -261,7 +385,6 @@ for i, b in enumerate(unique_behaviors):
         missing_icons.append(b)
         label = label + "\n(no icon)"
 
-    # Clickable text block
     t = panel.text(
         x_text,
         y,
@@ -275,13 +398,12 @@ for i, b in enumerate(unique_behaviors):
     click_targets[t] = ("__behavior__", b, icon_path)
 
 # ==========================
-# Sessions section (moved down + collapsible)
+# Sessions section (collapsible)
 # ==========================
 sessions_expanded = True
 
-# Push sessions down by lowering header_y/top_y; adjust to taste.
-sessions_header_y = 0.30
-sessions_top_y = 0.26
+sessions_header_y = 0.34
+sessions_top_y = 0.30
 row_h_sess = 0.042
 
 sessions_header = panel.text(
@@ -300,7 +422,7 @@ session_row_artists = []
 
 for j, s in enumerate(unique_sessions):
     yy = sessions_top_y - j * row_h_sess
-    if yy < 0.02:
+    if yy < 0.16:
         break
 
     dot = panel.scatter(
@@ -339,6 +461,32 @@ def update_sessions_header():
     fig.canvas.draw_idle()
 
 
+# ==========================
+# PCA INTERPRETATION TEXT BOX (panel bottom)
+# ==========================
+interpretation_text = (
+    "PCA Dimension Interpretation\n\n"
+    f"PC1 ({explained_variance[0]*100:.1f}% variance)\n"
+    f"{pc1_text}\n\n"
+    f"PC2 ({explained_variance[1]*100:.1f}% variance)\n"
+    f"{pc2_text}\n\n"
+    f"PC3 ({explained_variance[2]*100:.1f}% variance)\n"
+    f"{pc3_text}"
+)
+
+panel.text(
+    0.02,
+    0.13,
+    interpretation_text,
+    transform=panel.transAxes,
+    va="top",
+    fontsize=9,
+    bbox=dict(boxstyle="round,pad=0.5", facecolor="white", edgecolor="gray"),
+)
+
+# ==========================
+# PICK HANDLER
+# ==========================
 def on_pick(event):
     global sessions_expanded
     artist = event.artist
