@@ -137,7 +137,6 @@ public class LevelManager : MonoBehaviour
             if (optTiles.Contains(playPos))
             {
                 telemetryManager.OptionalComponentEntered();
-                Debug.Log(playPos);
                 foreach(var component in optComps)
                 {
                     if (component.Contains(playPos))
@@ -196,19 +195,17 @@ public class LevelManager : MonoBehaviour
             rb.angularVelocity = 0f;
         }
         telemetryManager.PlayerDied();
-        telemetryManager.UploadData();
-        //telemetryManager.ResetStats(false);
+        telemetryManager.ResetStats(false);
         finalMaps.Clear();
         foreach(var map in playedMaps)
         {
             finalMaps.Enqueue(map);
         }
-        //finalMaps = playedMaps;
-        Debug.Log("Played maps: " + playedMaps.Count);
-        Debug.Log("Final maps: " + finalMaps.Count);
         playMap = finalMaps.Dequeue();
         FixOptComps(playMap);
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
+        //_player._loadoutState.enabled = true;
+        _player.ResetStats();
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -226,6 +223,7 @@ public class LevelManager : MonoBehaviour
         }
         else {
             playMap = finalMaps.Dequeue();
+            _player.ResetStats();
             mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
             machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
             float[] behaviors = new float[5] {playMap.geoBehavior[0], playMap.furnBehavior[0], playMap.furnBehavior[1], playMap.enemyBehavior[0], playMap.enemyBehavior[1]};

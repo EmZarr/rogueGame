@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     [SerializeField] DamageFlash _flash;
     [SerializeField] Animator _healthAnimator;
     [SerializeField] Animator _powerUpAnimator;
-    [SerializeField] LoadoutState _loadoutState;
+    [SerializeField] public LoadoutState _loadoutState;
     [SerializeField] private Rigidbody2D rb;
 
     Shield _shield;
@@ -149,6 +149,7 @@ public class Player : MonoBehaviour
         {
             OnDied?.Invoke(attacker);
             //Destroy(gameObject);
+            _loadoutState.enabled = false;
             StartCoroutine(RespawnRoutine());
         }
         _ui.updateHealth(_health);
@@ -184,9 +185,10 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         _health = 100;
         _ui.updateHealth(_health);
-
+        ResetStats();
         if (col) col.enabled = true;
         _isRespawning = false;
+        _loadoutState.enabled = true;
     }
 
     public void SetStunning(bool isStunning, float stunDuration)
@@ -339,6 +341,15 @@ public class Player : MonoBehaviour
     public bool IsInvinsible()
     {
         return _isInvinsible;
+    }
+
+    public void ResetStats()
+    {
+        _damageMultiplier = 1.0f;
+        _attackSpeedMultiplier = 1.0f;
+        _moveSpeedMultiplier = 1.0f;
+        _activeTempMultiplier = 1f;
+        HeavyDashCooldownDecrease = 1f;
     }
 
     void CurrentLoadout()

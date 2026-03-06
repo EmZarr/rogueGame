@@ -24,13 +24,13 @@ public class PowerUp : MonoBehaviour
             switch (_boostType)
             {
                 case 0:
-                    _player.IncreaseDamage(0.1f);
+                    _player.IncreaseDamage(0.15f);
                     break;
                 case 1:
-                    _player.IncreaseAttackSpeed(0.1f);
+                    _player.IncreaseAttackSpeed(0.15f);
                     break;
                 case 2:
-                    _player.IncreaseMovespeed(0.05f);
+                    _player.IncreaseMovespeed(0.1f);
                     break;
             }
 
