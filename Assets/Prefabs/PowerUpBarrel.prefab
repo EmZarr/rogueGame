@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_Sprite: {fileID: 21300000, guid: cb7482f8e43e6694ebf80fdfffce591f, type: 3}
-  m_Color: {r: 0.029463595, g: 0.6830188, b: 0, a: 1}
+  m_Color: {r: 0.44028127, g: 0.47563764, b: 0.9622642, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -164,5 +164,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 499488b2c02b3e94b9278e7c9c59c559, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PowerUp
-  _boostType: 0
   _barrelAnimator: {fileID: 8819213042102907505}
