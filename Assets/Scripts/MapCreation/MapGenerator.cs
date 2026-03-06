@@ -814,7 +814,7 @@ public class MapGenerator : MonoBehaviour
                             }
                             if(map.mapArray[x-1, y+2] == 0)
                             {
-                                TrySetWall(map, x-1,y+2, true);
+                                TrySetWall(map, x-1,y+2, false);
                             }
                         }
                         
@@ -839,6 +839,10 @@ public class MapGenerator : MonoBehaviour
                             {
                                 TrySetCorner(map, x, y+1);
                             }
+                        }
+                        if (map.mapArray[x-1,y] == 3 && map.mapArray[x,y+1] == 4 && map.mapArray[x-1, y+1] == 4 && map.mapArray[x-1, y+2] == 3)
+                        {
+                            TrySetCorner(map, x, y+1);
                         }
                     }
                 }

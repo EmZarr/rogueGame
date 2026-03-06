@@ -184,31 +184,33 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
+                        var fixPos = tilemapBase.GetCellCenterWorld(cell);
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[0],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos.x, fixPos.y, fixPos.z),
                                 Quaternion.identity
                             )
                         );
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[1],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos.x, fixPos.y, fixPos.z),
                                 Quaternion.identity
                             )
                         );
+                        
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[2],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos.x-0.1f, fixPos.y-0.1f, fixPos.z),
                                 Quaternion.identity
                             )
                         );
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[3],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos.x, fixPos.y, fixPos.z),
                                 Quaternion.identity
                             )
                         );
@@ -226,31 +228,33 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
+                        var fixPos2 = tilemapBase.GetCellCenterWorld(cell);
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[0],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos2.x, fixPos2.y, fixPos2.z),
                                 Quaternion.identity
                             )
                         );
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[1],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos2.x, fixPos2.y, fixPos2.z),
                                 Quaternion.identity
                             )
                         );
+                        
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[2],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos2.x-0.1f, fixPos2.y-0.1f, fixPos2.z),
                                 Quaternion.identity
                             )
                         );
                         spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[3],
-                                tilemapBase.GetCellCenterWorld(cell),
+                                new Vector3(fixPos2.x, fixPos2.y, fixPos2.z),
                                 Quaternion.identity
                             )
                         );
