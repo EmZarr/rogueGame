@@ -73,7 +73,7 @@ public class MapInstantiator : MonoBehaviour
         ClearPreviousMap();
         int tileIndex;
         //int mapStyle = Random.Range(0,3);
-        int mapStyle = 1;
+        int mapStyle = 2;
         for (int x = 0; x < map.GetLength(0); x++)
         {
             for (int y = 0; y < map.GetLength(1); y++)
@@ -191,6 +191,27 @@ public class MapInstantiator : MonoBehaviour
                                 Quaternion.identity
                             )
                         );
+                        spawnedLoot.Add(
+                            Instantiate(
+                                furnishingPrefabs[1],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        spawnedLoot.Add(
+                            Instantiate(
+                                furnishingPrefabs[2],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        spawnedLoot.Add(
+                            Instantiate(
+                                furnishingPrefabs[3],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
                         break;
                     case 12:
                         switch (mapStyle)
@@ -207,7 +228,28 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedLoot.Add(
                             Instantiate(
+                                furnishingPrefabs[0],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        spawnedLoot.Add(
+                            Instantiate(
                                 furnishingPrefabs[1],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        spawnedLoot.Add(
+                            Instantiate(
+                                furnishingPrefabs[2],
+                                tilemapBase.GetCellCenterWorld(cell),
+                                Quaternion.identity
+                            )
+                        );
+                        spawnedLoot.Add(
+                            Instantiate(
+                                furnishingPrefabs[3],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -228,7 +270,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedObjects.Add(
                             Instantiate(
-                                furnishingPrefabs[2],
+                                furnishingPrefabs[4],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )
@@ -249,7 +291,7 @@ public class MapInstantiator : MonoBehaviour
                         }
                         spawnedLoot.Add(
                             Instantiate(
-                                furnishingPrefabs[3],
+                                furnishingPrefabs[5],
                                 tilemapBase.GetCellCenterWorld(cell),
                                 Quaternion.identity
                             )

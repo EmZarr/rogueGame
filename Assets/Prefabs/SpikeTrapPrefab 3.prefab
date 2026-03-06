@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7530292463250669511}
   - component: {fileID: 175433902047552768}
   m_Layer: 0
-  m_Name: SpikeTrapPrefab
+  m_Name: SpikeTrapPrefab 3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -81,7 +81,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 5
-  m_Sprite: {fileID: 21300000, guid: 7f37afad32065bb4f97f1ba4df519664, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ddb6060354e0d054f9fcb861935df66b, type: 3}
   m_Color: {r: 0.9433962, g: 0.15637752, b: 0.084549636, a: 1}
   m_FlipX: 0
   m_FlipY: 0

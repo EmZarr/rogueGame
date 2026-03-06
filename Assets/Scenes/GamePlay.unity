@@ -985,7 +985,9 @@ MonoBehaviour:
   - {fileID: 7378334077991207350, guid: 90ef62bb5f6b7dc41a05c14905a2b7c1, type: 3}
   furnishingPrefabs:
   - {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
-  - {fileID: 5086782275875845498, guid: ec1788206efa39844adcbd6b83cb961d, type: 3}
+  - {fileID: 5086782275875845498, guid: f72e9067ce93c154dab0e4696bc751e5, type: 3}
+  - {fileID: 5086782275875845498, guid: dc96e9ca3968af74b8b7bb7fba775a52, type: 3}
+  - {fileID: 5086782275875845498, guid: 3b6a584d68eae7349b7377d4c354e96f, type: 3}
   - {fileID: 7478037528052263297, guid: ed534ca038c4da141b60375581a40542, type: 3}
   - {fileID: 7478037528052263297, guid: c82706e725f2f8148bb5e94378943127, type: 3}
   levelManager: {fileID: 1723517302}
