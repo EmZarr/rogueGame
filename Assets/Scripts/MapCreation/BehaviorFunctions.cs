@@ -3,34 +3,19 @@ using UnityEngine;
 using Unity.Mathematics;
 using System;
 
-public class BehaviorFunctions : MonoBehaviour 
+public class BehaviorFunctions : MonoBehaviour
 {
 
     // compute amount of components
-    public static int OpennessByRoomSizeShare(MapInfo map, int resolution)
+    public static int GetComponentCountBehavior(MapInfo map)
     {
-        if (map?.components == null || map.components.Count == 0) return 0;
+        //int componentCount = candidate.mapData.components.Count;
 
-        int totalTiles = 0;
-        List<int> sizes = new();
+        //const int maxComponents = 20;   // max amount of components
 
-        foreach (var c in map.components)
-        {
-            int s = (c.tiles != null) ? c.tiles.Count : 0;
-            if (s <= 0) continue;
-            sizes.Add(s);
-            totalTiles += s;
-        }
-        if (sizes.Count == 0 || totalTiles == 0) return 0;
+        //float normalized = Mathf.Clamp01((componentCount - 1f) / (maxComponents - 1f));
 
-        sizes.Sort((a, b) => b.CompareTo(a)); // descending
-        int k = Mathf.Min(3, sizes.Count);
-        int top = 0;
-        for (int i = 0; i < k; i++) top += sizes[i];
-
-        float topShare = top / (float)totalTiles; // 0..1
-                                                  // Interpret: higher topShare => fewer/larger rooms (more open-feeling)
-        return GetBehaviorRange(resolution, Mathf.Clamp01(topShare));
+        return map.components.Count;
     }
 
     static int GetBehaviorRange(int resolution, double value)
@@ -210,7 +195,7 @@ public class BehaviorFunctions : MonoBehaviour
         foreach (var loot in map.furnishing)
         {
             // fuck spikes
-            if (loot.type == 0 || loot.type == 1)
+            if (loot.type == 11 || loot.type == 12)
                 continue;
 
             var c = MapGenerator.GetComponentForTile(map, loot.placement);
@@ -246,11 +231,10 @@ public class BehaviorFunctions : MonoBehaviour
 
         foreach (var loot in map.furnishing)
         {
-            // keep your exclusions
-            if (loot.type == 0 || loot.type == 1)
+            if (loot.type == 11 || loot.type == 12)
                 continue;
-            if (loot.type == 2) healthCount++;
-            else if (loot.type == 3) powerCount++;
+            if (loot.type == 13) healthCount++;
+            else if (loot.type == 14) powerCount++;
         }
 
         float total = healthCount + powerCount;

@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     [SerializeField] DamageFlash _flash;
     [SerializeField] Animator _healthAnimator;
     [SerializeField] Animator _powerUpAnimator;
-    [SerializeField] public LoadoutState _loadoutState;
+    [SerializeField] LoadoutState _loadoutState;
     [SerializeField] private Rigidbody2D rb;
 
     Shield _shield;
@@ -35,7 +35,7 @@ public class Player : MonoBehaviour
     }
     private void OnDisable()
     {
-        // optional: ensure no �stuck buff� if object is disabled mid-buff
+        // optional: ensure no stuck buff if object is disabled mid-buff
         _tempBuffCo = null;
     }
     private bool _isInvinsible = false;
@@ -65,40 +65,40 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 30f,LayerMask.GetMask("Road"));
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 30f, LayerMask.GetMask("Road"));
         float shortestDistance = 100f;
         foreach (var hit in hits)
         {
             Vector2 closestPoint = hit.ClosestPoint(transform.position);
             float distance = Vector2.Distance(transform.position, closestPoint);
-            if(shortestDistance > distance)
+            if (shortestDistance > distance)
             {
                 shortestDistance = distance;
             }
         }
-        if(shortestDistance < 100f)
+        if (shortestDistance < 100f)
         {
             telemetryManager.DistanceToPath(shortestDistance);
         }
-        
-        Collider2D[] wallHits = Physics2D.OverlapCircleAll(transform.position, 20f,LayerMask.GetMask("Wall"));
+
+        Collider2D[] wallHits = Physics2D.OverlapCircleAll(transform.position, 20f, LayerMask.GetMask("Wall"));
         shortestDistance = 100f;
         foreach (var hit in wallHits)
         {
             Vector2 closestPoint = hit.ClosestPoint(transform.position);
             float distance = Vector2.Distance(transform.position, closestPoint);
-            if(shortestDistance > distance)
+            if (shortestDistance > distance)
             {
                 shortestDistance = distance;
             }
         }
-        if(shortestDistance < 100f)
+        if (shortestDistance < 100f)
         {
             telemetryManager.DistanceToWall(shortestDistance);
         }
-        
 
-        Collider2D[] enemyHits = Physics2D.OverlapCircleAll(transform.position, 20f,LayerMask.GetMask("Enemies"));
+
+        Collider2D[] enemyHits = Physics2D.OverlapCircleAll(transform.position, 20f, LayerMask.GetMask("Enemies"));
         float totalDistance = 0f;
         var counter = 1;
         foreach (var hit in enemyHits)
@@ -106,22 +106,23 @@ public class Player : MonoBehaviour
             float distance = Vector2.Distance(transform.position, hit.transform.position);
             totalDistance += distance;
             counter++;
-            if(shortestDistance > distance)
+            if (shortestDistance > distance)
             {
                 shortestDistance = distance;
             }
         }
-        totalDistance = totalDistance/counter;
-        if(totalDistance > 0)
+        totalDistance = totalDistance / counter;
+        if (totalDistance > 0)
         {
             telemetryManager.DistanceToEnemy(totalDistance);
         }
-        
+
     }
     public void TakeDamage(float damage, GameObject attacker)
     {
-        if (_isInvinsible) {
-            telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType]+=1;
+        if (_isInvinsible)
+        {
+            telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType] += 1;
             return;
         }
 
@@ -133,23 +134,24 @@ public class Player : MonoBehaviour
             if (enemy != null && enemy._data.enemyType != EnemyType.Ranged)
             {
                 enemy.ApplyStun(_parryStunDuration);
-                telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)enemy._data.enemyType]+=1;
+                telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)enemy._data.enemyType] += 1;
             }
             return;
         }
 
         if (_shield.isBlocking && shieldIntercepts)
         {
-            telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType]+=1;
+            telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType] += 1;
             return;
         }
         _flash.Flash();
         _health -= damage;
         if (_health <= 0)
         {
+            rb.linearVelocity = Vector2.zero;
             OnDied?.Invoke(attacker);
+
             //Destroy(gameObject);
-            _loadoutState.enabled = false;
             StartCoroutine(RespawnRoutine());
         }
         _ui.updateHealth(_health);
@@ -163,7 +165,7 @@ public class Player : MonoBehaviour
 
     public void Heal(float health)
     {
-        
+
         _health += health;
         if (_health > 100)
         {
@@ -171,14 +173,15 @@ public class Player : MonoBehaviour
         }
         _healthAnimator.SetTrigger("PickUpHealth");
         _ui.updateHealth(_health);
-        
+
     }
 
     public void TeleportTo(Vector3 worldPos)
     {
         transform.position = worldPos;
     }
-    IEnumerator RespawnRoutine() {
+    IEnumerator RespawnRoutine()
+    {
         _isRespawning = true;
         var col = GetComponent<Collider2D>();
         if (col) col.enabled = false;
@@ -188,7 +191,6 @@ public class Player : MonoBehaviour
         ResetStats();
         if (col) col.enabled = true;
         _isRespawning = false;
-        _loadoutState.enabled = true;
     }
 
     public void SetStunning(bool isStunning, float stunDuration)
@@ -200,7 +202,7 @@ public class Player : MonoBehaviour
     public void SetDealingDamage(bool isDealingdmg, float damageAmount)
     {
         _isDealingDmg = isDealingdmg;
-        _damage = damageAmount*_damageMultiplier;
+        _damage = damageAmount * _damageMultiplier;
     }
 
     public void SetInvinsible(bool isInvinsible)
@@ -276,7 +278,7 @@ public class Player : MonoBehaviour
         while (timer < duration)
         {
             timer += Time.fixedDeltaTime;
-
+            if (_isRespawning) break;
             // override velocity so damping/mass doesn't make it "barely move"
             rb.linearVelocity = dir * speed;
 
@@ -288,7 +290,8 @@ public class Player : MonoBehaviour
     }
 
 
-    public void IncreaseMovespeed(float increase) {
+    public void IncreaseMovespeed(float increase)
+    {
         _powerUpAnimator.SetTrigger("PowerPickUp");
         _moveSpeedMultiplier += increase;
         _loadoutState.SetSpeed(1f);
@@ -335,7 +338,7 @@ public class Player : MonoBehaviour
 
     public void DecreaseHeavyDashCooldown(float percentDecrease)
     {
-        HeavyDashCooldownDecrease -= 0.01f*percentDecrease;
+        HeavyDashCooldownDecrease -= 0.01f * percentDecrease;
     }
 
     public bool IsInvinsible()
@@ -351,15 +354,15 @@ public class Player : MonoBehaviour
         _activeTempMultiplier = 1f;
         HeavyDashCooldownDecrease = 1f;
     }
-
     void CurrentLoadout()
     {
-        
+
     }
 
     public float DamageMultiplier => _damageMultiplier;
     public float AttackSpeedMultiplier => _attackSpeedMultiplier;
-    public float GetMoveSpeed() {
+    public float GetMoveSpeed()
+    {
         return _maxSpeed * _moveSpeedMultiplier;
     }
     public float MovementSpeedMultiplier => _moveSpeedMultiplier;

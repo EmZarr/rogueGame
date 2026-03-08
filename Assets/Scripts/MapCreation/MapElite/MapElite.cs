@@ -16,7 +16,7 @@ public class MapElite : MonoBehaviour
 
 
     [Header("Controls")]
-    public InputActionReference runElites; 
+    public InputActionReference runElites;
     MapGenerator mapGenerator;
 
     private Dictionary<Vector2, MapCandidate> geoArchive = new Dictionary<Vector2, MapCandidate>();
@@ -39,10 +39,10 @@ public class MapElite : MonoBehaviour
         RunMapElitesFurnishing();
         MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
         RunMapElitesEnemies();
-        MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemTestArchive_maps.json");
+        MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
         //RunMapElitesCombined();
         //MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
-        
+
     }
 
 
@@ -79,7 +79,7 @@ public class MapElite : MonoBehaviour
 
             // behavior + fitness
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.OpennessByRoomSizeShare(candidate.mapData, 5),
+                BehaviorFunctions.GetComponentCountBehavior(candidate.mapData),
                 0
             );
 
@@ -150,7 +150,7 @@ public class MapElite : MonoBehaviour
         var sb = new StringBuilder();
         sb.AppendLine("iterations, archive avg enemy fitness, archive avg total fitness, avg delta total fitness, elites total, elites enemFitness above 0.8");
 
-        for (int i = 0; i < totalIterations*2; i++)
+        for (int i = 0; i < totalIterations * 3; i++)
         {
             // Generate candidate
             MapCandidate candidate;
@@ -244,7 +244,7 @@ public class MapElite : MonoBehaviour
             }
 
             // behavior + fitness 
-            candidate.furnBehavior = new Vector2 (BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), BehaviorFunctions.FurnishingBehaviorSafety(candidate.mapData));
+            candidate.furnBehavior = new Vector2(BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), BehaviorFunctions.FurnishingBehaviorSafety(candidate.mapData));
 
             candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate, (1, 6, 0.5f), 0.5f);
 
@@ -323,7 +323,7 @@ public class MapElite : MonoBehaviour
 
             // Behaviors
             candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.OpennessByRoomSizeShare(candidate.mapData, 5),
+                BehaviorFunctions.GetComponentCountBehavior(candidate.mapData),
                 0
             );
 
@@ -390,7 +390,7 @@ public class MapElite : MonoBehaviour
 
 
     MapCandidate GenerateRandomGeometry()
-    {   
+    {
         MapCandidate candidate = new MapCandidate(mapGenerator.MakeMap());
         return candidate;
     }
@@ -446,8 +446,8 @@ public class MapElite : MonoBehaviour
         child.mapData = mapGenerator.mutateGeometry(child.mapData);
         return child;
     }
-    
-     MapCandidate MutateEnemies(MapCandidate parent)
+
+    MapCandidate MutateEnemies(MapCandidate parent)
     {
         var child = new MapCandidate(parent.mapData.Clone());
         child.geoBehavior = new Vector2(parent.geoBehavior.x, parent.geoBehavior.y);
@@ -491,11 +491,8 @@ public class MapCandidate
         geoFitness = 0f;
         enemFitness = 0f;
         furnFitness = 0f;
-        geoBehavior = new Vector2() ;
+        geoBehavior = new Vector2();
         furnBehavior = new Vector2();
         enemyBehavior = new Vector2();
     }
 }
-
-
-

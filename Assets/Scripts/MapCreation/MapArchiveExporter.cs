@@ -17,8 +17,6 @@ public static class MapArchiveExporter
         public int width;
         public int height;
 
-        // tiles[y][x]
-        public List<List<int>> tiles;
 
         // flattened row-major list: length == width * height
         // IMPORTANT: this exporter flattens in (y-major, x-minor) order using mapArray[x,y]
@@ -37,7 +35,7 @@ public static class MapArchiveExporter
 
         // Summary metrics
 
-        public List<Vector2IntList> optionalComponents;  
+        public List<Vector2IntList> optionalComponents;
         public List<Vector2Int> optionalComponentTiles;
         public int roomsCount;
         public int enemiesCount;
@@ -82,23 +80,21 @@ public static class MapArchiveExporter
             HashSet<Vector2Int> optCompTiles = new HashSet<Vector2Int>();
 
             foreach (var component in candidate.mapData.components)
+            {
+                if (!component.onMainPath || component.orderIndex == 0)
                 {
-                    if(!component.onMainPath || component.orderIndex == 0)
+                    foreach (var tile in component.tiles)
                     {
-                        foreach(var tile in component.tiles)
-                        {
-                            optCompTiles.Add(tile);
-                        }
-                        optComp.Add(component.tiles);
+                        optCompTiles.Add(tile);
                     }
+                    optComp.Add(component.tiles);
                 }
-            Debug.Log("are they added? " + optComp.Count);
+            }
 
             var dto = new MapDTO
             {
                 width = width,
                 height = height,
-                tiles = (map.mapArray != null) ? ConvertMapArrayToNestedList(map.mapArray) : new List<List<int>>(),
                 flatTiles = (map.mapArray != null) ? FlattenMapArray(map.mapArray) : new List<int>(),
 
                 // Fitness: combined + slices
@@ -127,7 +123,7 @@ public static class MapArchiveExporter
             collection.maps.Add(dto);
         }
 
-        string json = JsonUtility.ToJson(collection, true);
+        string json = JsonUtility.ToJson(collection, false);
         string path = Path.Combine(Application.dataPath, filename);
         File.WriteAllText(path, json);
 
@@ -146,15 +142,15 @@ public static class MapArchiveExporter
         foreach (var comp in components)
         {
             result.Add(new Vector2IntList { tiles = comp });
-            counter+=comp.Count;
+            counter += comp.Count;
         }
-        Debug.Log("Amount of opt comp tiles counted from components: " + counter);
+        //Debug.Log("Amount of opt comp tiles counted from components: " + counter);
         return result;
     }
 
     private static List<Vector2Int> OptTiles(HashSet<Vector2Int> tiles)
     {
-        Debug.Log("Amount of opt comp tiles counted from tiles: " + tiles.Count);
+        //Debug.Log("Amount of opt comp tiles counted from tiles: " + tiles.Count);
         return new List<Vector2Int>(tiles);
     }
     private static float SafeFloat(float v)
@@ -242,7 +238,6 @@ public static class MapArchiveExporter
     {
         var arr = new int[dto.width, dto.height];
 
-        // Prefer flatTiles if valid
         if (dto.flatTiles != null && dto.flatTiles.Count == dto.width * dto.height)
         {
             int i = 0;
@@ -254,22 +249,6 @@ public static class MapArchiveExporter
                 }
             }
             return arr;
-        }
-
-        // Fallback to nested list
-        if (dto.tiles != null && dto.tiles.Count == dto.height)
-        {
-            for (int y = 0; y < dto.height; y++)
-            {
-                var row = dto.tiles[y];
-                if (row == null) continue;
-
-                int rowCount = Mathf.Min(row.Count, dto.width);
-                for (int x = 0; x < rowCount; x++)
-                {
-                    arr[x, y] = row[x];
-                }
-            }
         }
 
         return arr;

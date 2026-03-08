@@ -56,30 +56,6 @@ public class MapGenerator : MonoBehaviour
         //mapInstantiator.makeMap(currentMap.mapArray);
     }
 
-    MapInfo MutateMap(MapInfo map)
-    {
-        map = mutateGeometry(map);
-        //currentMap = map;
-        //map = PlaceObjects(map);
-        //mapInstantiator.makeMap(map.mapArray);
-        return map;
-    }
-
-    MapInfo MutateContent(MapInfo map)
-    {
-        map = mutateFurnishing(map);
-        //mapInstantiator.makeMap(map.mapArray);
-        return map;
-    }
-
-    MapInfo MutatePlacements(MapInfo map)
-    {
-        //Debug.Log("Min enemes amount: " + map.enemyBudgetMin);
-        map = mutateEnemies(map);
-        //mapInstantiator.makeMap(map.mapArray);
-        return map;
-    }
-
 
     MapInfo makeRoomGeometry(MapInfo map)
     {
@@ -92,7 +68,7 @@ public class MapGenerator : MonoBehaviour
 
         map = buildMapFromComponents(map);
         map = PlaceCorners(map);
-        if (map.shortestPath!= null)
+        if (map.shortestPath != null)
         {
             return SetShortestPathTiles(map);
         }
@@ -136,10 +112,11 @@ public class MapGenerator : MonoBehaviour
 
             if (map.shortestPath == null)
             {
-                Debug.Log("No path found between player start and end!");
+                //Debug.Log("No path found between player start and end!");
             }
-            else {
-                Debug.Log("Totally got path");
+            else
+            {
+                //Debug.Log("Totally got path");
             }
         }
 
@@ -161,7 +138,7 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }*/
-        
+
         /*foreach (var component in map.components) {
             if (component.onMainPath)
             {
@@ -174,7 +151,7 @@ public class MapGenerator : MonoBehaviour
         }*/
         map.enemyBudget = Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
         map.furnishingBudget = furnishingBudget;
-    
+
         return map;
     }
 
@@ -184,10 +161,10 @@ public class MapGenerator : MonoBehaviour
         {
             for (int j = 0; j < pattern.y; j++)
             {
-                map.mapArray[start.x+i, start.y+j] = 1;
+                map.mapArray[start.x + i, start.y + j] = 1;
             }
         }
-        
+
     }
 
     MapInfo placeRandomRoom(MapInfo map)
@@ -198,8 +175,8 @@ public class MapGenerator : MonoBehaviour
         );
 
         Vector2Int roomPlacement = new Vector2Int(
-            UnityEngine.Random.Range(2, mapSize.x - roomSize.x-2),
-            UnityEngine.Random.Range(2, mapSize.y - roomSize.y-2)
+            UnityEngine.Random.Range(2, mapSize.x - roomSize.x - 2),
+            UnityEngine.Random.Range(2, mapSize.y - roomSize.y - 2)
         );
 
         Room room = new Room
@@ -244,7 +221,7 @@ public class MapGenerator : MonoBehaviour
         return map;
     }
 
-    public static int GetComponentEnemyBudget(
+    public static float GetComponentEnemyBudget(
     int lastComponentNumber,   // highest orderIndex on main path
     float size,                // component area in tiles
     int orderIndex,            // 0 = optional room
@@ -312,18 +289,18 @@ public class MapGenerator : MonoBehaviour
         {
             if (c.tiles.Count <= 0)
             {
-                Debug.Log("empty component");
+                //Debug.Log("empty component");
                 continue;
             }
             var componentBudget = GetComponentEnemyBudget(map.mainRoomsAmount, c.tiles.Count, c.orderIndex, map.enemyBudget, c.lootCount);
             componentBudget -= c.enemiesCount;
             if (componentBudget <= 0) continue;
-            int remaining = componentBudget;
+            float remaining = componentBudget;
             int tries = 0;
 
             while (remaining > 0 && tries < 1000)
             {
-                Vector2Int tile = c.tiles[Random.Range(0, c.tiles.Count-1)];
+                Vector2Int tile = c.tiles[Random.Range(0, c.tiles.Count - 1)];
                 if (!occupied.Add(tile)) { tries++; continue; }
                 int enemyType;
                 // If component too small, forbid guardian (type 0)
@@ -341,13 +318,15 @@ public class MapGenerator : MonoBehaviour
                         enemyType = Random.Range(1, amountOfEnemyTypes); // reroll to non-0
                     }
                 }
-                // guardian costs twice
-                int cost = (enemyType == 0) ? 2 : 1;
-                if (cost > remaining)
-                    continue;
+                // guardian costs twice, melee cost half
+                float cost;
+                if (enemyType == 0) cost = 2f;
+                else if (enemyType == 1) cost = 0.5f;
+                else cost = 1f;
+                if (cost > remaining) { tries++; continue; }
                 map.enemies.Add((tile, 40 + enemyType));
                 c.enemiesCount += cost;
-                remaining-=cost;
+                remaining -= cost;
                 tries++;
             }
 
@@ -402,7 +381,7 @@ public class MapGenerator : MonoBehaviour
             int furnishType;
             if (lastPlacedFriendly)
             {
-                furnishType = UnityEngine.Random.Range(0, amountOfFurnishingTypes-2);
+                furnishType = UnityEngine.Random.Range(0, amountOfFurnishingTypes - 2);
                 lastPlacedFriendly = false;
                 c.spikeCount++;
             }
@@ -413,7 +392,7 @@ public class MapGenerator : MonoBehaviour
                 c.lootCount++;
             }
             occupied.Add(pos);
-            map.furnishing.Add((pos, 11+furnishType));
+            map.furnishing.Add((pos, 11 + furnishType));
         }
 
         foreach (var (p, t) in map.furnishing)
@@ -512,7 +491,7 @@ public class MapGenerator : MonoBehaviour
         {
             map = SetShortestPathTiles(map);
         }
-        
+
         // validate existing enemies and furnishing
         //map = ValidateEnemiesAgainstMap(map);
         //map = ValidateFurnishingAgainstMap(map);
@@ -527,7 +506,7 @@ public class MapGenerator : MonoBehaviour
         if (Random.value < 0.20f)
         {
             newBudget = Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
-            additionalToRemove = Mathf.Max((map.enemyBudget-newBudget) / map.enemyBudget, 0f);
+            additionalToRemove = Mathf.Max((float)(map.enemyBudget - newBudget) / map.enemyBudget, 0f);
         }
         else
         {
@@ -544,8 +523,11 @@ public class MapGenerator : MonoBehaviour
             map.mapArray[removed.Item1.x, removed.Item1.y] = 1;
             map.enemies.RemoveAt(index);
             var c = GetComponentForTile(map, removed.placement);
-            int cost = (removed.type == 0) ? 2 : 1;
-            c.enemiesCount = Mathf.Max(0, c.enemiesCount - cost);
+            float cost;
+            if (removed.type == 0) cost = 2f;
+            else if (removed.type == 1) cost = 0.5f;
+            else cost = 1f;
+            c.enemiesCount = Mathf.Max(0f, c.enemiesCount - cost);
         }
         // add replacement
         map = placeEnemies(map);
@@ -618,26 +600,28 @@ public class MapGenerator : MonoBehaviour
             while (x != to.x)
             {
                 SetFloorAndAutoWalls(map, x, y, true);
-                if (to.y > y) {
-                    SetFloorAndAutoWalls(map, x, y+1, true);
+                if (to.y > y)
+                {
+                    SetFloorAndAutoWalls(map, x, y + 1, true);
                 }
                 else
                 {
-                    SetFloorAndAutoWalls(map, x, y-1, true);
+                    SetFloorAndAutoWalls(map, x, y - 1, true);
                 }
                 x += (to.x > x) ? 1 : -1;
-            while (y != to.y)
-            {
-                SetFloorAndAutoWalls(map, x, y, true);
-                if (to.x > x) {
-                    SetFloorAndAutoWalls(map, x+1, y, true);
-                }
-                else
+                while (y != to.y)
                 {
-                    SetFloorAndAutoWalls(map, x-1,y, true);
+                    SetFloorAndAutoWalls(map, x, y, true);
+                    if (to.x > x)
+                    {
+                        SetFloorAndAutoWalls(map, x + 1, y, true);
+                    }
+                    else
+                    {
+                        SetFloorAndAutoWalls(map, x - 1, y, true);
+                    }
+                    y += (to.y > y) ? 1 : -1;
                 }
-                y += (to.y > y) ? 1 : -1;
-            }
             }
         }
         else
@@ -645,24 +629,26 @@ public class MapGenerator : MonoBehaviour
             while (y != to.y)
             {
                 SetFloorAndAutoWalls(map, x, y, true);
-                if (to.x > x) {
-                    SetFloorAndAutoWalls(map, x+1, y, true);
+                if (to.x > x)
+                {
+                    SetFloorAndAutoWalls(map, x + 1, y, true);
                 }
                 else
                 {
-                    SetFloorAndAutoWalls(map, x-1,y, true);
+                    SetFloorAndAutoWalls(map, x - 1, y, true);
                 }
                 y += (to.y > y) ? 1 : -1;
             }
             while (x != to.x)
             {
                 SetFloorAndAutoWalls(map, x, y, true);
-                if (to.y > y) {
-                    SetFloorAndAutoWalls(map, x, y+1, true);
+                if (to.y > y)
+                {
+                    SetFloorAndAutoWalls(map, x, y + 1, true);
                 }
                 else
                 {
-                    SetFloorAndAutoWalls(map, x, y-1, true);
+                    SetFloorAndAutoWalls(map, x, y - 1, true);
                 }
                 x += (to.x > x) ? 1 : -1;
             }
@@ -706,7 +692,7 @@ public class MapGenerator : MonoBehaviour
                 {
                     map.mapArray[x, y] = 1;
                     if (!corridor) map.floorTiles.Add(pos);
-                    else map.corridorTileCount++; 
+                    else map.corridorTileCount++;
                 }
             }
         }
@@ -744,9 +730,9 @@ public class MapGenerator : MonoBehaviour
             {
                 map.mapArray[x, y] = 4;
             }
-            
-        }   
-        
+
+        }
+
     }
 
     MapInfo PlaceCorners(MapInfo map)
@@ -755,94 +741,94 @@ public class MapGenerator : MonoBehaviour
         {
             for (int y = 0; y < map.mapArray.GetLength(1); y++)
             {
-                if (map.mapArray[x,y] != 0 && map.mapArray[x,y] != 3 && map.mapArray[x,y] != 4 && map.mapArray[x,y] != 5)
+                if (map.mapArray[x, y] != 0 && map.mapArray[x, y] != 3 && map.mapArray[x, y] != 4 && map.mapArray[x, y] != 5)
                 {
-                    if (x-1 > 0 && y-1 > 0 && x+2 < mapSize.x && y+2 < mapSize.y)
+                    if (x - 1 > 0 && y - 1 > 0 && x + 2 < mapSize.x && y + 2 < mapSize.y)
                     {
                         //Bottom outward corner
-                        if((map.mapArray[x-1,y] == 3 || map.mapArray[x-1,y] == 4) && (map.mapArray[x,y-1] == 4 || map.mapArray[x,y-1] == 3))
+                        if ((map.mapArray[x - 1, y] == 3 || map.mapArray[x - 1, y] == 4) && (map.mapArray[x, y - 1] == 4 || map.mapArray[x, y - 1] == 3))
                         {
-                            TrySetCorner(map, x-1, y-1);
+                            TrySetCorner(map, x - 1, y - 1);
                         }
 
                         //Top outward corner handled by walls by default
 
                         //Left outward corner
-                        if(map.mapArray[x,y+1] == 4 && map.mapArray[x-1,y] == 3)
+                        if (map.mapArray[x, y + 1] == 4 && map.mapArray[x - 1, y] == 3)
                         {
-                            TrySetWall(map, x-1, y +1, false);
+                            TrySetWall(map, x - 1, y + 1, false);
                         }
 
                         //Left outward corner edge case
-                        if(map.mapArray[x,y+1] == 3 && map.mapArray[x-1,y] == 3)
+                        if (map.mapArray[x, y + 1] == 3 && map.mapArray[x - 1, y] == 3)
                         {
-                            TrySetWall(map, x-1, y +1, false);
+                            TrySetWall(map, x - 1, y + 1, false);
                         }
 
                         //Right outward corner
-                        if(map.mapArray[x,y-1] == 4 && map.mapArray[x+1,y] == 3)
+                        if (map.mapArray[x, y - 1] == 4 && map.mapArray[x + 1, y] == 3)
                         {
-                            TrySetWall(map, x+1, y -1, true);
+                            TrySetWall(map, x + 1, y - 1, true);
                         }
                         //Right outward corner edge case
-                        if(map.mapArray[x,y-1] == 4 && map.mapArray[x+1,y] == 4)
+                        if (map.mapArray[x, y - 1] == 4 && map.mapArray[x + 1, y] == 4)
                         {
-                            TrySetWall(map, x+1, y -1, true);
+                            TrySetWall(map, x + 1, y - 1, true);
                         }
 
                         //Bottom inward corner, should be handled by default
 
                         //Top inward corner
-                        if(map.mapArray[x+1,y] == 1 && map.mapArray[x,y+1] == 1)
-                        {   
-                            
-                            if(map.mapArray[x+1,y+1] == 3 || map.mapArray[x+1,y+1] == 4)
+                        if (map.mapArray[x + 1, y] == 1 && map.mapArray[x, y + 1] == 1)
+                        {
+
+                            if (map.mapArray[x + 1, y + 1] == 3 || map.mapArray[x + 1, y + 1] == 4)
                             {
-                                TrySetCorner(map, x+1, y +1);
+                                TrySetCorner(map, x + 1, y + 1);
                             }
                         }
-                        
+
 
                         //Left inward corner, should be the same as right outward corner if edge
 
                         //Left inward corner when not edge
-                        if((map.mapArray[x-1,y] == 1 || map.mapArray[x-1,y] == 2) && (map.mapArray[x,y+1] == 1 || map.mapArray[x,y+1] == 2))
+                        if ((map.mapArray[x - 1, y] == 1 || map.mapArray[x - 1, y] == 2) && (map.mapArray[x, y + 1] == 1 || map.mapArray[x, y + 1] == 2))
                         {
-                            if(map.mapArray[x-1,y+1] == 3 || map.mapArray[x-1,y+1] == 4)
+                            if (map.mapArray[x - 1, y + 1] == 3 || map.mapArray[x - 1, y + 1] == 4)
                             {
-                                map.mapArray[x-1,y+1] = 31;
+                                map.mapArray[x - 1, y + 1] = 31;
                             }
-                            if(map.mapArray[x-1, y+2] == 0)
+                            if (map.mapArray[x - 1, y + 2] == 0)
                             {
-                                TrySetWall(map, x-1,y+2, false);
+                                TrySetWall(map, x - 1, y + 2, false);
                             }
                         }
-                        
+
                         //Right inward corner
-                        if((map.mapArray[x+1,y] == 1 || map.mapArray[x+1,y] == 2) && (map.mapArray[x,y-1] == 1 || map.mapArray[x,y-1] == 2))
+                        if ((map.mapArray[x + 1, y] == 1 || map.mapArray[x + 1, y] == 2) && (map.mapArray[x, y - 1] == 1 || map.mapArray[x, y - 1] == 2))
+                        {
+                            if (map.mapArray[x + 1, y - 1] == 3 || map.mapArray[x + 1, y - 1] == 4)
                             {
-                                if(map.mapArray[x+1,y-1] == 3 || map.mapArray[x+1,y-1] == 4)
+                                map.mapArray[x + 1, y - 1] = 32;
+                                if (map.mapArray[x + 2, y - 1] == 0)
                                 {
-                                    map.mapArray[x+1,y-1] = 32;
-                                    if(map.mapArray[x+2, y-1] == 0)
-                                    {
-                                        TrySetWall(map, x+2,y-1, true);
-                                    }
-                                    
+                                    TrySetWall(map, x + 2, y - 1, true);
                                 }
+
                             }
+                        }
 
                         //Weird ass edge cases
-                        if ((map.mapArray[x-1,y] == 1 || map.mapArray[x-1,y] == 2) && (map.mapArray[x+1,y] == 1 || map.mapArray[x+1,y] == 2))
+                        if ((map.mapArray[x - 1, y] == 1 || map.mapArray[x - 1, y] == 2) && (map.mapArray[x + 1, y] == 1 || map.mapArray[x + 1, y] == 2))
                         {
-                            if(map.mapArray[x,y+1] == 3 && map.mapArray[x+1,y+1] == 4)
+                            if (map.mapArray[x, y + 1] == 3 && map.mapArray[x + 1, y + 1] == 4)
                             {
-                                TrySetCorner(map, x, y+1);
+                                TrySetCorner(map, x, y + 1);
                             }
                         }
-                        if (map.mapArray[x-1,y] == 3 && map.mapArray[x,y+1] == 4 && map.mapArray[x-1, y+1] == 4 && map.mapArray[x-1, y+2] == 3)
+                        if (map.mapArray[x - 1, y] == 3 && map.mapArray[x, y + 1] == 4 && map.mapArray[x - 1, y + 1] == 4 && map.mapArray[x - 1, y + 2] == 3)
                         {
-                            TrySetCorner(map, x, y+1);
+                            TrySetCorner(map, x, y + 1);
                         }
                     }
                 }
@@ -857,8 +843,9 @@ public class MapGenerator : MonoBehaviour
     {
         if (x < 0 || y < 0 || x >= mapSize.x || y >= mapSize.y)
             return;
-        if (map.mapArray[x,y] != 100 || map.mapArray[x,y] != 1){
-                map.mapArray[x,y] = 5;
+        if (map.mapArray[x, y] != 100 || map.mapArray[x, y] != 1)
+        {
+            map.mapArray[x, y] = 5;
         }
     }
 
@@ -866,11 +853,11 @@ public class MapGenerator : MonoBehaviour
     {
         foreach (var tile in map.shortestPath)
         {
-            if(map.mapArray[tile.x, tile.y] == 1)
+            if (map.mapArray[tile.x, tile.y] == 1)
             {
-                 map.mapArray[tile.x, tile.y] = 2;
+                map.mapArray[tile.x, tile.y] = 2;
             }
-           
+
         }
         return map;
     }
@@ -936,7 +923,7 @@ public class MapGenerator : MonoBehaviour
         return null;
     }
 
-    int     Heuristic(Vector2Int a, Vector2Int b)
+    int Heuristic(Vector2Int a, Vector2Int b)
     {
         // Manhattan distance works well on 4-directional grids
         return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
@@ -1217,7 +1204,7 @@ public class MapInfo
     public Vector2Int? endPos;
     public float distFromPlayerToEnd;
     public List<Vector2Int> shortestPath;
- 
+
     public int enemyBudget;
     public int furnishingBudget;
 
@@ -1295,7 +1282,7 @@ public class FloorComponent
     public int lootCount = 0;
     public int spikeCount = 0;
 
-    public int enemiesCount = 0;
+    public float enemiesCount = 0;
     public bool onMainPath = false;
     public Vector2Int? entryTile;
     public Vector2Int? exitTile;
@@ -1372,4 +1359,3 @@ public struct Pattern
     public Vector2Int size;
     public int[,] patternType;
 }
-
