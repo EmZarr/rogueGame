@@ -20,8 +20,8 @@ public class UI : MonoBehaviour
 
     public void updateBuffs(float attackSpeed, float moveSpeed, float damage)
     {
-        buffsText.text = " ATKSPD: x" + attackSpeed.ToString()
-            + "\n MOVE: x" + moveSpeed.ToString()
-            + "\n DMG : x" + damage.ToString();
+        buffsText.text = " ATTACK SPEED: x" + attackSpeed.ToString()
+            + "\n MOVEMENT SPEED: x" + moveSpeed.ToString()
+            + "\n DAMAGE : x" + damage.ToString();
     }
 }

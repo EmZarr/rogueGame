@@ -9,7 +9,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] TelemetryManager telemetryManager;
     [SerializeField] CircleCollider2D col;
     [SerializeField] SpriteRenderer sprite;
-    [SerializeField] AutoRecorder autoRecorder;
+    //[SerializeField] AutoRecorder autoRecorder;
 
     private StateMachine[] machines;
 
@@ -18,6 +18,9 @@ public class LevelManager : MonoBehaviour
 
     // The exact 8 maps chosen for this run, preserved in order
     public List<MapArchiveExporter.MapDTO> playedMaps;
+
+    //Used to save only the maps we need for build
+    public List<MapArchiveExporter.MapDTO> buildMaps;
 
     float checkTimer;
 
@@ -42,8 +45,8 @@ public class LevelManager : MonoBehaviour
 
     void Awake()
     {
-        if (autoRecorder == null)
-            autoRecorder = FindFirstObjectByType<AutoRecorder>();
+        /*if (autoRecorder == null)
+            autoRecorder = FindFirstObjectByType<AutoRecorder>();*/
         if (mapInstantiator == null)
             mapInstantiator = FindFirstObjectByType<MapInstantiator>();
 
@@ -56,11 +59,12 @@ public class LevelManager : MonoBehaviour
 
     void Start()
     {
-        string path = Path.Combine(Application.streamingAssetsPath, "enemArchive_maps.json");
+        string path = Path.Combine(Application.streamingAssetsPath, "buildMapsArchive.json");
         var archive = MapArchiveExporter.LoadArchiveFromJson(path);
 
         finalMaps = new Queue<MapArchiveExporter.MapDTO>();
         playedMaps = new List<MapArchiveExporter.MapDTO>();
+        buildMaps = new List<MapArchiveExporter.MapDTO>();
 
         BuildLevelLoop(archive.maps);
         RebuildQueueFromPlayedMaps();
@@ -83,7 +87,6 @@ public class LevelManager : MonoBehaviour
             if (optTiles.Contains(playPos))
             {
                 telemetryManager.OptionalComponentEntered();
-                Debug.Log(playPos);
 
                 foreach (var component in optComps)
                 {
@@ -143,14 +146,15 @@ public class LevelManager : MonoBehaviour
 
         telemetryManager.PlayerDied();
         telemetryManager.ResetStats(false);
-        if (autoRecorder != null)
+        /*if (autoRecorder != null)
         {
             autoRecorder.DiscardRecording();
-        }
+        }*/
         // Restart the same chosen 8 maps from the beginning, preserving order
         RebuildQueueFromPlayedMaps();
-        LoadNextMap();
         _player.ResetStats();
+        LoadNextMap();
+        //_player.ResetStats();
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -201,11 +205,11 @@ public class LevelManager : MonoBehaviour
         // ------------------------------------------------------------
         var difficulty2Rules = new List<System.Func<Vector2Int, Vector2Int, Vector2Int, MapArchiveExporter.MapDTO, bool>>
         {
-            (geo, enem, furn, map) => enem.y == 2 && geo.x == 8 && (enem.x == 1) && (furn.x == 4) && (furn.y == 1), // All bombers and ranged
+            (geo, enem, furn, map) => enem.y == 2 && geo.x == 2 && (enem.x == 1) && (furn.x == 4) && (furn.y == 1), // All bombers and ranged
             (geo, enem, furn, map) => geo.x == 3 && enem.y == 2 && (enem.x == 5) && (furn.x == 3) && (furn.y == 1), // ranged and guardian, small
             (geo, enem, furn, map) => geo.x == 19 && enem.y == 2 && (enem.x == 51) && (furn.x == 3) && (furn.y == 2), // mainly melee
-            (geo, enem, furn, map) => geo.x == 69 && enem.y == 2 && (enem.x == 41) && (furn.x == 1) && (furn.y == 2), // Very large map
-            (geo, enem, furn, map) => geo.x == 69 && (enem.y == 2) && (enem.x == 41) && (furn.x == 2) && furn.y == 4, // almost only health
+            (geo, enem, furn, map) => geo.x == 69 && enem.y == 2 && (enem.x == 41) && (furn.x == 2) && (furn.y == 1), // Very large map
+            (geo, enem, furn, map) => geo.x == 31 && (enem.y == 2) && (enem.x == 41) && (furn.x == 2) && furn.y == 4, // almost only health
             (geo, enem, furn, map) => geo.x == 4 && enem.y == 2 && enem.x == 38 && furn.x == 3 && furn.y == 0, // map
             (geo, enem, furn, map) => geo.x == 11 && enem.y == 2 && enem.x == 27 && furn.x == 2 && furn.y == 0, // map
             (geo, enem, furn, map) => geo.x == 12 && enem.y == 2 && enem.x == 31 && furn.x == 3 && furn.y == 2 // map
@@ -236,11 +240,15 @@ public class LevelManager : MonoBehaviour
         }
         Debug.Log($"Intro map behaviors: geo=({introMap.geoBehavior[0]}, {introMap.geoBehavior[1]}), furn=({introMap.furnBehavior[0]}, {introMap.furnBehavior[1]}), enemy=({introMap.enemyBehavior[0]}, {introMap.enemyBehavior[1]})");
         playedMaps.Add(introMap);
+        //buildMaps.Add(introMap);
 
         // Build pools from hand-picked rules
         var difficulty1Pool = BuildPoolFromRules(archiveMaps, difficulty1Rules, "Difficulty 1");
         var difficulty2Pool = BuildPoolFromRules(archiveMaps, difficulty2Rules, "Difficulty 2");
         var difficulty3Pool = BuildPoolFromRules(archiveMaps, difficulty3Rules, "Difficulty 3");
+
+        //Only used for making a smaller archive with build maps to reduce size
+        //MapArchiveExporter.buildMapList(buildMaps, "buildMapsArchive");
 
         // Pick from each pool
         var pickedDiff1 = PickRandomUnique(difficulty1Pool, 1);
@@ -279,8 +287,8 @@ public class LevelManager : MonoBehaviour
             }
 
             pool.Add(map);
+            //buildMaps.Add(map);
         }
-
         return pool;
     }
 
@@ -308,7 +316,6 @@ public class LevelManager : MonoBehaviour
             if (rule(geo, enem, furn, map))
                 return map;
         }
-
         return null;
     }
 
@@ -340,6 +347,7 @@ public class LevelManager : MonoBehaviour
             Debug.LogError("No maps available in finalMaps.");
             return;
         }
+        //_player.ResetStats();
 
         // Preserve order while looping infinitely:
         // take front map, play it, then put it at the back

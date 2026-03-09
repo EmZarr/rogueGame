@@ -186,8 +186,6 @@ public class Player : MonoBehaviour
         var col = GetComponent<Collider2D>();
         if (col) col.enabled = false;
         yield return new WaitForSeconds(0.2f);
-        _health = 100;
-        _ui.updateHealth(_health);
         ResetStats();
         if (col) col.enabled = true;
         _isRespawning = false;
@@ -353,6 +351,10 @@ public class Player : MonoBehaviour
         _moveSpeedMultiplier = 1.0f;
         _activeTempMultiplier = 1f;
         HeavyDashCooldownDecrease = 1f;
+        _loadoutState.SetSpeed(1f);
+        _health = 100;
+        _ui.updateHealth(_health);
+        _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
     }
     void CurrentLoadout()
     {

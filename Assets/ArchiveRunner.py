@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-JSON_FILENAME = "enemArchive_maps.json"
+JSON_FILENAME = "buildMapsArchive.json"
 ICON_DIR = "icons"              # must match the visualizer
 BASE_FONT_SIZE = 18
 BANNER_MARGIN = 8

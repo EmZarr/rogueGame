@@ -1,11 +1,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Animations;
-using UnityEditor.Tilemaps;
+//using UnityEditor.Animations;
+using UnityEngine.Tilemaps;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static UnityEditor.PlayerSettings;
+//using static UnityEditor.PlayerSettings;
 
 
 public class MapGenerator : MonoBehaviour

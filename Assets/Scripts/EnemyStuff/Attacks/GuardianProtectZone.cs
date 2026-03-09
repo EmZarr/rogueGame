@@ -65,6 +65,7 @@ public class GuardianProtectZone : DamageZone
         var projectile = other.GetComponent<Projectile>();
         if (projectile != null && projectile.IsAllied())
         {
+            direction = (_player.transform.position - transform.position).normalized;
             projectile.Reflect(direction);
         }
     }
