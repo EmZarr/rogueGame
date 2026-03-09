@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Mathematics;
 using static UnityEngine.EventSystems.EventTrigger;
-using static UnityEditor.PlayerSettings;
+//using static UnityEditor.PlayerSettings;
 using System.ComponentModel;
 using System;
 

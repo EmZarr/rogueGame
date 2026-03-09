@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
@@ -326,3 +327,4 @@ public class AutoCreateDirectionalClips : EditorWindow
             AssetDatabase.CreateFolder(parent, name);
     }
 }
+#endif

@@ -464,7 +464,20 @@ public class MapInstantiator : MonoBehaviour
                         );
                         break;
                     case 55:
-                        tilemapBase.SetTile(cell, tilesForestBase[0]);
+                        int type2 = Random.Range(0,5);
+                        switch (mapStyle)
+                        {
+                            
+                            case 0:
+                                tilemapBase.SetTile(cell, tilesGroundBase[type2]);
+                                break;
+                            case 1:
+                                tilemapBase.SetTile(cell, tilesFarmBase[type2]);
+                                break;
+                            case 2:
+                                tilemapBase.SetTile(cell, tilesForestBase[type2]);
+                                break;
+                        }
                         break;
                     case 99:
                         tileIndex = Random.Range(0,3);

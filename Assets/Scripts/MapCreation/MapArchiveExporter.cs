@@ -253,4 +253,13 @@ public static class MapArchiveExporter
 
         return arr;
     }
+
+    public static void buildMapList(List<MapDTO> dto, string filename)
+    {
+        var collection = new MapCollection{ maps = dto };
+        string json = JsonUtility.ToJson(collection, false);
+        string path = Path.Combine(Application.dataPath, filename);
+        File.WriteAllText(path, json);
+        Debug.Log($"Archive exported to {path} ({collection.maps.Count} maps)");
+    }
 }

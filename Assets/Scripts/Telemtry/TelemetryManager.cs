@@ -155,9 +155,6 @@ public class TelemetryManager : MonoBehaviour
                        berserkerLightAttacks, berserkerHeavyAttacks, berserkerLightDashes, berserkerHeavyDashes, berserkerDefense,
                        damageTaken);
 
-        Debug.Log("amount of opt rooms total: " + amountOptionalComponentsOnMap);
-        Debug.Log("amount of opt rooms entered: " + optionalComponentsEntered);
-        Debug.Log("% entered: " + optionalComponentsEntered/amountOptionalComponentsOnMap * 100f);
         var telemetryData = new TelemetryData
         {
             sessionId = SystemInfo.deviceUniqueIdentifier,
@@ -242,7 +239,7 @@ public class TelemetryManager : MonoBehaviour
             DamageMultiplier = DamageMultiplier,
             FormChangeCount = formChangeAmount,
             FormChangeCountInCombat = formChangeAmountInCombat,
-            OptionalRoomPercentage = optionalComponentsEntered/amountOptionalComponentsOnMap * 100f,
+            OptionalRoomPercentage = amountOptionalComponentsOnMap != 0? optionalComponentsEntered/amountOptionalComponentsOnMap * 100f : 0,
             AverageDistanceToMainPath = averageDistanceToMainPath/distanceCounterRoad,
             AverageDistanceToWall = averageDistanceToWall/distanceCounterWall,
             AverageDistanceToEnemies = averageDistanceToEnemies/distanceCounterEnemy,

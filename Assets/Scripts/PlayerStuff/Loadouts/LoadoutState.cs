@@ -429,13 +429,36 @@ public class LoadoutState : MonoBehaviour
         Vector3 mouseWorld3 = cam.ScreenToWorldPoint(new Vector3(mouseScreen.x, mouseScreen.y, zDist));
         mouseWorld3.z = transform.position.z; // lock to 2D plane
         mousePos = mouseWorld3;
-
         // Move player
         Vector2 input = move.action.ReadValue<Vector2>();
         if (input.sqrMagnitude > 1f) input.Normalize();
+        bool diagonal = Mathf.Abs(input.x) > 0.01f && Mathf.Abs(input.y) > 0.01f;
+        if (diagonal)
+        {
+            input = new Vector2(input.x,input.y*0.5f);
+            Vector2 targetVel = input * (currentSpeed*1.2f);
+            float rate = (input.sqrMagnitude > 0.0001f) ? accel : decel;
+            vel = Vector2.MoveTowards(vel, targetVel, rate * Time.deltaTime);
+        }
+        else {
         Vector2 targetVel = input * currentSpeed;
         float rate = (input.sqrMagnitude > 0.0001f) ? accel : decel;
         vel = Vector2.MoveTowards(vel, targetVel, rate * Time.deltaTime);
+        }
+        
+        /*Vector2 input = move.action.ReadValue<Vector2>();
+        if (input.sqrMagnitude > 1f) input.Normalize();
+
+        // rotate input for isometric movement
+        Vector2 isoInput = new Vector2(
+            input.x - input.y,
+            input.x + input.y
+        ) * 0.7f; // normalize (1 / sqrt(2))
+
+        Vector2 targetVel = isoInput * currentSpeed;
+
+        float rate = (input.sqrMagnitude > 0.0001f) ? accel : decel;
+        vel = Vector2.MoveTowards(vel, targetVel, rate * Time.deltaTime);*/
 
         //if (!blockedMovement) transform.position += (Vector3)(vel * Time.deltaTime);
         if (showIndicator && (Time.time - dashPressTime) >= heavyDashHoldTime)
