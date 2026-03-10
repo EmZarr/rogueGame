@@ -992,7 +992,6 @@ MonoBehaviour:
   - {fileID: 7478037528052263297, guid: ed534ca038c4da141b60375581a40542, type: 3}
   - {fileID: 7478037528052263297, guid: c82706e725f2f8148bb5e94378943127, type: 3}
   levelManager: {fileID: 1723517302}
-  surroundingsGenerator: {fileID: 859900378}
   telemetryManager: {fileID: 859900376}
 --- !u!156049354 &859900374
 Grid:
@@ -1061,31 +1060,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 859900371}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 427a1faa9df02df4d87b87e1362c57eb, type: 3}
+  m_Script: {fileID: 11500000, guid: 417579ca120fcdf47ab30b085e334c7d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MapSurroundingsGenerator
-  tilemapBase: {fileID: 1048831579}
-  tilemapDecour: {fileID: 720047734}
-  tilesForestBase:
-  - {fileID: 11400000, guid: 399ec6ac6c3fc9a40a70462abf3d45de, type: 2}
-  - {fileID: 11400000, guid: 399ec6ac6c3fc9a40a70462abf3d45de, type: 2}
-  - {fileID: 11400000, guid: 399ec6ac6c3fc9a40a70462abf3d45de, type: 2}
-  - {fileID: 11400000, guid: 399ec6ac6c3fc9a40a70462abf3d45de, type: 2}
-  - {fileID: 11400000, guid: 399ec6ac6c3fc9a40a70462abf3d45de, type: 2}
-  tilesForestDecour:
-  - {fileID: 11400000, guid: 3806d37c2e09b4444a10a491bf63a40f, type: 2}
-  - {fileID: 11400000, guid: 8aa42f6e92c8fc34a9aa12bf62585e74, type: 2}
-  - {fileID: 11400000, guid: 565066d5950e00147814fbf03409c503, type: 2}
-  - {fileID: 11400000, guid: 848647d24b3b6d34e8082d7c8bfe9184, type: 2}
-  - {fileID: 11400000, guid: c417019d296bde6458dc2bcedc0d4d8e, type: 2}
-  treePrefabs:
-  - {fileID: 5860875515225852008, guid: 5f814b7c071adfe44a7320419467c115, type: 3}
-  - {fileID: 7388930950692001412, guid: defe5a0e43d8a35479dcc01027964a1e, type: 3}
-  - {fileID: 6128136744110614528, guid: 197d526bd05980d4ab89e999085a9848, type: 3}
-  padding: 15
-  decorChance: 44
-  treeChance: 61
-  minTreeDistanceFromMap: 4
+  m_EditorClassIdentifier: Assembly-CSharp::PopUpCreator
+  damagePopupPrefab: {fileID: 6576311764399600034, guid: e712766c54d09fa4fa16a6ecd2c0c939, type: 3}
 --- !u!1 &1048831578
 GameObject:
   m_ObjectHideFlags: 0
@@ -1642,6 +1620,10 @@ PrefabInstance:
       propertyPath: buffsText
       value: 
       objectReference: {fileID: 1097705174}
+    - target: {fileID: 5568163985180005485, guid: 83411c4e6c421fe41be59ec74228bde7, type: 3}
+      propertyPath: scoreText
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7353819719099932253, guid: 83411c4e6c421fe41be59ec74228bde7, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 200

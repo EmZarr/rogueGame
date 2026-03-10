@@ -36,6 +36,8 @@ public class Enemy : MonoBehaviour
     public Vector2 WanderWaitRange => _data.wanderWaitRange;
     bool _dead;
 
+    PopUpCreator popup;
+
     private void OnEnable()
     {
         MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
@@ -43,6 +45,7 @@ public class Enemy : MonoBehaviour
         // catch up in case player already spawned
         if (_player == null)
             HandlePlayerSpawned(MapInstantiator.CurrentPlayer);
+        popup = FindFirstObjectByType<PopUpCreator>();
     }
     private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
 
@@ -94,6 +97,7 @@ public class Enemy : MonoBehaviour
         damageFlash.Flash();
         StartCoroutine(animDriver.RunAction(0.25f, Animator.StringToHash("Hurt")));
         _currentHealth -= damage;
+        popup.CreatePopUp(damage, transform.position, 2);
         if (_currentHealth <= 0 && _dying == false) {
             StopAllCoroutines();
             _dying = true;
