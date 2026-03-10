@@ -17,11 +17,15 @@ public class PlayerIndicator : MonoBehaviour
         
     }
 
-    public void Activate(Vector2 direction, float maxDistance)
+    public void Activate(Vector2 direction, Vector2 mousePos, float maxDistance)
     {
 
         Vector2 start = transform.parent.position;
-        Vector2 end = ComputeEnd(start, direction, maxDistance);
+        float disToMouse = Vector2.Distance(start, mousePos);
+        if (disToMouse > maxDistance) { 
+            disToMouse = maxDistance;
+        }
+        Vector2 end = ComputeEnd(start, direction, disToMouse);
         float distance = Vector2.Distance(start, end);
         direction = direction.normalized;
 

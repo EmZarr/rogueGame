@@ -2,11 +2,11 @@
 # ------------------------------------------------------------
 # 3D PCA telemetry plot with a custom right-side panel:
 # - KMeans clustering + PCA (3D)
-# - Color per sessionId (deterministic)
+# - Color per playerId (deterministic)
 # - Marker shape per behavior combination (deterministic by first-seen order)
 # - Right panel has THREE sections:
 #     1) Behaviors (2 columns): marker + named rows; click text to expand icon
-#     2) Sessions (collapsible): click header to expand/collapse sessionId -> color list
+#     2) Sessions (collapsible): click header to expand/collapse playerId -> color list
 #     3) PCA interpretation text box
 #
 # Click behavior text in right panel:
@@ -14,9 +14,9 @@
 #
 # Click a point in the 3D scatter:
 #   -> finds a replay video by matching:
-#        - sessionId
+#        - playerId
 #        - behavior hash
-#        - date+minute from timestamp
+#        - levelPlayID
 #   -> opens a popup with info/icon
 #   -> opens the video in the OS default player if found
 #
@@ -25,11 +25,11 @@
 # - Expects video filename to contain:
 #       session id
 #       behavior hash (same as icon)
-#       date+minute
+#       levelPlayID
 #
 # Example good filename patterns:
-#   session_ABC_behavior_faa7ad14_2026-03-07_14-23.mp4
-#   ABC_behavior_faa7ad14_time_14-23_date_2026-03-07.mp4
+#   session_ABC_behavior_faa7ad14_levelPlayID_LP12345.mp4
+#   ABC_behavior_faa7ad14_LP12345.mp4
 #
 # Icons:
 # - Put behavior icons in ICON_DIR:
@@ -150,90 +150,40 @@ def csv_behavior_tuple(row) -> tuple:
     return (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
 
 
-def normalize_timestamp_for_video_match(value) -> tuple[str | None, str | None]:
-    """
-    Convert timestamp/date into:
-      - date string: YYYY-MM-DD
-      - minute string: HH-MM
-
-    Examples:
-      2026-03-07 14:23:51 -> ("2026-03-07", "14-23")
-      2026/03/07 14:23    -> ("2026-03-07", "14-23")
-
-    Returns (None, None) if parsing fails.
-    """
-    if pd.isna(value):
-        return None, None
-
-    s = str(value).strip()
-    if not s:
-        return None, None
-
-    dt = pd.to_datetime(s, errors="coerce")
-    if pd.notna(dt):
-        return dt.strftime("%Y-%m-%d"), dt.strftime("%H-%M")
-
-    # fallback regex
-    m = re.search(
-        r"(\d{4})[-_/](\d{1,2})[-_/](\d{1,2})[ T](\d{1,2})[:\-](\d{1,2})",
-        s,
-    )
-    if m:
-        yyyy, mm, dd, hh, mi = m.groups()
-        return f"{int(yyyy):04d}-{int(mm):02d}-{int(dd):02d}", f"{int(hh):02d}-{int(mi):02d}"
-
-    return None, None
-
-
+# --- replace build_video_match_tokens with this ---
 def build_video_match_tokens(row) -> dict:
     """
-    Build a set of acceptable filename tokens from the CSV row.
+    Build acceptable filename tokens from the CSV row.
+
+    We now match videos using:
+      - playerId
+      - behavior hash
+      - levelPlayID
     """
-    session_id = str(row["sessionId"])
+    session_id = str(row["playerId"])
     behavior = csv_behavior_tuple(row)
     beh_hash = behavior_hash8(behavior)
 
-    match_date = row.get("match_date", None)
-    match_minute = row.get("match_minute", None)
+    level_play_id = str(row.get("levelPlayID", "")).strip()
 
-    date_tokens = []
-    minute_tokens = []
-    datetime_tokens = []
-
-    if match_date:
-        date_tokens = [
-            match_date,                        # 2026-03-07
-            match_date.replace("-", "_"),      # 2026_03_07
-            match_date.replace("-", ""),       # 20260307
-        ]
-
-    if match_minute:
-        minute_tokens = [
-            match_minute,                      # 14-23
-            match_minute.replace("-", "_"),    # 14_23
-            match_minute.replace("-", ":"),    # 14:23
-            match_minute.replace("-", ""),     # 1423
-        ]
-
-    if match_date and match_minute:
-        yyyyMMdd = match_date.replace("-", "")
-        hhmm = match_minute.replace("-", "")
-        datetime_tokens = [
-            f"{match_date}_{match_minute}",              # 2026-03-07_14-23
-            f"{match_date}_{match_minute.replace('-', '_')}",
-            f"{match_date} {match_minute.replace('-', ':')}",
-            f"{yyyyMMdd}_{hhmm}",                        # 20260307_1423
-            f"{yyyyMMdd}-{hhmm}",                        # 20260307-1423
-            f"{yyyyMMdd}{hhmm}",                         # 202603071423
+    level_tokens = []
+    if level_play_id:
+        # Allow a few common filename-safe variants
+        level_tokens = [
+            level_play_id,
+            level_play_id.replace("-", "_"),
+            level_play_id.replace("_", "-"),
+            level_play_id.replace(" ", "_"),
+            level_play_id.replace(" ", "-"),
         ]
 
     return {
         "session_id": session_id,
         "behavior_hash": beh_hash,
-        "date_tokens": date_tokens,
-        "minute_tokens": minute_tokens,
-        "datetime_tokens": datetime_tokens,
+        "level_play_id": level_play_id,
+        "level_tokens": level_tokens,
     }
+
 
 
 def iter_video_files(root_dir: str):
@@ -249,13 +199,13 @@ def iter_video_files(root_dir: str):
             yield p
 
 
+# --- replace find_video_for_row with this ---
 def find_video_for_row(row) -> str | None:
     """
     Find a replay video whose filename contains:
-      - sessionId
+      - playerId
       - behavior hash
-      - date
-      - minute
+      - levelPlayID
 
     Searches recursively under VIDEO_ROOT_DIR.
 
@@ -266,9 +216,8 @@ def find_video_for_row(row) -> str | None:
 
     session_id = tokens["session_id"]
     behavior_hash = tokens["behavior_hash"]
-    date_tokens = tokens["date_tokens"]
-    minute_tokens = tokens["minute_tokens"]
-    datetime_tokens = tokens["datetime_tokens"]
+    level_play_id = tokens["level_play_id"]
+    level_tokens = tokens["level_tokens"]
 
     candidates = []
 
@@ -282,17 +231,14 @@ def find_video_for_row(row) -> str | None:
 
         score = 0
 
-        if any(tok in name for tok in datetime_tokens):
+        # Exact levelPlayID match gets highest score
+        if level_play_id and level_play_id in name:
             score += 4
+        elif any(tok in name for tok in level_tokens):
+            score += 3
 
-        if any(tok in name for tok in date_tokens):
-            score += 2
-
-        if any(tok in name for tok in minute_tokens):
-            score += 2
-
-        # Require at least date+minute coverage if timestamp info exists
-        if (date_tokens or minute_tokens) and score < 4:
+        # Require levelPlayID coverage when present
+        if level_play_id and score < 3:
             continue
 
         candidates.append((score, p.stat().st_mtime, p))
@@ -342,11 +288,10 @@ def open_session_popup(row, icon_path: str | None, video_path: str | None):
             print(f"Could not load icon: {e}")
 
     text_lines = [
-        f"Session: {row['sessionId']}",
+        f"Session: {row['playerId']}",
         f"Behavior tuple: {behavior}",
         f"Behavior hash: {beh_hash}",
-        f"Date: {row.get('match_date', 'unknown')}",
-        f"Minute: {row.get('match_minute', 'unknown')}",
+        f"levelPlayID: {row.get('levelPlayID', 'unknown')}",
         "",
         f"Video found: {'YES' if video_path else 'NO'}",
         f"Video path: {video_path if video_path else '(no matching file found)'}",
@@ -371,25 +316,12 @@ def open_session_popup(row, icon_path: str | None, video_path: str | None):
 # ==========================
 df = pd.read_csv(CSV_PATH)
 
-if "sessionId" not in df.columns:
-    raise ValueError("CSV must contain a 'sessionId' column.")
+if "playerId" not in df.columns:
+    raise ValueError("CSV must contain a 'playerId' column.")
 
 missing_beh = [c for c in behavior_columns if c not in df.columns]
 if missing_beh:
     raise ValueError(f"Missing behavior columns in CSV: {missing_beh}")
-
-# Keep timestamp/date for replay lookup, but do not feed it into PCA.
-if "timestamp" in df.columns:
-    parsed = df["timestamp"].apply(normalize_timestamp_for_video_match)
-    df["match_date"] = parsed.apply(lambda x: x[0])
-    df["match_minute"] = parsed.apply(lambda x: x[1])
-elif "date" in df.columns:
-    parsed = df["date"].apply(normalize_timestamp_for_video_match)
-    df["match_date"] = parsed.apply(lambda x: x[0])
-    df["match_minute"] = parsed.apply(lambda x: x[1])
-else:
-    df["match_date"] = None
-    df["match_minute"] = None
 
 # Build behavior tuples per row (used for markers + icons)
 behavior_combinations = df.apply(csv_behavior_tuple, axis=1)
@@ -398,12 +330,12 @@ unique_behaviors = behavior_combinations.unique()
 # ==========================
 # SELECT FEATURES (NUMERIC ONLY)
 # ==========================
-excluded = ["sessionId", "timestamp", "date", "match_date", "match_minute"] + behavior_columns
+excluded = ["playerId", "timestamp", "date", "match_date", "match_minute", "levelPlayID"] + behavior_columns
 feature_df = df.drop(columns=excluded, errors="ignore").select_dtypes(include=[np.number])
 
 if feature_df.shape[1] == 0:
     raise ValueError(
-        "No numeric feature columns found after excluding sessionId + behavior columns. "
+        "No numeric feature columns found after excluding playerId + behavior columns. "
         "If you have timestamps/strings, they must be excluded or converted."
     )
 
@@ -501,7 +433,7 @@ pc3_text = build_pc_interpretation("PC3")
 # ==========================
 # COLOR + SHAPE MAPPING
 # ==========================
-unique_sessions = df["sessionId"].unique()
+unique_sessions = df["playerId"].unique()
 session_color_map = {s: session_to_color(s) for s in unique_sessions}
 
 # Marker assignment depends on first-seen order of unique behaviors in the CSV
@@ -556,7 +488,7 @@ for row_idx, row in df.iterrows():
         X_3d[row_idx, 0],
         X_3d[row_idx, 1],
         X_3d[row_idx, 2],
-        c=[session_color_map[row["sessionId"]]],
+        c=[session_color_map[row["playerId"]]],
         marker=behavior_marker_map[b],
         s=45,
         alpha=0.7,
@@ -784,10 +716,9 @@ def on_pick(event):
         else:
             print(
                 "No matching replay found for "
-                f"sessionId={row['sessionId']}, "
+                f"playerId={row['playerId']}, "
                 f"behavior={behavior_hash8(behavior)}, "
-                f"date={row.get('match_date', None)}, "
-                f"minute={row.get('match_minute', None)}"
+                f"levelPlayID={row.get('levelPlayID', None)}"
             )
 
 

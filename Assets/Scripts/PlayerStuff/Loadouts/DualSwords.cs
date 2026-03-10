@@ -12,7 +12,7 @@ public class DualSwords : LoadoutBase
 
     float _heavyDashDamage = 15f;
 
-    float _parryStunDuration = 4f;
+    float _parryStunDuration = 1f;
 
 
     public DualSwords(Player player) : base(player)
@@ -21,7 +21,8 @@ public class DualSwords : LoadoutBase
         //_lightAttackDuration = 0.25f;
         _lightAttackDuration = 0.15f;
         _lightDashCD = 0.5f;
-        _defenseDuration = 0.4f;
+        _defenseDuration = 0.25f;
+        _defCD = 3f;
         _heavyDamage = 10f;
         _heavyAttackDuration = 0.6f;
 
@@ -49,11 +50,11 @@ public class DualSwords : LoadoutBase
         yield return MeleeAttack(direction, _aoeSword, _aoeSwordhitbox, 0f, true);
     }
 
-    public override IEnumerator HeavyDash(Vector2 direction, Transform transform)
+    public override IEnumerator HeavyDash(Vector2 direction, Vector2 mousePos, Transform transform)
     {
         _player.SetDealingDamage(true, _heavyDashDamage);
         _player.SetInvinsible(true);
-        yield return base.HeavyDash(direction, transform);
+        yield return base.HeavyDash(direction, mousePos, transform);
         _player.SetDealingDamage(false, _heavyDashDamage);
         _player.SetInvinsible(false);
     }

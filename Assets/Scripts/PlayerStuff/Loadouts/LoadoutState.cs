@@ -178,7 +178,7 @@ public class LoadoutState : MonoBehaviour
 
                 case ActionType.DashHeavy:
                     SetMovementBlocked(true);
-                    yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(getMouseDir(), transform), ActionType.DashHeavy, "Dash");
+                    yield return RunAction(loadout.GetHeavyDashDuration(), loadout.HeavyDash(getMouseDir(), getMousePos(), transform), ActionType.DashHeavy, "Dash");
                     nextHeavyDashTime = Time.time + loadout.getHeavyDashCD();
                     SetMovementBlocked(false);
                     telemetryManager.HeavyDashCount(loadoutNumber);
@@ -188,9 +188,9 @@ public class LoadoutState : MonoBehaviour
 
                 case ActionType.Defense:
                     doAnimationAnyway = true;
+                    nextDefTime = Time.time + loadout.getDefenseCD();
                     yield return RunAction(loadout.GetDefenseDuration(), loadout.Defense(getMouseDir()), ActionType.Defense, "Defense");
                     doAnimationAnyway = false;
-                    nextDefTime = Time.time + loadout.getDefenseCD();
                     telemetryManager.DefenseCount(loadoutNumber);
                     break;
             }
@@ -463,7 +463,7 @@ public class LoadoutState : MonoBehaviour
         //if (!blockedMovement) transform.position += (Vector3)(vel * Time.deltaTime);
         if (showIndicator && (Time.time - dashPressTime) >= heavyDashHoldTime)
         {
-            indicator.Activate(getMouseDir(), loadout.GetHeavyDashDistance());
+            indicator.Activate(getMouseDir(),getMousePos(), loadout.GetHeavyDashDistance());
         }
         if ((Time.time - attackPressTime) >= heavyAttackHoldTime && attackHeld && !heavyAttackQueuedThisPress)
         {
@@ -505,6 +505,11 @@ public class LoadoutState : MonoBehaviour
         return dir;
     }
 
+    public Vector2 getMousePos()
+    {
+        return mousePos;
+    }
+
     public void SetSpeed(float speedProcent)
     {
         currentSpeed = speedProcent * player.GetMoveSpeed();
@@ -542,5 +547,10 @@ public class LoadoutState : MonoBehaviour
     {
         blockedMovement = blocked;
         if (blocked) vel = Vector2.zero;
+    }
+
+    public void RefundDefCD()
+    {
+        nextDefTime = Time.time;
     }
 }

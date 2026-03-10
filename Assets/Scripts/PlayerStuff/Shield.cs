@@ -10,6 +10,7 @@ public class Shield : MonoBehaviour
     [SerializeField] private SpriteRenderer sr;
     [SerializeField] private Collider2D col;
     [SerializeField] private LoadoutState loadoutState;
+    [SerializeField] private Player player;
 
     TelemetryManager telemetryManager;
 
@@ -56,12 +57,14 @@ public class Shield : MonoBehaviour
         {
             if (!isParrying)
             {
+                player.AddDamageBlocked(projectile.GetDamage());
                 Destroy(other.gameObject);
                 telemetryManager.defenseToEnemy[1, 2]+=1;
             }
             else
             {
                 projectile.Reflect(loadoutState.getMouseDir());
+                loadoutState.RefundDefCD();
                 telemetryManager.defenseToEnemy[2, 2]+=1;
             }
         }
@@ -70,7 +73,8 @@ public class Shield : MonoBehaviour
             var bomb = other.GetComponent<Bomb>();
             if (bomb != null)
             {
-                bomb.Reflect((Vector2)transform.position + (10f*loadoutState.getMouseDir()));
+                bomb.Reflect(loadoutState.getMousePos());
+                loadoutState.RefundDefCD();
                 telemetryManager.defenseToEnemy[2, 3]+=1;
             }
         }

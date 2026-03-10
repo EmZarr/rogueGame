@@ -1,9 +1,11 @@
-using UnityEngine;
-using System.IO;
-using System.Text;
-using System.Globalization;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+using UnityEngine.UIElements;
 
 public class TelemetryManager : MonoBehaviour
 {
@@ -28,6 +30,8 @@ public class TelemetryManager : MonoBehaviour
 
     //1 Bowman, 2 Knight, 3 Berserker
     public int loadOutNumber;
+
+    public string levelPlayID;
 
 
     //1 light, 2 heavy, 3 heavy dash
@@ -142,6 +146,14 @@ public class TelemetryManager : MonoBehaviour
         timerStarted = true;
     }
 
+    public void GenerateRandomLevelID(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        var random = new System.Random();
+        levelPlayID = new string(Enumerable.Range(0, length)
+            .Select(_ => chars[random.Next(chars.Length)]).ToArray());
+    }
+
     public void UploadData()
     {
         timerStarted = false;
@@ -157,7 +169,8 @@ public class TelemetryManager : MonoBehaviour
 
         var telemetryData = new TelemetryData
         {
-            sessionId = SystemInfo.deviceUniqueIdentifier,
+            levelPlayID = levelPlayID,
+            playerId = SystemInfo.deviceUniqueIdentifier,
             timePlayed = timePlayed,
             enemiesKilledPct = eneKilledPerc,
             lootTakenPct = lootGathPerc,
@@ -184,51 +197,51 @@ public class TelemetryManager : MonoBehaviour
             damageTakenRanged = damageTaken[1],
             damageTakenGuardianShield = damageTaken[2],
             damageTakenTraps = damageTaken[3],
-            BowLightAttacksMeleeEnemy = loadoutToEnemy[0,0,0],
-            BowHeavyAttacksMeleeEnemy = loadoutToEnemy[0,1,0],
-            BowHeavyDashesMeleeEnemy = loadoutToEnemy[0,2,0],
-            BowLightAttacksRangedEnemy = loadoutToEnemy[0,0,1],
-            BowHeavyAttacksRangedEnemy = loadoutToEnemy[0,1,1],
-            BowHeavyDashesRangedEnemy = loadoutToEnemy[0,2,1],
-            BowLightAttacksBomberEnemy = loadoutToEnemy[0,0,2],
-            BowHeavyAttacksBomberEnemy = loadoutToEnemy[0,1,2],
-            BowHeavyDashesBomberEnemy = loadoutToEnemy[0,2,2],
-            BowLightAttacksAssassinEnemy = loadoutToEnemy[0,0,3],
-            BowHeavyAttacksAssassinEnemy = loadoutToEnemy[0,1,3],
-            BowHeavyDashesAssassinEnemy = loadoutToEnemy[0,2,3],
-            BowLightAttacksGuardianEnemy = loadoutToEnemy[0,0,4],
-            BowHeavyAttacksGuardianEnemy = loadoutToEnemy[0,1,4],
-            BowHeavyDashesGuardianEnemy = loadoutToEnemy[0,2,4],
-            KnightLightAttacksMeleeEnemy = loadoutToEnemy[1,0,0],
-            KnightHeavyAttacksMeleeEnemy = loadoutToEnemy[1,1,0],
-            KnightHeavyDashesMeleeEnemy = loadoutToEnemy[1,2,0],
-            KnightLightAttacksRangedEnemy = loadoutToEnemy[1,0,1],
-            KnightHeavyAttacksRangedEnemy = loadoutToEnemy[1,1,1],
-            KnightHeavyDashesRangedEnemy = loadoutToEnemy[1,2,1],
-            KnightLightAttacksBomberEnemy = loadoutToEnemy[1,0,2],
-            KnightHeavyAttacksBomberEnemy = loadoutToEnemy[1,1,2],
-            KnightHeavyDashesBomberEnemy = loadoutToEnemy[1,2,2],
-            KnightLightAttacksAssassinEnemy = loadoutToEnemy[1,0,3],
-            KnightHeavyAttacksAssassinEnemy = loadoutToEnemy[1,1,3],
-            KnightHeavyDashesAssassinEnemy = loadoutToEnemy[1,2,3],
-            KnightLightAttacksGuardianEnemy = loadoutToEnemy[1,0,4],
-            KnightHeavyAttacksGuardianEnemy = loadoutToEnemy[1,1,4],
-            KnightHeavyDashesGuardianEnemy = loadoutToEnemy[1,2,4],
-            BerserkerLightAttacksMeleeEnemy = loadoutToEnemy[2,0,0],
-            BerserkerHeavyAttacksMeleeEnemy = loadoutToEnemy[2,1,0],
-            BerserkerHeavyDashesMeleeEnemy = loadoutToEnemy[2,2,0],
-            BerserkerLightAttacksRangedEnemy = loadoutToEnemy[2,0,1],
-            BerserkerHeavyAttacksRangedEnemy = loadoutToEnemy[2,1,1],
-            BerserkerHeavyDashesRangedEnemy = loadoutToEnemy[2,2,1],
-            BerserkerLightAttacksBomberEnemy = loadoutToEnemy[2,0,2],
-            BerserkerHeavyAttacksBomberEnemy = loadoutToEnemy[2,1,2],
-            BerserkerHeavyDashesBomberEnemy = loadoutToEnemy[2,2,2],
-            BerserkerLightAttacksAssassinEnemy = loadoutToEnemy[2,0,3],
-            BerserkerHeavyAttacksAssassinEnemy = loadoutToEnemy[2,1,3],
-            BerserkerHeavyDashesAssassinEnemy = loadoutToEnemy[2,2,3],
-            BerserkerLightAttacksGuardianEnemy = loadoutToEnemy[2,0,4],
-            BerserkerHeavyAttacksGuardianEnemy = loadoutToEnemy[2,1,4],
-            BerserkerHeavyDashesGuardianEnemy = loadoutToEnemy[2,2,4],
+            BowLightAttacksMeleeEnemy = loadoutToEnemy[0, 0, 0],
+            BowHeavyAttacksMeleeEnemy = loadoutToEnemy[0, 1, 0],
+            BowHeavyDashesMeleeEnemy = loadoutToEnemy[0, 2, 0],
+            BowLightAttacksRangedEnemy = loadoutToEnemy[0, 0, 1],
+            BowHeavyAttacksRangedEnemy = loadoutToEnemy[0, 1, 1],
+            BowHeavyDashesRangedEnemy = loadoutToEnemy[0, 2, 1],
+            BowLightAttacksBomberEnemy = loadoutToEnemy[0, 0, 2],
+            BowHeavyAttacksBomberEnemy = loadoutToEnemy[0, 1, 2],
+            BowHeavyDashesBomberEnemy = loadoutToEnemy[0, 2, 2],
+            BowLightAttacksAssassinEnemy = loadoutToEnemy[0, 0, 3],
+            BowHeavyAttacksAssassinEnemy = loadoutToEnemy[0, 1, 3],
+            BowHeavyDashesAssassinEnemy = loadoutToEnemy[0, 2, 3],
+            BowLightAttacksGuardianEnemy = loadoutToEnemy[0, 0, 4],
+            BowHeavyAttacksGuardianEnemy = loadoutToEnemy[0, 1, 4],
+            BowHeavyDashesGuardianEnemy = loadoutToEnemy[0, 2, 4],
+            KnightLightAttacksMeleeEnemy = loadoutToEnemy[1, 0, 0],
+            KnightHeavyAttacksMeleeEnemy = loadoutToEnemy[1, 1, 0],
+            KnightHeavyDashesMeleeEnemy = loadoutToEnemy[1, 2, 0],
+            KnightLightAttacksRangedEnemy = loadoutToEnemy[1, 0, 1],
+            KnightHeavyAttacksRangedEnemy = loadoutToEnemy[1, 1, 1],
+            KnightHeavyDashesRangedEnemy = loadoutToEnemy[1, 2, 1],
+            KnightLightAttacksBomberEnemy = loadoutToEnemy[1, 0, 2],
+            KnightHeavyAttacksBomberEnemy = loadoutToEnemy[1, 1, 2],
+            KnightHeavyDashesBomberEnemy = loadoutToEnemy[1, 2, 2],
+            KnightLightAttacksAssassinEnemy = loadoutToEnemy[1, 0, 3],
+            KnightHeavyAttacksAssassinEnemy = loadoutToEnemy[1, 1, 3],
+            KnightHeavyDashesAssassinEnemy = loadoutToEnemy[1, 2, 3],
+            KnightLightAttacksGuardianEnemy = loadoutToEnemy[1, 0, 4],
+            KnightHeavyAttacksGuardianEnemy = loadoutToEnemy[1, 1, 4],
+            KnightHeavyDashesGuardianEnemy = loadoutToEnemy[1, 2, 4],
+            BerserkerLightAttacksMeleeEnemy = loadoutToEnemy[2, 0, 0],
+            BerserkerHeavyAttacksMeleeEnemy = loadoutToEnemy[2, 1, 0],
+            BerserkerHeavyDashesMeleeEnemy = loadoutToEnemy[2, 2, 0],
+            BerserkerLightAttacksRangedEnemy = loadoutToEnemy[2, 0, 1],
+            BerserkerHeavyAttacksRangedEnemy = loadoutToEnemy[2, 1, 1],
+            BerserkerHeavyDashesRangedEnemy = loadoutToEnemy[2, 2, 1],
+            BerserkerLightAttacksBomberEnemy = loadoutToEnemy[2, 0, 2],
+            BerserkerHeavyAttacksBomberEnemy = loadoutToEnemy[2, 1, 2],
+            BerserkerHeavyDashesBomberEnemy = loadoutToEnemy[2, 2, 2],
+            BerserkerLightAttacksAssassinEnemy = loadoutToEnemy[2, 0, 3],
+            BerserkerHeavyAttacksAssassinEnemy = loadoutToEnemy[2, 1, 3],
+            BerserkerHeavyDashesAssassinEnemy = loadoutToEnemy[2, 2, 3],
+            BerserkerLightAttacksGuardianEnemy = loadoutToEnemy[2, 0, 4],
+            BerserkerHeavyAttacksGuardianEnemy = loadoutToEnemy[2, 1, 4],
+            BerserkerHeavyDashesGuardianEnemy = loadoutToEnemy[2, 2, 4],
             GeometryBehavior = mapBehaviors[0],
             FurnishingBehaviorSpread = mapBehaviors[1],
             FurnishingBehaviorRatio = mapBehaviors[2],
@@ -239,25 +252,25 @@ public class TelemetryManager : MonoBehaviour
             DamageMultiplier = DamageMultiplier,
             FormChangeCount = formChangeAmount,
             FormChangeCountInCombat = formChangeAmountInCombat,
-            OptionalRoomPercentage = amountOptionalComponentsOnMap != 0? optionalComponentsEntered/amountOptionalComponentsOnMap * 100f : 0,
-            AverageDistanceToMainPath = averageDistanceToMainPath/distanceCounterRoad,
-            AverageDistanceToWall = averageDistanceToWall/distanceCounterWall,
-            AverageDistanceToEnemies = averageDistanceToEnemies/distanceCounterEnemy,
-            BowDefenseToMelee = defenseToEnemy[0,0],
-            BowDefenseToRanged = defenseToEnemy[0,1],
-            BowDefenseToBomber = defenseToEnemy[0,2],
-            BowDefenseToAssasssin = defenseToEnemy[0,3],
-            BowDefenseToGuardian = defenseToEnemy[0,4],
-            KnightDefenseToMelee = defenseToEnemy[1,0],
-            KnightDefenseToRanged = defenseToEnemy[1,1],
-            KnightDefenseToBomber = defenseToEnemy[1,2],
-            KnightDefenseToAssasssin = defenseToEnemy[1,3],
-            KnightDefenseToGuardian = defenseToEnemy[1,4],
-            BerserkerDefenseToMelee = defenseToEnemy[2,0],
-            BerserkerDefenseToRanged = defenseToEnemy[2,1],
-            BerserkerDefenseToBomber = defenseToEnemy[2,2],
-            BerserkerDefenseToAssasssin = defenseToEnemy[2,3],
-            BerserkerDefenseToGuardian = defenseToEnemy[2,4]
+            OptionalRoomPercentage = amountOptionalComponentsOnMap != 0 ? optionalComponentsEntered / amountOptionalComponentsOnMap * 100f : 0,
+            AverageDistanceToMainPath = averageDistanceToMainPath / distanceCounterRoad,
+            AverageDistanceToWall = averageDistanceToWall / distanceCounterWall,
+            AverageDistanceToEnemies = averageDistanceToEnemies / distanceCounterEnemy,
+            BowDefenseToMelee = defenseToEnemy[0, 0],
+            BowDefenseToRanged = defenseToEnemy[0, 1],
+            BowDefenseToBomber = defenseToEnemy[0, 2],
+            BowDefenseToAssasssin = defenseToEnemy[0, 3],
+            BowDefenseToGuardian = defenseToEnemy[0, 4],
+            KnightDefenseToMelee = defenseToEnemy[1, 0],
+            KnightDefenseToRanged = defenseToEnemy[1, 1],
+            KnightDefenseToBomber = defenseToEnemy[1, 2],
+            KnightDefenseToAssasssin = defenseToEnemy[1, 3],
+            KnightDefenseToGuardian = defenseToEnemy[1, 4],
+            BerserkerDefenseToMelee = defenseToEnemy[2, 0],
+            BerserkerDefenseToRanged = defenseToEnemy[2, 1],
+            BerserkerDefenseToBomber = defenseToEnemy[2, 2],
+            BerserkerDefenseToAssasssin = defenseToEnemy[2, 3],
+            BerserkerDefenseToGuardian = defenseToEnemy[2, 4]
         };
         telemetrySender.SendTelemetry(telemetryData);
 
@@ -622,7 +635,8 @@ public class TelemetryManager : MonoBehaviour
 [System.Serializable]
 public struct TelemetryData
 {
-    public string sessionId;
+    public string levelPlayID;    
+    public string playerId;
 
     public float timePlayed;
     public float enemiesKilledPct;

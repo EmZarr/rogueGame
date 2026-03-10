@@ -10,6 +10,7 @@ using UnityEditor.Recorder.Input;
 public class AutoRecorder : MonoBehaviour
 {
     [SerializeField] private LevelManager levelManager;
+    [SerializeField] private TelemetryManager telemetryManager;
 
     private RecorderController controller;
     private MovieRecorderSettings movieRecorder;
@@ -55,6 +56,7 @@ public class AutoRecorder : MonoBehaviour
     public void StartMyRecording()
     {
         if (isRecording) return;
+        telemetryManager.GenerateRandomLevelID(10);
 
         currentRecordingPath = BuildOutputPathFromLevelBehavior();
         movieRecorder.OutputFile = currentRecordingPath;
@@ -152,11 +154,10 @@ public class AutoRecorder : MonoBehaviour
         string hash8 = Md5Hex(tupleString).Substring(0, 8);
 
         // Concrete timestamp so we know exactly what file belongs to this recording
-        string timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
 
         return Path.Combine(
             RecordingFolder,
-            $"{SystemInfo.deviceUniqueIdentifier}_behavior_{hash8}_{timestamp}"
+            $"{SystemInfo.deviceUniqueIdentifier}_behavior_{hash8}_{telemetryManager.levelPlayID}"
         );
     }
 
