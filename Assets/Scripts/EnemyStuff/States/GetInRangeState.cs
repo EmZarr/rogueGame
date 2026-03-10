@@ -47,7 +47,7 @@ public class GetInRangeState : BaseState
         if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh)
             return new IdleState(_enemy);
 
-        if (_enemy._data.enemyType == EnemyType.Bomber && _enemy._currentHealth < _enemy._data.health / 2)
+        if (_enemy._data.enemyType == EnemyType.Bomber && _enemy._currentHealth < _enemy._data.health / 4)
         {
             return new SuicideState(_enemy);
         }
