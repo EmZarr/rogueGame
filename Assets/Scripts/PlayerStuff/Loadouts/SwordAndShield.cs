@@ -81,8 +81,8 @@ public class SwordAndShield : LoadoutBase
 
         float ripostDamage = _player.GetDamageBlocked() * 0.5f;
         if (ripostDamage >= 10f) _heavySwordhitbox.Activate(ripostDamage, GetHeavyAttackDuration() - GetHeavyAttackWindup());
-
-    }
+        _player.ResetDamageBlocked();
+        }
 }
 
 

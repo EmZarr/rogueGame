@@ -22,7 +22,7 @@ public class AutoRecorder : MonoBehaviour
     private string currentRecordingPath;
 
     // Folder only
-    private const string RecordingFolder = "/MyRecordings";
+    private const string RecordingFolder = "C:/Users/olive/AIGS/rogueGame/MyRecordings";
 
     void Awake()
     {
@@ -38,11 +38,13 @@ public class AutoRecorder : MonoBehaviour
         movieRecorder.name = "Auto Movie Recorder";
         movieRecorder.Enabled = true;
         movieRecorder.FrameRatePlayback = FrameRatePlayback.Variable;
+        controllerSettings.CapFrameRate = true;
+        controllerSettings.FrameRate = 60;
 
         var input = new GameViewInputSettings
         {
-            OutputWidth = 960,
-            OutputHeight = 540
+            OutputWidth = 1920,
+            OutputHeight = 1080
         };
 
         movieRecorder.ImageInputSettings = input;
