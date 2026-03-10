@@ -36,6 +36,8 @@ public class LevelManager : MonoBehaviour
     bool _hasSpawnPos;
     bool _inCombat = false;
 
+    bool clearedTutorial = false;
+
     private void OnEnable() => MapInstantiator.OnPlayerSpawned += HandlePlayerSpawned;
     private void OnDisable() => MapInstantiator.OnPlayerSpawned -= HandlePlayerSpawned;
 
@@ -347,12 +349,21 @@ public class LevelManager : MonoBehaviour
             Debug.LogError("No maps available in finalMaps.");
             return;
         }
+        //Remove tutorial map from rotation
+        if (finalMaps.Count == 7)
+        {
+            clearedTutorial = true;
+            playedMaps.Remove(playMap);
+        }
         //_player.ResetStats();
 
         // Preserve order while looping infinitely:
         // take front map, play it, then put it at the back
         playMap = finalMaps.Dequeue();
-        finalMaps.Enqueue(playMap);
+        if(finalMaps.Count < 7)
+        {
+            finalMaps.Enqueue(playMap);
+        }
 
         FixOptComps(playMap);
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
