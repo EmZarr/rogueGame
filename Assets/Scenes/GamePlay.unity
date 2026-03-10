@@ -874,6 +874,7 @@ GameObject:
   - component: {fileID: 859900372}
   - component: {fileID: 859900376}
   - component: {fileID: 859900377}
+  - component: {fileID: 859900378}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -1050,6 +1051,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TelemetrySender
   webAppUrl: https://script.google.com/macros/s/AKfycbwX-RyBc_R6W6aqRHl6RIzUF2k-wfylj7r6SGQOCJmK04opkUpb92Zpji3OTEMkRB2A/exec
+--- !u!114 &859900378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 859900371}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 417579ca120fcdf47ab30b085e334c7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PopUpCreator
+  damagePopupPrefab: {fileID: 6576311764399600034, guid: e712766c54d09fa4fa16a6ecd2c0c939, type: 3}
 --- !u!1 &1048831578
 GameObject:
   m_ObjectHideFlags: 0
@@ -1606,6 +1620,10 @@ PrefabInstance:
       propertyPath: buffsText
       value: 
       objectReference: {fileID: 1097705174}
+    - target: {fileID: 5568163985180005485, guid: 83411c4e6c421fe41be59ec74228bde7, type: 3}
+      propertyPath: scoreText
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 7353819719099932253, guid: 83411c4e6c421fe41be59ec74228bde7, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 200
