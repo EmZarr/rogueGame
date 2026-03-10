@@ -31,10 +31,10 @@ public class SuicideState : BaseState
     {
         timer += Time.deltaTime;
 
-        if (timer > 1f && isExploding == false) {
+        if (timer > 0f && isExploding == false) {
             isExploding = true;
             _agent.isStopped = false;
-            _agent.speed = _agent.speed * 2f;
+            _agent.speed = _agent.speed * 2.5f;
         }
         if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh)
             return;

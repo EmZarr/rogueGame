@@ -507,6 +507,7 @@ MonoBehaviour:
   widthAtFront1: 1
   frontProp: _Front
   alphaProp: _Alpha
+  telemetryManager: {fileID: 0}
 --- !u!1 &6661648982398562003
 GameObject:
   m_ObjectHideFlags: 0
@@ -711,6 +712,7 @@ MonoBehaviour:
   widthAtFront1: 1
   frontProp: _Front
   alphaProp: _Alpha
+  telemetryManager: {fileID: 0}
 --- !u!61 &7030468852873650371
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -913,6 +915,7 @@ MonoBehaviour:
   sr: {fileID: 3481338797414314004}
   col: {fileID: 4857567525672572144}
   loadoutState: {fileID: 5298250564863856370}
+  player: {fileID: 0}
 --- !u!50 &4565233139228972871
 Rigidbody2D:
   serializedVersion: 5
@@ -1115,7 +1118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 881bbdd5c674cfe439a579ff8d8e8671, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  _health: 100
+  _health: 150
   _maxSpeed: 8
   _shieldMask:
     serializedVersion: 2
@@ -1125,6 +1128,7 @@ MonoBehaviour:
   _powerUpAnimator: {fileID: 7914691252393384917}
   _loadoutState: {fileID: 5298250564863856370}
   rb: {fileID: 7512121947329450310}
+  closestEnemy: {x: 0, y: 0, z: 0}
   HeavyDashCooldownDecrease: 1
 --- !u!70 &7005813500300224167
 CapsuleCollider2D:
@@ -1446,6 +1450,7 @@ MonoBehaviour:
   widthAtFront1: 9.6
   frontProp: _Front
   alphaProp: _Alpha
+  telemetryManager: {fileID: 0}
 --- !u!58 &6594280310288519999
 CircleCollider2D:
   m_ObjectHideFlags: 0
