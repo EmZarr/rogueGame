@@ -28,6 +28,7 @@ public class GuardianProtectZone : DamageZone
     private void Update()
     {
         _hit = false;
+        healShield(Time.deltaTime * -12f);
         if (_player == null)
         {
             _player = GameObject.FindWithTag("Player");
@@ -150,7 +151,7 @@ public class GuardianProtectZone : DamageZone
         {
             sr.enabled = false;
             col.enabled = false;
-            enemy.ApplyStun(4f);
+            enemy.ApplyStun(2.5f);
         }
     }
 
