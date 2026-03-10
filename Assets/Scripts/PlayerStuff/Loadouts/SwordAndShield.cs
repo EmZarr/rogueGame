@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SwordAndShield : LoadoutBase
@@ -9,9 +10,9 @@ public class SwordAndShield : LoadoutBase
     GameObject _heavySword;
     SwordHitbox _heavySwordhitbox;
 
-    float _stunDuration = 3f;
+    float _stunDuration = 2f;
 
-    float _heavyStunDuration = 5f;
+    float _heavyStunDuration = 3f;
 
     public SwordAndShield(Player player) : base(player)
     {
@@ -28,7 +29,7 @@ public class SwordAndShield : LoadoutBase
         {
             _heavySwordhitbox = _heavySword.GetComponent<SwordHitbox>();
         }
-        _defCD = 0f;
+        _defCD = 4f;
     }
 
     public override IEnumerator LightAttack(Vector2 direction)
@@ -48,11 +49,11 @@ public class SwordAndShield : LoadoutBase
         _player.SetStunning(false, _stunDuration);
     }
 
-    public override IEnumerator HeavyDash(Vector2 direction, Transform transform)
+    public override IEnumerator HeavyDash(Vector2 direction, Vector2 mousePos, Transform transform)
     {
         _player.SetStunning(true, _heavyStunDuration);
         _player.SetInvinsible(true);
-        yield return base.HeavyDash(direction, transform);
+        yield return base.HeavyDash(direction, mousePos, transform);
         _player.SetStunning(false, _heavyStunDuration);
         _player.SetInvinsible(false);
     }
@@ -61,6 +62,26 @@ public class SwordAndShield : LoadoutBase
     {
         _player.SetBlocking(_defenseDuration, direction);
         yield return new WaitForSeconds(_defenseDuration);
+        RipostMeleeAttack(_player.GetMouseDir());
+    }
+
+    private void RipostMeleeAttack(Vector2 dir)
+    {
+        if (_heavySwordhitbox == null) return;
+
+        Vector2 playerPos = _player.transform.position;
+
+        // world-space placement
+        Vector3 pos = playerPos + dir * 4f;
+        pos.z = _heavySword.transform.position.z;
+        _heavySword.transform.position = pos;
+
+        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        _heavySword.transform.rotation = Quaternion.Euler(0f, 0f, angle + 90f);
+
+        float ripostDamage = _player.GetDamageBlocked() * 0.5f;
+        if (ripostDamage >= 10f) _heavySwordhitbox.Activate(ripostDamage, GetHeavyAttackDuration() - GetHeavyAttackWindup());
+
     }
 }
 

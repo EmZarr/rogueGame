@@ -25,11 +25,12 @@ public class Projectile : MonoBehaviour
         attackType = type;
     }
 
-    public void Reflect(Vector2 newDir)
+    public void Reflect(Vector2 newDir, float dmgMulti = 1f)
     {
         _allied = !_allied;
         _dir = newDir.sqrMagnitude > 0.000001f ? newDir.normalized : Vector2.right;
         _speed = 1.5f * _speed;
+        _damage = dmgMulti * _damage;
     }
 
     public bool IsAllied()
@@ -69,4 +70,6 @@ public class Projectile : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+    public float GetDamage() {  return _damage; }
 }

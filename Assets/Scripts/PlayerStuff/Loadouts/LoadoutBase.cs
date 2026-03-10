@@ -75,28 +75,39 @@ public class LoadoutBase
         Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
     }
 
-    public virtual IEnumerator HeavyDash(Vector2 direction, Transform transform)
+    public virtual IEnumerator HeavyDash(Vector2 mouseDir, Vector2 mousePos, Transform transform)
     {
         int playerLayer = LayerMask.NameToLayer("Player");
         int enemyLayer = LayerMask.NameToLayer("Enemies");
         Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, true);
 
-        float baseDuration = 0.2f;
-        float speedMul = _player.GetMoveSpeed() / 8f;
-        float dashDuration = Mathf.Max(0.06f, baseDuration / speedMul);
-
-        direction.Normalize();
+        float dashSpeed = 60f;
 
         Vector3 start = transform.position;
-        Vector3 end = start + (Vector3)(direction * _heavyDashDistance);
+        Vector2 end = mousePos;
 
-        float t = 0f;
-        while (t < 1f)
+        float disToMouse = Vector2.Distance(start, mousePos);
+        if (disToMouse > _heavyDashDistance)
         {
-            t += Time.fixedDeltaTime / dashDuration;
+            end = start + (Vector3)(mouseDir.normalized * _heavyDashDistance);
+        }
+
+        float distance = Vector2.Distance(start, end);
+        float dashDuration = distance / dashSpeed;
+
+        float elapsed = 0f;
+
+        while (elapsed < dashDuration)
+        {
+            elapsed += Time.fixedDeltaTime;
+            float t = elapsed / dashDuration;
+
             rb.MovePosition(Vector3.Lerp(start, end, t));
             yield return new WaitForFixedUpdate();
         }
+
+        rb.MovePosition(end);
+
         Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, false);
     }
 

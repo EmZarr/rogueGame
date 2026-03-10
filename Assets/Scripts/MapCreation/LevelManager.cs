@@ -9,7 +9,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] TelemetryManager telemetryManager;
     [SerializeField] CircleCollider2D col;
     [SerializeField] SpriteRenderer sprite;
-    //[SerializeField] AutoRecorder autoRecorder;
+    [SerializeField] AutoRecorder autoRecorder;
 
     private StateMachine[] machines;
 
@@ -45,8 +45,8 @@ public class LevelManager : MonoBehaviour
 
     void Awake()
     {
-        /*if (autoRecorder == null)
-            autoRecorder = FindFirstObjectByType<AutoRecorder>();*/
+        if (autoRecorder == null)
+            autoRecorder = FindFirstObjectByType<AutoRecorder>();
         if (mapInstantiator == null)
             mapInstantiator = FindFirstObjectByType<MapInstantiator>();
 
@@ -205,7 +205,7 @@ public class LevelManager : MonoBehaviour
         // ------------------------------------------------------------
         var difficulty2Rules = new List<System.Func<Vector2Int, Vector2Int, Vector2Int, MapArchiveExporter.MapDTO, bool>>
         {
-            (geo, enem, furn, map) => enem.y == 2 && geo.x == 2 && (enem.x == 1) && (furn.x == 4) && (furn.y == 1), // All bombers and ranged
+            //(geo, enem, furn, map) => enem.y == 2 && geo.x == 2 && (enem.x == 1) && (furn.x == 4) && (furn.y == 1), // All bombers and ranged
             (geo, enem, furn, map) => geo.x == 3 && enem.y == 2 && (enem.x == 5) && (furn.x == 3) && (furn.y == 1), // ranged and guardian, small
             (geo, enem, furn, map) => geo.x == 19 && enem.y == 2 && (enem.x == 51) && (furn.x == 3) && (furn.y == 2), // mainly melee
             (geo, enem, furn, map) => geo.x == 69 && enem.y == 2 && (enem.x == 41) && (furn.x == 2) && (furn.y == 1), // Very large map

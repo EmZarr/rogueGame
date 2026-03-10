@@ -62,7 +62,7 @@ public class TwoCrossbow : LoadoutBase {
         yield return base.LightDash(direction, transform, mousePos);
     }
 
-    public override IEnumerator HeavyDash(Vector2 direction, Transform transform)
+    public override IEnumerator HeavyDash(Vector2 direction, Vector2 mousePos, Transform transform)
     {
 
         Vector2 origin = transform.position;
