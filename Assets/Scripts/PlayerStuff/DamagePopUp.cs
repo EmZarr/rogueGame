@@ -9,7 +9,7 @@ public class DamagePopup : MonoBehaviour
 
     float moveSpeed = 3f;
     float fadeSpeed = 3f;
-    float lifetime = 1f;
+    float lifetime = 1.5f;
 
     Color textColor;
 
@@ -18,11 +18,31 @@ public class DamagePopup : MonoBehaviour
         textMesh = GetComponent<TextMeshPro>();
     }
 
-    public void Setup(float damage)
+    public void Setup(float damage, int type)
     {
+        switch (type)
+        {
+            //player damage
+            case 1:
+                textMesh.color = Color.red;
+                damage = -damage;
+                break;
+            //enemy damage
+            case 2:
+                textMesh.color = Color.red;
+                break;
+            //player heal
+            case 3:
+                textMesh.color = Color.green;
+                break;
+            //player buff
+            case 4:
+                textMesh.color = Color.white;
+                break;
+
+        }
         textMesh.SetText(damage.ToString());
         textColor = textMesh.color;
-        Debug.Log(damage.ToString());
     }
 
     void Update()

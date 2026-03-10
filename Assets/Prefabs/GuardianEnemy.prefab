@@ -522,8 +522,9 @@ MonoBehaviour:
   sr: {fileID: 854464616306054891}
   col: {fileID: 2211602437275344301}
   knockBackDistance: 4
-  maxHealth: 50
-  healRate: 5
+  telemetryManager: {fileID: 0}
+  maxHealth: 150
+  healRate: 15
   enemy: {fileID: 9205621224563281077}
   _damageFlash: {fileID: 3947441216186497570}
 --- !u!114 &3947441216186497570

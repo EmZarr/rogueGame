@@ -93,9 +93,11 @@ public class TwoCrossbow : LoadoutBase {
                 t += Time.deltaTime / dashDuration;
                 transform.position = Vector3.Lerp(start, end, t);
                 counter += Time.deltaTime/dashDuration;
+                var attackDirection = _player.closestEnemy - transform.position;
                 if (counter > 0.2f)
                 {
-                    yield return LightAttackAttack(-direction, 2);
+                    yield return LightAttackAttack((Vector2) attackDirection, 2);
+                    yield return LightAttackAttack((Vector2) attackDirection, 2);
                     counter = 0f;
                 }
                 

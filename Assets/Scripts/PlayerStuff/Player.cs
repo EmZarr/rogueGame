@@ -26,6 +26,8 @@ public class Player : MonoBehaviour
     public event Action<GameObject /*killer*/> OnDied;
     public static Player Instance { get; private set; }
 
+    public Vector3 closestEnemy;
+
     private void Awake()
     {
         Instance = this;
@@ -112,6 +114,7 @@ public class Player : MonoBehaviour
             if (shortestDistance > distance)
             {
                 shortestDistance = distance;
+                closestEnemy = hit.transform.position;
             }
         }
         totalDistance = totalDistance / counter;
@@ -149,7 +152,7 @@ public class Player : MonoBehaviour
         }
         _flash.Flash();
         _health -= damage;
-        popup.CreatePopUp(damage, transform.position);
+        popup.CreatePopUp(damage, transform.position, 1);
         if (_health <= 0)
         {
             rb.linearVelocity = Vector2.zero;
@@ -174,6 +177,11 @@ public class Player : MonoBehaviour
         if (_health > 100)
         {
             _health = 100;
+            popup.CreatePopUp(0, transform.position, 3);
+        }
+        else
+        {
+            popup.CreatePopUp(health, transform.position, 3);
         }
         _healthAnimator.SetTrigger("PickUpHealth");
         _ui.updateHealth(_health);
@@ -297,18 +305,21 @@ public class Player : MonoBehaviour
         _powerUpAnimator.SetTrigger("PowerPickUp");
         _moveSpeedMultiplier += increase;
         _loadoutState.SetSpeed(1f);
+        popup.CreatePopUp(increase, transform.position, 4);
         _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
     }
     public void IncreaseAttackSpeed(float increase)
     {
         _powerUpAnimator.SetTrigger("PowerPickUp");
         _attackSpeedMultiplier += increase;
+        popup.CreatePopUp(increase, transform.position, 4);
         _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
     }
     public void IncreaseDamage(float increase)
     {
         _powerUpAnimator.SetTrigger("PowerPickUp");
         _damageMultiplier += increase;
+        popup.CreatePopUp(increase, transform.position, 4);
         _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
     }
 
