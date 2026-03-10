@@ -185,14 +185,14 @@ public class MapInstantiator : MonoBehaviour
                                 break;
                         }
                         var fixPos = tilemapBase.GetCellCenterWorld(cell);
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[0],
                                 new Vector3(fixPos.x, fixPos.y, fixPos.z),
                                 Quaternion.identity
                             )
                         );
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[1],
                                 new Vector3(fixPos.x, fixPos.y, fixPos.z),
@@ -200,14 +200,14 @@ public class MapInstantiator : MonoBehaviour
                             )
                         );
                         
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[2],
                                 new Vector3(fixPos.x-0.1f, fixPos.y-0.1f, fixPos.z),
                                 Quaternion.identity
                             )
                         );
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[3],
                                 new Vector3(fixPos.x, fixPos.y, fixPos.z),
@@ -229,14 +229,14 @@ public class MapInstantiator : MonoBehaviour
                                 break;
                         }
                         var fixPos2 = tilemapBase.GetCellCenterWorld(cell);
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[0],
                                 new Vector3(fixPos2.x, fixPos2.y, fixPos2.z),
                                 Quaternion.identity
                             )
                         );
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[1],
                                 new Vector3(fixPos2.x, fixPos2.y, fixPos2.z),
@@ -244,14 +244,14 @@ public class MapInstantiator : MonoBehaviour
                             )
                         );
                         
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[2],
                                 new Vector3(fixPos2.x-0.1f, fixPos2.y-0.1f, fixPos2.z),
                                 Quaternion.identity
                             )
                         );
-                        spawnedLoot.Add(
+                        spawnedObjects.Add(
                             Instantiate(
                                 furnishingPrefabs[3],
                                 new Vector3(fixPos2.x, fixPos2.y, fixPos2.z),
@@ -272,7 +272,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedObjects.Add(
+                        spawnedLoot.Add(
                             Instantiate(
                                 furnishingPrefabs[4],
                                 tilemapBase.GetCellCenterWorld(cell),

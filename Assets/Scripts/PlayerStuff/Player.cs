@@ -20,6 +20,8 @@ public class Player : MonoBehaviour
     float _score = 0;
 
     TelemetryManager telemetryManager;
+
+    PopUpCreator popup;
     private Coroutine _tempBuffCo;
     public event Action<GameObject /*killer*/> OnDied;
     public static Player Instance { get; private set; }
@@ -61,6 +63,7 @@ public class Player : MonoBehaviour
         _ui = FindAnyObjectByType<UI>();
         _shield = GetComponentInChildren<Shield>();
         telemetryManager = FindFirstObjectByType<TelemetryManager>();
+        popup = FindFirstObjectByType<PopUpCreator>();
     }
 
     void Update()
@@ -146,6 +149,7 @@ public class Player : MonoBehaviour
         }
         _flash.Flash();
         _health -= damage;
+        popup.CreatePopUp(damage, transform.position);
         if (_health <= 0)
         {
             rb.linearVelocity = Vector2.zero;
