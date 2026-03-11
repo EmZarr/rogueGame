@@ -489,6 +489,8 @@ public class TelemetryManager : MonoBehaviour
         {
             playerDeaths = 0;
         }
+        averageEnemiesAliveOnLootPickup = 0;
+        powerUpsTaken = 0;
         totalEnemies = 0;
         totalLoot = 0;
         lootTaken = 0;
