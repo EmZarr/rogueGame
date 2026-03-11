@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.AI;
@@ -12,6 +13,10 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float maxDashLenght;
     [SerializeField] private float dashCooldown = 3.0f;
     [SerializeField] private DamageFlash damageFlash;
+    [SerializeField] private Collider2D enemyCollider;
+    private readonly RaycastHit2D[] _hits = new RaycastHit2D[8];
+
+    public bool dashAttacking = false;
 
     [SerializeField] private EnemyAnimDriver animDriver;
 
@@ -165,32 +170,36 @@ public class Enemy : MonoBehaviour
         StartCoroutine(KnockbackRoutine(direction, distance));
     }
 
-    private IEnumerator KnockbackRoutine(Vector3 direction, float distance)
+    private IEnumerator KnockbackRoutine(Vector2 direction, float distance)
     {
+        if (_data.enemyType == EnemyType.Guardian) yield break;
         _agent.enabled = false;
+        dashAttacking = false;
+        bool hitWall = false;
         float dashDuration = 0.25f;
+        Vector2 start = transform.position;
+        Vector2 dir = direction.normalized;
+        Vector2 end = start + dir * distance;
 
-        Vector3 start = transform.position;
-        Vector3 end = start + (Vector3)(direction * distance);
+        int wallMask = LayerMask.GetMask("Wall");
 
-        NavMeshHit hit;
-        if (NavMesh.Raycast(start, end, out hit, NavMesh.AllAreas))
+        RaycastHit2D hit = Physics2D.Raycast(start, dir, distance, wallMask);
+        if (hit.collider != null)
         {
-            end = hit.position;
+            end = hit.point - direction * 0.1f;
+            hitWall = true;
         }
 
         float t = 0f;
-
         while (t < 1f)
         {
             t += Time.deltaTime / dashDuration;
-            transform.position = Vector3.Lerp(start, end, t);
-            yield return null; // wait one frame
+            transform.position = Vector2.Lerp(start, end, t);
+            yield return null;
         }
 
+        if (hitWall) TakeDamage(10f);
         _agent.enabled = true;
-        //transform.position = end; // snap cleanly at the end
-   
     }
 
     public void Dash()
@@ -205,69 +214,76 @@ public class Enemy : MonoBehaviour
         _agent.isStopped = true;
         _agent.enabled = false;
 
-        float dashDistance = 0f;
         float dashDuration = 0.15f;
+        float bestDistanceFromPlayer = 0f;
 
-        var direction = (Vector2)(transform.position - _player.transform.position);
-        var baseDirection = direction.normalized;
-        var finalEnd = Vector3.zero;
+        Vector2 origin = transform.position;
+        Vector2 awayFromPlayer = (origin - (Vector2)_player.transform.position).normalized;
+        Vector2 bestEnd = origin;
 
-        direction.Normalize();
-        Vector2 start = (Vector2)transform.position;
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useLayerMask = true;
+        filter.layerMask = LayerMask.GetMask("Wall", "Spike");
+        filter.useTriggers = true; // include trigger spikes if needed
 
-        start = start + direction * 1.5f;
-        Vector2 end = start + (direction * maxDashLenght);
+        float skin = 0.15f;
 
         for (int i = 0; i < 360; i++)
         {
-            direction = ((Vector2)(Quaternion.Euler(0, 0, i) * baseDirection)).normalized;
-            start = (Vector2)transform.position + direction * 0.01f;
-            end = (Vector2)transform.position + (direction * maxDashLenght);
-            int mask = LayerMask.GetMask("Wall");
+            Vector2 direction = Rotate(awayFromPlayer, i).normalized ;
 
-            RaycastHit2D hit = Physics2D.Raycast(
-                start,
-                direction,
-                maxDashLenght,
-                mask
-            );
+            int count = enemyCollider.Cast(direction, filter, _hits, maxDashLenght);
 
-            if (hit.collider != null)
+            float allowedDistance = maxDashLenght;
+            if (count > 0)
             {
-                end = hit.point - direction * 0.1f;
+                allowedDistance = Mathf.Max(0f, _hits[0].distance - skin);
             }
-            var distance = Vector2.Distance((Vector2)_player.transform.position, end);
-            if (distance > dashDistance)
+
+            Vector2 candidateEnd = origin + direction * allowedDistance;
+
+            float distanceFromPlayer = Vector2.Distance((Vector2)_player.transform.position, candidateEnd);
+
+            if (distanceFromPlayer > bestDistanceFromPlayer)
             {
-                dashDistance = distance;
-                finalEnd = (Vector3)end;
+                bestDistanceFromPlayer = distanceFromPlayer;
+                bestEnd = candidateEnd;
             }
         }
-        start = transform.position;
-        end = finalEnd;
 
-        if (Vector2.Distance((Vector2)transform.position, end) < 4.0f)
+        if (Vector2.Distance(origin, bestEnd) < 2f)
         {
-            _agent.enabled = true;
-            _nextDashTime = Time.time;
-        }
-        else
-        {
-
-            float t = 0f;
-            while (t < 1f)
-            {
-                t += Time.deltaTime / dashDuration;
-                transform.position = Vector3.Lerp(start, end, t);
-                yield return null;
-            }
-            //transform.position = end;
-            _agent.Warp(transform.position);
             _agent.enabled = true;
             _agent.isStopped = false;
-
+            _nextDashTime = Time.time;
+            yield break;
         }
 
+        float elapsed = 0f;
+        while (elapsed < dashDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / dashDuration);
+            transform.position = Vector2.Lerp(origin, bestEnd, t);
+            yield return null;
+        }
+
+        transform.position = bestEnd;
+        _agent.enabled = true;
+        _agent.Warp(transform.position);
+        _agent.isStopped = false;
+    }
+
+    private Vector2 Rotate(Vector2 v, float degrees)
+    {
+        float radians = degrees * Mathf.Deg2Rad;
+        float sin = Mathf.Sin(radians);
+        float cos = Mathf.Cos(radians);
+
+        return new Vector2(
+            v.x * cos - v.y * sin,
+            v.x * sin + v.y * cos
+        );
     }
 
 

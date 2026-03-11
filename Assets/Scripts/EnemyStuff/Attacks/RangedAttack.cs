@@ -17,7 +17,7 @@ public class RangedAttack : IAttack
     protected override IEnumerator BasicAttack()
     {
         Vector3 dir = (_player.transform.position - transform.position).normalized;
-        Vector3 spawnPos = transform.position + dir * 0.5f;
+        Vector3 spawnPos = transform.position + dir * 1f;
         var proj = Instantiate(_projectilePrefab, spawnPos, Quaternion.identity);
         proj.SetInstigator(gameObject);
         proj.Init(_damage, dir, false, 4);

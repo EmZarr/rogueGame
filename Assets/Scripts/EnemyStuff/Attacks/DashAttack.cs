@@ -7,6 +7,7 @@ public class DashAttack : IAttack, ICancelableAttack
     [SerializeField] private DamageZone damageZone;
     [SerializeField] private LayerMask wallMask;
     [SerializeField] private float wallSkin = 0.05f;
+    [SerializeField] private Enemy enemy;
 
     /*protected override IEnumerator SpecialAttack() {
         // Windup, make attack, wind down
@@ -46,8 +47,9 @@ public class DashAttack : IAttack, ICancelableAttack
         // Finish windup without tracking
         yield return new WaitForSeconds(_attackDelay - trackTime);
 
+        enemy.dashAttacking = true;
         yield return StartCoroutine(DashThrough(-damageZone.transform.up ,0.2f, 20f));
-
+        enemy.dashAttacking = false;
         // Opening
         GetComponentInParent<Enemy>().ApplyStun(2f);
     }
