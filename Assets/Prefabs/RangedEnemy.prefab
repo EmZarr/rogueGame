@@ -108,6 +108,7 @@ GameObject:
   - component: {fileID: 7590729806695015962}
   - component: {fileID: 7661527120654252044}
   - component: {fileID: 7067305895996137203}
+  - component: {fileID: 4610077302717868616}
   m_Layer: 3
   m_Name: RangedEnemy
   m_TagString: Enemy
@@ -186,6 +187,7 @@ MonoBehaviour:
   maxDashLenght: 5
   dashCooldown: 3
   damageFlash: {fileID: 7067305895996137203}
+  enemyCollider: {fileID: 6647700377313793458}
   animDriver: {fileID: 4657217420798431053}
   _currentHealth: 0
   attacking: 0
@@ -345,3 +347,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageFlash
   spriteRenderer: {fileID: 7661527120654252044}
+--- !u!50 &4610077302717868616
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7378334077991207350}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
