@@ -108,6 +108,7 @@ GameObject:
   - component: {fileID: 6602417515676336701}
   - component: {fileID: 2844506159985133278}
   - component: {fileID: 8852339247010875897}
+  - component: {fileID: 5471991951449292690}
   m_Layer: 3
   m_Name: GuardianEnemy
   m_TagString: Enemy
@@ -187,6 +188,7 @@ MonoBehaviour:
   maxDashLenght: 0
   dashCooldown: 3
   damageFlash: {fileID: 8852339247010875897}
+  enemyCollider: {fileID: 6647700377313793458}
   animDriver: {fileID: 2588431901809034450}
   _currentHealth: 0
   attacking: 0
@@ -345,6 +347,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DamageFlash
   spriteRenderer: {fileID: 2844506159985133278}
+--- !u!50 &5471991951449292690
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7378334077991207350}
+  m_BodyType: 1
+  m_Simulated: 1
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 0
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!1 &8867156919391814894
 GameObject:
   m_ObjectHideFlags: 0

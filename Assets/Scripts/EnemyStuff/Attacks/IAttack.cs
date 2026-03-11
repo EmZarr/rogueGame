@@ -47,7 +47,8 @@ public abstract class IAttack : MonoBehaviour
 
         if (IsReady())
         {
-
+            // Double logic since isReady needs to be false while attacking
+            _nextReadyTime = Time.time + _attackSpeed;
             yield return BasicAttack();
             yield return _anim.RunAction(_attackSpeed, Animator.StringToHash("Attack"));
             _nextReadyTime = Time.time + _attackSpeed;

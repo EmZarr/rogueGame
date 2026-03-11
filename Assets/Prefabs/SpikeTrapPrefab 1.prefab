@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7530292463250669511}
   - component: {fileID: 175433902047552768}
   - component: {fileID: 2956134630558595426}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: SpikeTrapPrefab 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -167,9 +167,9 @@ NavMeshObstacle:
   m_Enabled: 1
   serializedVersion: 3
   m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.1}
+  m_Extents: {x: 0.475, y: 0.4, z: 0.1}
   m_MoveThreshold: 0.1
-  m_Carve: 0
+  m_Carve: 1
   m_CarveOnlyStationary: 1
-  m_Center: {x: 0.17, y: 0.33, z: 0}
+  m_Center: {x: 0.1, y: 0.2, z: 0}
   m_TimeToStationary: 0.5
