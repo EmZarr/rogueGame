@@ -21,7 +21,7 @@ public class TwoCrossbow : LoadoutBase {
         {
             _knockBackHitBox = _knockBack.GetComponent<KnockBackDefense>();
         }
-        _lightDamage = 10f;
+        _lightDamage = 7.5f;
         _defenseDuration = 0.2f;
         _lightAttackDuration = 0.3f;
     }
@@ -36,13 +36,13 @@ public class TwoCrossbow : LoadoutBase {
     public IEnumerator LightAttackAttack(Vector2 direction, int type)
     {
 
-        GameObject arrowObj = UnityEngine.GameObject.Instantiate(ArrowProjectile, _player.transform.position, Quaternion.identity);
+        GameObject arrowObj = UnityEngine.GameObject.Instantiate(ArrowProjectile, (Vector2)_player.transform.position + 1f*_player.GetMouseDir(), Quaternion.identity);
         var _arrowRenderer = arrowObj.GetComponent<SpriteRenderer>();
         var _arrowCollider = arrowObj.GetComponent<Collider2D>();
         _arrowRenderer.enabled = true;
         _arrowCollider.enabled = true;
         var arrow = arrowObj.GetComponent<Projectile>();
-        arrow.Init(getLightDamage(), direction, true, type);
+        arrow.Init(getLightDamage(), _player.GetMouseDir(), true, type);
         yield return null;
     }
 
