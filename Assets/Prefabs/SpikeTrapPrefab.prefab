@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 6411068157435617285}
   - component: {fileID: 7530292463250669511}
   - component: {fileID: 175433902047552768}
-  - component: {fileID: 3331833411372726557}
-  m_Layer: 0
+  - component: {fileID: 5142692202010717385}
+  m_Layer: 12
   m_Name: SpikeTrapPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -157,7 +157,7 @@ PolygonCollider2D:
       - {x: 0.030656397, y: 0.03651142}
       - {x: 0.28883946, y: 0.065359235}
   m_UseDelaunayMesh: 0
---- !u!208 &3331833411372726557
+--- !u!208 &5142692202010717385
 NavMeshObstacle:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -167,9 +167,9 @@ NavMeshObstacle:
   m_Enabled: 1
   serializedVersion: 3
   m_Shape: 1
-  m_Extents: {x: 0.5, y: 0.5, z: 0.1}
+  m_Extents: {x: 0.4, y: 0.35, z: 0.1}
   m_MoveThreshold: 0.1
-  m_Carve: 0
+  m_Carve: 1
   m_CarveOnlyStationary: 1
-  m_Center: {x: 0.17, y: 0.09, z: 0}
+  m_Center: {x: 0.1, y: 0.1, z: 0}
   m_TimeToStationary: 0.5
