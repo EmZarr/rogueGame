@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Collections;
 
 public class LevelManager : MonoBehaviour
 {
@@ -47,8 +48,8 @@ public class LevelManager : MonoBehaviour
 
     void Awake()
     {
-        /*if (autoRecorder == null)
-            autoRecorder = FindFirstObjectByType<AutoRecorder>();*/
+        if (autoRecorder == null)
+            autoRecorder = FindFirstObjectByType<AutoRecorder>();
         if (mapInstantiator == null)
             mapInstantiator = FindFirstObjectByType<MapInstantiator>();
 
@@ -115,7 +116,6 @@ public class LevelManager : MonoBehaviour
         }
 
         if (anyInCombat == _inCombat) return;
-
         _inCombat = anyInCombat;
         sprite.enabled = !_inCombat;
         col.enabled = !_inCombat;
@@ -155,6 +155,7 @@ public class LevelManager : MonoBehaviour
         // Restart the same chosen 8 maps from the beginning, preserving order
         RebuildQueueFromPlayedMaps();
         _player.ResetStats();
+        _player.ResetScore();
         LoadNextMap();
         //_player.ResetStats();
     }
@@ -353,10 +354,11 @@ public class LevelManager : MonoBehaviour
             return;
         }
         //Remove tutorial map from rotation
-        if (finalMaps.Count == 7)
+        if (finalMaps.Count == 7 && !clearedTutorial)
         {
             clearedTutorial = true;
             playedMaps.Remove(playMap);
+            //Debug.Log("here");
         }
         //_player.ResetStats();
 
@@ -371,7 +373,8 @@ public class LevelManager : MonoBehaviour
         FixOptComps(playMap);
         mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
 
-        machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
+        StartCoroutine(WaitForEnemies());
+        
 
         float[] behaviors = new float[5]
         {
@@ -381,9 +384,14 @@ public class LevelManager : MonoBehaviour
             playMap.enemyBehavior[0],
             playMap.enemyBehavior[1]
         };
-
         telemetryManager.SetBehavior(behaviors);
         telemetryManager.SetTotalAmountOfOptionalComponents(playMap.optionalComponents.Count);
+    }
+
+    IEnumerator WaitForEnemies()
+    {
+        yield return new WaitForSeconds(1.5f);
+        machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
     }
 
     static void Shuffle<T>(IList<T> list)

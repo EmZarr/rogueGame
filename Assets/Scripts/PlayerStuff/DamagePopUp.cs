@@ -20,32 +20,12 @@ public class DamagePopup : MonoBehaviour
 
     public void Setup(float damage, int type)
     {
-        switch (type)
+        if (type == 1)
         {
-            //player damage
-            case 1:
-                textMesh.color = Color.red;
-                damage = -damage;
-                break;
-            //enemy damage
-            case 2:
-                textMesh.color = Color.red;
-                break;
-            //player heal
-            case 3:
-                textMesh.color = Color.green;
-                break;
-            //player buff
-            case 4:
-                textMesh.color = Color.white;
-                break;
-            //score increase
-            case 5:
-                textMesh.color = Color.yellow;
-                break;
-
+            damage = -damage;
+            textMesh.SetText(damage.ToString());
         }
-        if (type == 5)
+        else if (type == 5)
         {
             textMesh.SetText("+" + damage.ToString());
         }
@@ -53,7 +33,6 @@ public class DamagePopup : MonoBehaviour
         {
             textMesh.SetText(damage.ToString());
         }
-        textColor = textMesh.color;
     }
 
     void Update()

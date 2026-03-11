@@ -58,7 +58,6 @@ public class Player : MonoBehaviour
 
     private float _parryStunDuration = 1f;
 
-
     bool _isRespawning;
 
     private void Start()
@@ -107,6 +106,7 @@ public class Player : MonoBehaviour
         Collider2D[] enemyHits = Physics2D.OverlapCircleAll(transform.position, 20f, LayerMask.GetMask("Enemies"));
         float totalDistance = 0f;
         var counter = 1;
+        shortestDistance = 100f;
         foreach (var hit in enemyHits)
         {
             float distance = Vector2.Distance(transform.position, hit.transform.position);
@@ -400,6 +400,13 @@ public class Player : MonoBehaviour
         _health = 150;
         _ui.updateHealth(_health);
         _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
+
+    }
+
+    public void ResetScore()
+    {
+        _score = 0;
+        _ui.updateScore(_score);
     }
     public float DamageMultiplier => _damageMultiplier;
     public float AttackSpeedMultiplier => _attackSpeedMultiplier;

@@ -1233,6 +1233,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PopUpCreator
   damagePopupPrefab: {fileID: 6576311764399600034, guid: e712766c54d09fa4fa16a6ecd2c0c939, type: 3}
+  healthPopupPrefab: {fileID: 6576311764399600034, guid: f73022cd3a75bac44810c61bbfe3513c, type: 3}
+  powerUpPopupPrefab: {fileID: 6576311764399600034, guid: 50f3d9af9adc7344ab9b9edc067034de, type: 3}
+  scorePopupPrefab: {fileID: 6576311764399600034, guid: a7600f88145c1404fac517483061301f, type: 3}
 --- !u!114 &859900379
 MonoBehaviour:
   m_ObjectHideFlags: 0

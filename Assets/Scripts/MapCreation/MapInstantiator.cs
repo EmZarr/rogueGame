@@ -66,6 +66,9 @@ public class MapInstantiator : MonoBehaviour
 
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
+    private List<(GameObject, Vector3)> enemiesToSpawn = new List<(GameObject, Vector3)>();
+
+
     void Start()
     {
         telemetryManager = FindAnyObjectByType<TelemetryManager>();
@@ -380,9 +383,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedEnemies.Add(
-                            Instantiate(enemyPrefabs[0], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity)
-                        );
+                        enemiesToSpawn.Add((enemyPrefabs[0], tilemapBase.GetCellCenterWorld(cell)));
                         telemetryManager.IncreaseTotalMapScore(20);
                         break;
                     case 41:
@@ -398,13 +399,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[1],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
+                        enemiesToSpawn.Add((enemyPrefabs[1], tilemapBase.GetCellCenterWorld(cell)));
                         telemetryManager.IncreaseTotalMapScore(30);
                         break;
                     case 42:
@@ -420,13 +415,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[2],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
+                        enemiesToSpawn.Add((enemyPrefabs[2], tilemapBase.GetCellCenterWorld(cell)));
                         telemetryManager.IncreaseTotalMapScore(30);
                         break;
                     case 43:
@@ -442,13 +431,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[3],
-                               tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
+                        enemiesToSpawn.Add((enemyPrefabs[3], tilemapBase.GetCellCenterWorld(cell)));
                         telemetryManager.IncreaseTotalMapScore(30);
                         break;
                     case 44:
@@ -464,13 +447,7 @@ public class MapInstantiator : MonoBehaviour
                                 tilemapBase.SetTile(cell, tilesForestBase[0]);
                                 break;
                         }
-                        spawnedEnemies.Add(
-                            Instantiate(
-                                enemyPrefabs[4],
-                                tilemapBase.GetCellCenterWorld(cell),
-                                Quaternion.identity
-                            )
-                        );
+                        enemiesToSpawn.Add((enemyPrefabs[4], tilemapBase.GetCellCenterWorld(cell)));
                         telemetryManager.IncreaseTotalMapScore(50);
                         break;
                     case 55:
@@ -549,7 +526,7 @@ public class MapInstantiator : MonoBehaviour
         {
             telemetryManager = GetComponent<TelemetryManager>();
         }
-        telemetryManager.SetTotalEnemies(spawnedEnemies.Count);
+        
         telemetryManager.SetTotalLoot(spawnedLoot.Count);
         StartCoroutine(BuildNavmeshNextFrame());
         telemetryManager.StartTimer();
@@ -560,6 +537,16 @@ public class MapInstantiator : MonoBehaviour
         
         yield return null; // need to wait a frame for the tilemaps to update
         surface.BuildNavMesh();
+        spawnEnemies();
+    }
+
+    void spawnEnemies()
+    {
+        foreach (var (enemy, pos) in enemiesToSpawn)
+        {
+            spawnedEnemies.Add(Instantiate(enemy, pos, Quaternion.identity));
+        }
+        telemetryManager.SetTotalEnemies(spawnedEnemies.Count);
     }
 
     void ClearPreviousMap()
@@ -580,9 +567,11 @@ public class MapInstantiator : MonoBehaviour
             if (go != null)
                 Destroy(go);
         }
+
         spawnedObjects.Clear();
         spawnedEnemies.Clear();
         spawnedLoot.Clear();
+        enemiesToSpawn.Clear();
 
         tilemapWall.ClearAllTiles();
         tilemapBase.ClearAllTiles();
