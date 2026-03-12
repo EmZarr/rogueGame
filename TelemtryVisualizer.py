@@ -1,6 +1,7 @@
 # TelemetryVisualizer.py
 # ------------------------------------------------------------
 # 3D PCA telemetry plot with a custom right-side panel:
+# - Optional pre-filtering of rows and features
 # - KMeans clustering + PCA (3D)
 # - Color per playerId (deterministic)
 # - Marker shape per behavior combination (deterministic by first-seen order)
@@ -23,7 +24,7 @@
 # Video lookup:
 # - Searches recursively under VIDEO_ROOT_DIR
 # - Expects video filename to contain:
-#       session id
+#       playerId
 #       behavior hash (same as icon)
 #       levelPlayID
 #
@@ -38,7 +39,6 @@
 # ------------------------------------------------------------
 
 import os
-import re
 import sys
 import hashlib
 import subprocess
@@ -79,7 +79,7 @@ behavior_columns = [
 # behavior tuple is: (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
 # geo_y is forced to 0 to match your icon generator.
 BEHAVIOR_FIELDS = [
-    ("Room Amount Tier", 0, 10),
+    ("Room Amount Tier", 0, 100),
     ("Loot on Main Ratio", 2, 5),
     ("Loot Health Ratio", 3, 5),
     ("Enemy Encounter Type", 4, 126),
@@ -88,6 +88,52 @@ BEHAVIOR_FIELDS = [
 
 MARKERS = ["o", "s", "^", "D", "P", "X", "*", "v", "<", ">"]
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"}
+
+# ==========================
+# FILTER CONFIG
+# ==========================
+# Leave lists empty / None to disable a filter.
+
+# Player filtering
+INCLUDE_PLAYER_IDS = ["e967dc9b7177e4abf497f68b06561fcdd3fb0ebd"]   # example: ["player_001", "player_007"]
+EXCLUDE_PLAYER_IDS = []   # example: ["test_player"]
+
+# Feature filtering
+# If INCLUDE_FEATURES is not None, only these numeric columns are kept
+# after standard exclusions.
+INCLUDE_FEATURES = None
+# example:
+# INCLUDE_FEATURES = ["CombatTime", "LootCollected", "RoomCount"]
+
+EXCLUDE_FEATURES = ["TotalScore"]
+# example:
+# EXCLUDE_FEATURES = ["DebugValue", "TempMetric"]
+
+# Per-behavior-column filtering
+# Each entry supports:
+#   "include": keep only these values
+#   "exclude": remove these values
+#
+# Example:
+# BEHAVIOR_FILTERS = {
+#     "GeometryBehavior": {"include": [1, 2, 3]},
+#     "EnemyBehaviorDifficulty": {"exclude": [0]},
+# }
+# intro level
+BEHAVIOR_FILTERS = {
+     "GeometryBehavior": {"exclude": [1]}, 
+    }
+
+
+# Exact canonical behavior tuple filtering
+# canonical tuple format:
+#   (GeometryBehavior, 0, FurnishingBehaviorSpread, FurnishingBehaviorRatio,
+#    EnemyBehaviorRatio, EnemyBehaviorDifficulty)
+INCLUDE_BEHAVIOR_TUPLES = []
+EXCLUDE_BEHAVIOR_TUPLES = []
+# example:
+# INCLUDE_BEHAVIOR_TUPLES = [(2, 0, 1, 3, 4, 2)]
+# EXCLUDE_BEHAVIOR_TUPLES = [(5, 0, 2, 4, 9, 3)]
 
 
 # ==========================
@@ -150,6 +196,129 @@ def csv_behavior_tuple(row) -> tuple:
     return (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
 
 
+def apply_filters(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Apply row-level filtering:
+      - playerId include/exclude
+      - per behavior-column include/exclude
+      - exact behavior tuple include/exclude
+    """
+    filtered = df.copy()
+    original_rows = len(filtered)
+
+    # ---- playerId filters
+    if INCLUDE_PLAYER_IDS:
+        include_ids = {str(x) for x in INCLUDE_PLAYER_IDS}
+        filtered = filtered[filtered["playerId"].astype(str).isin(include_ids)]
+
+    if EXCLUDE_PLAYER_IDS:
+        exclude_ids = {str(x) for x in EXCLUDE_PLAYER_IDS}
+        filtered = filtered[~filtered["playerId"].astype(str).isin(exclude_ids)]
+
+    # ---- per behavior column filters
+    for col, rules in BEHAVIOR_FILTERS.items():
+        if col not in filtered.columns:
+            raise ValueError(f"Behavior filter column not found in CSV: {col}")
+
+        if not isinstance(rules, dict):
+            raise ValueError(f"Behavior filter for {col} must be a dict with include/exclude keys.")
+
+        include_vals = rules.get("include")
+        exclude_vals = rules.get("exclude")
+
+        if include_vals:
+            include_vals = set(include_vals)
+            filtered = filtered[filtered[col].isin(include_vals)]
+
+        if exclude_vals:
+            exclude_vals = set(exclude_vals)
+            filtered = filtered[~filtered[col].isin(exclude_vals)]
+
+    # ---- exact behavior tuple filters
+    if INCLUDE_BEHAVIOR_TUPLES or EXCLUDE_BEHAVIOR_TUPLES:
+        filtered = filtered.copy()
+        filtered["_behavior_tuple"] = filtered.apply(csv_behavior_tuple, axis=1)
+
+        if INCLUDE_BEHAVIOR_TUPLES:
+            include_tuples = {tuple(x) for x in INCLUDE_BEHAVIOR_TUPLES}
+            filtered = filtered[filtered["_behavior_tuple"].isin(include_tuples)]
+
+        if EXCLUDE_BEHAVIOR_TUPLES:
+            exclude_tuples = {tuple(x) for x in EXCLUDE_BEHAVIOR_TUPLES}
+            filtered = filtered[~filtered["_behavior_tuple"].isin(exclude_tuples)]
+
+        filtered = filtered.drop(columns=["_behavior_tuple"])
+
+    if filtered.empty:
+        raise ValueError(
+            "All rows were filtered out. Adjust INCLUDE/EXCLUDE_PLAYER_IDS, "
+            "BEHAVIOR_FILTERS, or INCLUDE/EXCLUDE_BEHAVIOR_TUPLES."
+        )
+
+    print("\n==============================")
+    print("FILTER SUMMARY")
+    print("==============================")
+    print(f"Rows before filtering: {original_rows}")
+    print(f"Rows after filtering:  {len(filtered)}")
+    print(f"Rows removed:          {original_rows - len(filtered)}")
+
+    if INCLUDE_PLAYER_IDS:
+        print(f"Included playerIds: {INCLUDE_PLAYER_IDS}")
+    if EXCLUDE_PLAYER_IDS:
+        print(f"Excluded playerIds: {EXCLUDE_PLAYER_IDS}")
+    if BEHAVIOR_FILTERS:
+        print(f"Behavior filters: {BEHAVIOR_FILTERS}")
+    if INCLUDE_BEHAVIOR_TUPLES:
+        print(f"Included exact behavior tuples: {INCLUDE_BEHAVIOR_TUPLES}")
+    if EXCLUDE_BEHAVIOR_TUPLES:
+        print(f"Excluded exact behavior tuples: {EXCLUDE_BEHAVIOR_TUPLES}")
+
+    return filtered.reset_index(drop=True)
+
+
+def select_feature_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Select numeric feature columns after applying config-level feature filters.
+    """
+    excluded = [
+        "playerId",
+        "timestamp",
+        "date",
+        "match_date",
+        "match_minute",
+        "levelPlayID",
+        "Cluster",
+    ] + behavior_columns
+
+    feature_df = df.drop(columns=excluded, errors="ignore").select_dtypes(include=[np.number])
+
+    # Optional explicit include list
+    if INCLUDE_FEATURES is not None:
+        missing = [c for c in INCLUDE_FEATURES if c not in feature_df.columns]
+        if missing:
+            raise ValueError(f"INCLUDE_FEATURES contains columns not available as numeric features: {missing}")
+        feature_df = feature_df[INCLUDE_FEATURES]
+
+    # Optional explicit exclude list
+    if EXCLUDE_FEATURES:
+        feature_df = feature_df.drop(columns=EXCLUDE_FEATURES, errors="ignore")
+
+    if feature_df.shape[1] == 0:
+        raise ValueError(
+            "No numeric feature columns found after filtering. "
+            "Check INCLUDE_FEATURES / EXCLUDE_FEATURES and your CSV schema."
+        )
+
+    print("\n==============================")
+    print("FEATURE SELECTION")
+    print("==============================")
+    print(f"Using {feature_df.shape[1]} numeric feature columns for clustering.")
+    for col in feature_df.columns:
+        print(f"  - {col}")
+
+    return feature_df
+
+
 # --- replace build_video_match_tokens with this ---
 def build_video_match_tokens(row) -> dict:
     """
@@ -168,7 +337,6 @@ def build_video_match_tokens(row) -> dict:
 
     level_tokens = []
     if level_play_id:
-        # Allow a few common filename-safe variants
         level_tokens = [
             level_play_id,
             level_play_id.replace("-", "_"),
@@ -185,7 +353,6 @@ def build_video_match_tokens(row) -> dict:
     }
 
 
-
 def iter_video_files(root_dir: str):
     """
     Recursively iterate all candidate video files under root_dir.
@@ -199,7 +366,6 @@ def iter_video_files(root_dir: str):
             yield p
 
 
-# --- replace find_video_for_row with this ---
 def find_video_for_row(row) -> str | None:
     """
     Find a replay video whose filename contains:
@@ -231,13 +397,11 @@ def find_video_for_row(row) -> str | None:
 
         score = 0
 
-        # Exact levelPlayID match gets highest score
         if level_play_id and level_play_id in name:
             score += 4
         elif any(tok in name for tok in level_tokens):
             score += 3
 
-        # Require levelPlayID coverage when present
         if level_play_id and score < 3:
             continue
 
@@ -323,25 +487,22 @@ missing_beh = [c for c in behavior_columns if c not in df.columns]
 if missing_beh:
     raise ValueError(f"Missing behavior columns in CSV: {missing_beh}")
 
+# ==========================
+# PRESTEP: FILTER DATA
+# ==========================
+df = apply_filters(df)
+
 # Build behavior tuples per row (used for markers + icons)
 behavior_combinations = df.apply(csv_behavior_tuple, axis=1)
 unique_behaviors = behavior_combinations.unique()
 
 # ==========================
-# SELECT FEATURES (NUMERIC ONLY)
+# SELECT FEATURES (NUMERIC ONLY + OPTIONAL FILTERS)
 # ==========================
-excluded = ["playerId", "timestamp", "date", "match_date", "match_minute", "levelPlayID"] + behavior_columns
-feature_df = df.drop(columns=excluded, errors="ignore").select_dtypes(include=[np.number])
-
-if feature_df.shape[1] == 0:
-    raise ValueError(
-        "No numeric feature columns found after excluding playerId + behavior columns. "
-        "If you have timestamps/strings, they must be excluded or converted."
-    )
+feature_df = select_feature_columns(df)
 
 X = feature_df.to_numpy()
 feature_columns = list(feature_df.columns)
-print(f"Using {feature_df.shape[1]} numeric feature columns for clustering.")
 
 # ==========================
 # SCALE / KMEANS
@@ -436,7 +597,7 @@ pc3_text = build_pc_interpretation("PC3")
 unique_sessions = df["playerId"].unique()
 session_color_map = {s: session_to_color(s) for s in unique_sessions}
 
-# Marker assignment depends on first-seen order of unique behaviors in the CSV
+# Marker assignment depends on first-seen order of unique behaviors in the filtered CSV
 behavior_marker_map = {b: MARKERS[i % len(MARKERS)] for i, b in enumerate(unique_behaviors)}
 
 # ==========================
