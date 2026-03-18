@@ -10,7 +10,7 @@ import pandas as pd
 CSV_PATH = "Telemetry_Raw.csv"
 
 FILTER_COLUMN = "GeometryBehavior"
-FILTER_VALUE = 1
+FILTER_VALUES = [1]
 
 INCLUDE_PLAYER_IDS = []
 
@@ -119,7 +119,7 @@ def process_csv():
     # --------------------------------------------------------
     # Step 1: filter out rows where FILTER_COLUMN == FILTER_VALUE
     # --------------------------------------------------------
-    df = df[df[FILTER_COLUMN] != FILTER_VALUE].copy()
+    df = df[~df[FILTER_COLUMN].isin(FILTER_VALUES)].copy()
 
     # --------------------------------------------------------
     # Step 2: optional include filter
