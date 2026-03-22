@@ -5,24 +5,25 @@ using System.Linq;
 using UnityEngine.Tilemaps;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System;
 //using static UnityEditor.PlayerSettings;
 
 
 public class MapGenerator : MonoBehaviour
 {
     [Header("Geometry")]
-    [SerializeField] Vector3Int mapSize;
-    [SerializeField] Vector3Int maxRoomSize;
-    [SerializeField] int maxRoomAmount;
+    [SerializeField] protected Vector3Int mapSize;
+    [SerializeField] protected Vector3Int maxRoomSize;
+    [SerializeField] protected int maxRoomAmount;
 
     [Header("Enemies")]
-    [SerializeField] int amountOfEnemyTypes;
-    [SerializeField] int enemiesBudget;
+    [SerializeField] protected int amountOfEnemyTypes;
+    [SerializeField] protected int enemiesBudget;
 
 
     [Header("Furnishing")]
-    [SerializeField] int furnishingBudget;
-    [SerializeField] int amountOfFurnishingTypes;
+    [SerializeField] protected int furnishingBudget;
+    [SerializeField] protected int amountOfFurnishingTypes;
 
 
     public MapInfo currentMap;
@@ -57,7 +58,7 @@ public class MapGenerator : MonoBehaviour
     }
 
 
-    MapInfo makeRoomGeometry(MapInfo map)
+    public MapInfo makeRoomGeometry(MapInfo map)
     {
         map.components = new List<FloorComponent>();
         int roomAmount = UnityEngine.Random.Range(1, maxRoomAmount);
@@ -75,7 +76,7 @@ public class MapGenerator : MonoBehaviour
         return map;
     }
 
-    MapInfo buildMapFromComponents(MapInfo map)
+    public MapInfo buildMapFromComponents(MapInfo map)
     {
         // clear map
         map.mapArray = new int[mapSize.x, mapSize.y];
@@ -149,13 +150,13 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }*/
-        map.enemyBudget = Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
+        map.enemyBudget = UnityEngine.Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
         map.furnishingBudget = furnishingBudget;
 
         return map;
     }
 
-    void PlacePattern(MapInfo map, Vector2Int pattern, Vector2Int start)
+    public void PlacePattern(MapInfo map, Vector2Int pattern, Vector2Int start)
     {
         for (int i = 0; i < pattern.x; i++)
         {
@@ -167,7 +168,7 @@ public class MapGenerator : MonoBehaviour
 
     }
 
-    MapInfo placeRandomRoom(MapInfo map)
+    public MapInfo placeRandomRoom(MapInfo map)
     {
         Vector2Int roomSize = new Vector2Int(
             UnityEngine.Random.Range(4, maxRoomSize.x),
@@ -300,22 +301,22 @@ public class MapGenerator : MonoBehaviour
 
             while (remaining > 0 && tries < 1000)
             {
-                Vector2Int tile = c.tiles[Random.Range(0, c.tiles.Count - 1)];
+                Vector2Int tile = c.tiles[UnityEngine.Random.Range(0, c.tiles.Count - 1)];
                 if (!occupied.Add(tile)) { tries++; continue; }
                 int enemyType;
                 // If component too small, forbid guardian (type 0)
                 if (c.tiles.Count <= 200)
                 {
-                    enemyType = Random.Range(1, amountOfEnemyTypes); // excludes 0
+                    enemyType = UnityEngine.Random.Range(1, amountOfEnemyTypes); // excludes 0
                 }
                 else
                 {
                     // normal roll
-                    enemyType = Random.Range(0, amountOfEnemyTypes);
+                    enemyType = UnityEngine.Random.Range(0, amountOfEnemyTypes);
                     // make guardian twice as rare
-                    if (enemyType == 0 && Random.value < 0.5f)
+                    if (enemyType == 0 && UnityEngine.Random.value < 0.5f)
                     {
-                        enemyType = Random.Range(1, amountOfEnemyTypes); // reroll to non-0
+                        enemyType = UnityEngine.Random.Range(1, amountOfEnemyTypes); // reroll to non-0
                     }
                 }
                 // guardian costs twice, melee cost half
@@ -503,9 +504,9 @@ public class MapGenerator : MonoBehaviour
         int newBudget;
         float additionalToRemove = 0.2f;
         // 20% chance change budget
-        if (Random.value < 0.20f)
+        if (UnityEngine.Random.value < 0.20f)
         {
-            newBudget = Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
+            newBudget = UnityEngine.Random.Range(Mathf.RoundToInt(enemiesBudget * 0.5f), Mathf.RoundToInt(enemiesBudget * 2f));
             additionalToRemove = Mathf.Max((float)(map.enemyBudget - newBudget) / map.enemyBudget, 0f);
         }
         else
@@ -735,7 +736,7 @@ public class MapGenerator : MonoBehaviour
 
     }
 
-    MapInfo PlaceCorners(MapInfo map)
+    public MapInfo PlaceCorners(MapInfo map)
     {
         for (int x = 0; x < map.mapArray.GetLength(0); x++)
         {
@@ -849,7 +850,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    MapInfo SetShortestPathTiles(MapInfo map)
+    public MapInfo SetShortestPathTiles(MapInfo map)
     {
         foreach (var tile in map.shortestPath)
         {
@@ -1341,7 +1342,7 @@ public class FloorComponent
 
 
 }
-
+[Serializable]
 public struct Room
 {
     public Vector2Int placement;

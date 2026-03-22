@@ -62,14 +62,16 @@ public class LevelManager : MonoBehaviour
 
     void Start()
     {
-        string path = Path.Combine(Application.streamingAssetsPath, "buildMapsArchive.json");
+        //string path = Path.Combine(Application.streamingAssetsPath, "buildMapsArchive.json");
+        string path = Path.Combine(Application.streamingAssetsPath, "handcrafted_maps.json");
         var archive = MapArchiveExporter.LoadArchiveFromJson(path);
 
         finalMaps = new Queue<MapArchiveExporter.MapDTO>();
         playedMaps = new List<MapArchiveExporter.MapDTO>();
         buildMaps = new List<MapArchiveExporter.MapDTO>();
 
-        BuildLevelLoop(archive.maps);
+        //BuildLevelLoop(archive.maps);
+        playedMaps = new List<MapArchiveExporter.MapDTO>(archive.maps);
         RebuildQueueFromPlayedMaps();
 
         LoadNextMap();

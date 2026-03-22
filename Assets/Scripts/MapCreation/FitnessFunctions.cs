@@ -14,8 +14,14 @@ public class FitnessFunctions : MonoBehaviour
         if (i is (0 or 3 or 4 or 5 or 31 or 32)) return false;
         return true;
     }
-    public static float GetGeometryFitness(MapCandidate candidate, (float min, float max, float weight) optimalOpenness,(float min, float max, float weight) optimalMainToOptionalComponents, (int min, int max, float weight) optimalMapSize, (int min, int max, float weight) optimalComponentAmount, (float min, float max, float weight) optimalCorridorRatio)
+    public static float GetGeometryFitness(MapCandidate candidate)
     {
+        (float min, float max, float weight) optimalOpenness = (0.7f, 1f, 0.3f);
+        (float min, float max, float weight) optimalMainToOptionalComponents = (0.5f, 2f, 0.2f);
+        (int min, int max, float weight) optimalMapSize = (1000, 2000, 0.3f);
+        (int min, int max, float weight) optimalComponentAmount = (2, 16, 0.1f);
+        (float min, float max, float weight) optimalCorridorRatio = (0f, 0.1f, 0.1f);
+
         if (candidate.mapData.shortestPath == null || candidate.mapData.shortestPath.Count <=0) return 0;
         int mainCount = 1, optionalCount = 1;
         foreach (var c in candidate.mapData.components)
@@ -32,8 +38,11 @@ public class FitnessFunctions : MonoBehaviour
         return optimalOpennessScore * optimalOpenness.weight + optimalToMainScore * optimalMainToOptionalComponents.weight + optimalMapSizeScore * optimalMapSize.weight + optimalComponentAmountScore * optimalComponentAmount.weight + optimalCorridorRatioScore * optimalCorridorRatio.weight;
     }
 
-    public static float GetFurnishingFitness(MapCandidate candidate, (int min, int max, float weight) optimalSpread, float atEndWeight)
+    public static float GetFurnishingFitness(MapCandidate candidate)
     {
+        (int min, int max, float weight) optimalSpread = (1, 6, 0.5f);
+        float atEndWeight = 0.5f;
+
         float atEndScore = LootAtEndFitness(candidate.mapData);
         float spreadScore = FurnishingSpreadFitness(candidate, optimalSpread.min, optimalSpread.max);
         return spreadScore * optimalSpread.weight + atEndScore * atEndWeight;

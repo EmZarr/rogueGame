@@ -83,14 +83,7 @@ public class MapElite : MonoBehaviour
                 0
             );
 
-            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(
-                candidate,
-                (0.7f, 1f, 0.3f),
-                (0.5f, 2f, 0.2f),
-                (1000, 2000, 0.3f),
-                (2, 16, 0.1f),
-                (0f, 0.1f, 0.1f)
-            );
+            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(candidate);
 
             // Store candidate + track delta on overwrite
             var key = candidate.geoBehavior;
@@ -246,7 +239,7 @@ public class MapElite : MonoBehaviour
             // behavior + fitness 
             candidate.furnBehavior = new Vector2(BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), BehaviorFunctions.FurnishingBehaviorSafety(candidate.mapData));
 
-            candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate, (1, 6, 0.5f), 0.5f);
+            candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate);
 
             // Store candidate + track delta on overwrite
             var key = (candidate.geoBehavior, candidate.furnBehavior);
@@ -334,16 +327,9 @@ public class MapElite : MonoBehaviour
             var key = candidate.CombinedBehavior;
 
             // Fitness
-            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(
-                candidate,
-                (0.7f, 1f, 0.3f),
-                (0.5f, 2f, 0.2f),
-                (1000, 2000, 0.3f),
-                (2, 16, 0.1f),
-                (0f, 0.1f, 0.1f)
-            );
+            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(candidate);
 
-            candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate, (1, 6, 0.5f), 0.5f);
+            candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate);
             candidate.enemFitness = FitnessFunctions.GetEnemyFitness(candidate);
 
             // Store candidate + track delta on overwrite
