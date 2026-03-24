@@ -26,7 +26,7 @@ public class IdleState : BaseState
 
     public override void Execute()
     {
-        if (!_hasDestination && Time.time >= _nextActionTime)
+        /*if (!_hasDestination && Time.time >= _nextActionTime)
         {
             if (_agent != null && _agent.isActiveAndEnabled && _agent.isOnNavMesh && TryGetRandomPointAroundHome(out var dest))
             {
@@ -47,7 +47,7 @@ public class IdleState : BaseState
                 _hasDestination = false;
                 _nextActionTime = Time.time + Random.Range(_waitRange.x, _waitRange.y);
             }
-        }
+        }*/
     }
 
     public override void ExitState()
