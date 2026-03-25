@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89aa2cb65b170a74b8983e4e8c387720, type: 3}
   m_Name: BomberEnemy
   m_EditorClassIdentifier: Assembly-CSharp::EnemyData
-  chaseRange: 20
-  attackRange: 10
+  chaseRange: 30
+  attackRange: 30
   health: 50
   attackSpeed: 1
   attackDelay: 1
