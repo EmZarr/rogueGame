@@ -699,41 +699,56 @@ public class MapGenerator : MonoBehaviour
         }
 
         // 4-neighbor walls
-        TrySetWall(map, x + 1, y, true);
-        TrySetWall(map, x - 1, y, true);
-        TrySetWall(map, x, y + 1, false);
-        TrySetWall(map, x, y - 1, false);
+        TrySetWall(map, x + 1, y);
+        TrySetWall(map, x - 1, y);
+        TrySetWall(map, x, y + 1);
+        TrySetWall(map, x, y - 1);
         //TrySetWall(map, x + 1, y-1, false);
         //TrySetWall(map, x - 1, y+1, true);
 
 
     }
 
-    void TrySetWall(MapInfo map, int x, int y, bool south)
+    void TrySetWall(MapInfo map, int x, int y)
     {
         if (x < 0 || y < 0 || x >= mapSize.x || y >= mapSize.y)
             return;
 
-        /*if (map.mapArray[x, y] == 3 || map.mapArray[x, y] == 4)
-        {
-            // only turn empty into wall
-            map.mapArray[x, y] = 5;
-            
-        }*/
-        if (map.mapArray[x, y] == 0 || map.mapArray[x, y] == 3 || map.mapArray[x, y] == 4)
-        {
-            // only turn empty into wall
-            if (south)
-            {
-                map.mapArray[x, y] = 3;
-            }
-            else
-            {
-                map.mapArray[x, y] = 4;
-            }
+        int current = map.mapArray[x, y];
 
+        // only place wall into empty / existing wall / old corner cells
+        if (current != 0 && current != 3 && current != 4 && current != 5 && current != 6 && current != 7 && current != 8 && current != 9 && current != 10) return;
+
+        bool floorLeft = IsFloorLike(map, x - 1, y);
+        bool floorRight = IsFloorLike(map, x + 1, y);
+        bool floorDown = IsFloorLike(map, x, y - 1);
+        bool floorUp = IsFloorLike(map, x, y + 1);
+
+        // pick straight wall by which side touches floor
+        if (floorUp)
+        {
+            map.mapArray[x, y] = 3; // B7_S
         }
+        else if (floorLeft)
+        {
+            map.mapArray[x, y] = 4; // B7_E
+        }
+        else if (floorDown)
+        {
+            map.mapArray[x, y] = 5; // B7_N
+        }
+        else if (floorRight)
+        {
+            map.mapArray[x, y] = 6; // B7_W
+        }
+    }
+    bool IsFloorLike(MapInfo map, int x, int y)
+    {
+        if (x < 0 || y < 0 || x >= mapSize.x || y >= mapSize.y)
+            return false;
 
+        int t = map.mapArray[x, y];
+        return t == 1 || t == 2 || t == 99 || t == 100 || t == 11 || t == 12 || t == 13 || t == 14 || (t >= 40 && t <= 44);
     }
 
     public MapInfo PlaceCorners(MapInfo map)
@@ -742,111 +757,47 @@ public class MapGenerator : MonoBehaviour
         {
             for (int y = 0; y < map.mapArray.GetLength(1); y++)
             {
-                if (map.mapArray[x, y] != 0 && map.mapArray[x, y] != 3 && map.mapArray[x, y] != 4 && map.mapArray[x, y] != 5)
-                {
-                    if (x - 1 > 0 && y - 1 > 0 && x + 2 < mapSize.x && y + 2 < mapSize.y)
-                    {
-                        //Bottom outward corner
-                        if ((map.mapArray[x - 1, y] == 3 || map.mapArray[x - 1, y] == 4) && (map.mapArray[x, y - 1] == 4 || map.mapArray[x, y - 1] == 3))
-                        {
-                            TrySetCorner(map, x - 1, y - 1);
-                        }
+                if (!IsFloorLike(map, x, y))
+                    continue;
 
-                        //Top outward corner handled by walls by default
+                bool left = IsFloorLike(map, x - 1, y);
+                bool right = IsFloorLike(map, x + 1, y);
+                bool down = IsFloorLike(map, x, y - 1);
+                bool up = IsFloorLike(map, x, y + 1);
 
-                        //Left outward corner
-                        if (map.mapArray[x, y + 1] == 4 && map.mapArray[x - 1, y] == 3)
-                        {
-                            TrySetWall(map, x - 1, y + 1, false);
-                        }
+                if (left && down)
+                    TrySetCorner(map, x - 1, y - 1, 7); // B11_S
 
-                        //Left outward corner edge case
-                        if (map.mapArray[x, y + 1] == 3 && map.mapArray[x - 1, y] == 3)
-                        {
-                            TrySetWall(map, x - 1, y + 1, false);
-                        }
+                if (down && right)
+                    TrySetCorner(map, x + 1, y - 1, 8); // B11_E
 
-                        //Right outward corner
-                        if (map.mapArray[x, y - 1] == 4 && map.mapArray[x + 1, y] == 3)
-                        {
-                            TrySetWall(map, x + 1, y - 1, true);
-                        }
-                        //Right outward corner edge case
-                        if (map.mapArray[x, y - 1] == 4 && map.mapArray[x + 1, y] == 4)
-                        {
-                            TrySetWall(map, x + 1, y - 1, true);
-                        }
+                if (right && up)
+                    TrySetCorner(map, x + 1, y + 1, 9); // B11_N
 
-                        //Bottom inward corner, should be handled by default
-
-                        //Top inward corner
-                        if (map.mapArray[x + 1, y] == 1 && map.mapArray[x, y + 1] == 1)
-                        {
-
-                            if (map.mapArray[x + 1, y + 1] == 3 || map.mapArray[x + 1, y + 1] == 4)
-                            {
-                                TrySetCorner(map, x + 1, y + 1);
-                            }
-                        }
-
-
-                        //Left inward corner, should be the same as right outward corner if edge
-
-                        //Left inward corner when not edge
-                        if ((map.mapArray[x - 1, y] == 1 || map.mapArray[x - 1, y] == 2) && (map.mapArray[x, y + 1] == 1 || map.mapArray[x, y + 1] == 2))
-                        {
-                            if (map.mapArray[x - 1, y + 1] == 3 || map.mapArray[x - 1, y + 1] == 4)
-                            {
-                                map.mapArray[x - 1, y + 1] = 31;
-                            }
-                            if (map.mapArray[x - 1, y + 2] == 0)
-                            {
-                                TrySetWall(map, x - 1, y + 2, false);
-                            }
-                        }
-
-                        //Right inward corner
-                        if ((map.mapArray[x + 1, y] == 1 || map.mapArray[x + 1, y] == 2) && (map.mapArray[x, y - 1] == 1 || map.mapArray[x, y - 1] == 2))
-                        {
-                            if (map.mapArray[x + 1, y - 1] == 3 || map.mapArray[x + 1, y - 1] == 4)
-                            {
-                                map.mapArray[x + 1, y - 1] = 32;
-                                if (map.mapArray[x + 2, y - 1] == 0)
-                                {
-                                    TrySetWall(map, x + 2, y - 1, true);
-                                }
-
-                            }
-                        }
-
-                        //Weird ass edge cases
-                        if ((map.mapArray[x - 1, y] == 1 || map.mapArray[x - 1, y] == 2) && (map.mapArray[x + 1, y] == 1 || map.mapArray[x + 1, y] == 2))
-                        {
-                            if (map.mapArray[x, y + 1] == 3 && map.mapArray[x + 1, y + 1] == 4)
-                            {
-                                TrySetCorner(map, x, y + 1);
-                            }
-                        }
-                        if (map.mapArray[x - 1, y] == 3 && map.mapArray[x, y + 1] == 4 && map.mapArray[x - 1, y + 1] == 4 && map.mapArray[x - 1, y + 2] == 3)
-                        {
-                            TrySetCorner(map, x, y + 1);
-                        }
-                    }
-                }
+                if (up && left)
+                    TrySetCorner(map, x - 1, y + 1, 10); // B11_W
             }
         }
-        map.mapArray[map.playerStartPos.Value.x, map.playerStartPos.Value.y] = 100;
-        map.mapArray[map.endPos.Value.x, map.endPos.Value.y] = 99;
+
+        if (map.playerStartPos.HasValue)
+            map.mapArray[map.playerStartPos.Value.x, map.playerStartPos.Value.y] = 100;
+
+        if (map.endPos.HasValue)
+            map.mapArray[map.endPos.Value.x, map.endPos.Value.y] = 99;
+
         return map;
     }
 
-    void TrySetCorner(MapInfo map, int x, int y)
+    void TrySetCorner(MapInfo map, int x, int y, int cornerType)
     {
         if (x < 0 || y < 0 || x >= mapSize.x || y >= mapSize.y)
             return;
-        if (map.mapArray[x, y] != 100 || map.mapArray[x, y] != 1)
+
+        int t = map.mapArray[x, y];
+
+        if (t == 0 || t == 3 || t == 4 || t == 5 || t == 6 || t == 7 || t == 8 || t == 9 || t == 10)
         {
-            map.mapArray[x, y] = 5;
+            map.mapArray[x, y] = cornerType;
         }
     }
 

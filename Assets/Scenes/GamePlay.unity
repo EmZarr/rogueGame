@@ -1110,6 +1110,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 589e985e102e9b64a84a5a2cd8666943, type: 2}
   - {fileID: 11400000, guid: 963014a4c8a0f5f439699d5bc3b79cbf, type: 2}
   - {fileID: 11400000, guid: 7ee6ab2355eabe74996f5b4ba00355a7, type: 2}
+  - {fileID: 11400000, guid: fc4d2d9810605724292faa4c62138fd7, type: 2}
+  - {fileID: 11400000, guid: c6d8f45b59e983e468054509f9c58570, type: 2}
+  - {fileID: 11400000, guid: b88be3e7f6085b941af9b5d0c2380de9, type: 2}
   tilesForestWalls:
   - {fileID: 11400000, guid: f514ea207b81fc141b50c47b3dda24b4, type: 2}
   - {fileID: 11400000, guid: 3d437ff547970c141aaa0dd6e359e98d, type: 2}
