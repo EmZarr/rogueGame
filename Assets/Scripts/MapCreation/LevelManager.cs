@@ -149,7 +149,6 @@ public class LevelManager : MonoBehaviour
         }
 
         telemetryManager.PlayerDied();
-        telemetryManager.ResetStats(false);
         telemetryManager.SetTotalScore(_player.GetScore());
         telemetryManager.UploadData();
         telemetryManager.ResetStats(true);
