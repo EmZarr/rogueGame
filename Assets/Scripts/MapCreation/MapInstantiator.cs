@@ -549,6 +549,11 @@ public class MapInstantiator : MonoBehaviour
         telemetryManager.SetTotalEnemies(spawnedEnemies.Count);
     }
 
+    public void ClearCurrentPlayerReference()
+    {
+        CurrentPlayer = null;
+    }
+
     void ClearPreviousMap()
     {
 

@@ -90,14 +90,46 @@ public class LoadoutState : MonoBehaviour
     }
     void Start()
     {
-        loadout = new SwordAndShield(player);
-        currentSpeed = player.GetMoveSpeed();
         chargeUpBar = GameObject.FindWithTag("ChargeBar").GetComponent<ChargeUp>();
         nextHeavyDashTime = Time.time;
         telemetryManager = FindFirstObjectByType<TelemetryManager>();
         levelManager = FindFirstObjectByType<LevelManager>();
-        telemetryManager.SetLoadOut(2);
 
+        ApplyLoadout(2);
+
+    }
+
+    public void ApplyLoadout(int index)
+    {
+        loadoutNumber = index;
+
+        switch (index)
+        {
+            case 1:
+                anim.EquipWeapon(WeaponId.Bow);
+                loadout = new TwoCrossbow(player);
+                break;
+
+            case 2:
+                anim.EquipWeapon(WeaponId.Shield);
+                loadout = new SwordAndShield(player);
+                break;
+
+            case 3:
+                anim.EquipWeapon(WeaponId.Dual);
+                loadout = new DualSwords(player);
+                break;
+
+            default:
+                anim.EquipWeapon(WeaponId.Shield);
+                loadout = new SwordAndShield(player);
+                loadoutNumber = 2;
+                break;
+        }
+
+        currentSpeed = player.GetMoveSpeed();
+
+        if (telemetryManager != null) telemetryManager.SetLoadOut(loadoutNumber);
     }
 
     private void EnqueueAction(BufferedAction a)
@@ -251,34 +283,25 @@ public class LoadoutState : MonoBehaviour
 
     void OnLoadout1(InputAction.CallbackContext ctx)
     {
-        anim.EquipWeapon(WeaponId.Bow);
-        loadout = new TwoCrossbow(player);
-        loadoutNumber = 1;
-        telemetryManager.SetLoadOut(loadoutNumber);
+        ApplyLoadout(1);
         if (levelManager.IsInCombat())
-        {   
+        {
             telemetryManager.ChangedFormInCombat();
         }
     }
 
     void OnLoadout2(InputAction.CallbackContext ctx)
     {
-        anim.EquipWeapon(WeaponId.Shield);
-        loadout = new SwordAndShield(player);
-        loadoutNumber = 2;
-        telemetryManager.SetLoadOut(loadoutNumber);
+        ApplyLoadout(2);
         if (levelManager.IsInCombat())
-        {   
+        {
             telemetryManager.ChangedFormInCombat();
         }
     }
 
     void OnLoadout3(InputAction.CallbackContext ctx)
     {
-        anim.EquipWeapon(WeaponId.Dual);
-        loadout = new DualSwords(player);
-        loadoutNumber = 3;
-        telemetryManager.SetLoadOut(loadoutNumber);
+        ApplyLoadout(3);
         if (levelManager.IsInCombat())
         {
             telemetryManager.ChangedFormInCombat();

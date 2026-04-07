@@ -1,8 +1,9 @@
 using NUnit.Framework;
-using System.Collections.Generic;
-using UnityEngine;
-using System.IO;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 public class LevelManager : MonoBehaviour
 {
@@ -137,16 +138,25 @@ public class LevelManager : MonoBehaviour
 
         _player.OnDied -= HandlePlayerDied;
         _player.OnDied += HandlePlayerDied;
+
+        var loadoutState = _player.GetComponent<LoadoutState>();
+        if (loadoutState != null)
+        {
+            loadoutState.ApplyLoadout(2);
+        }
+        _player.RefreshUI();
+
     }
 
     void HandlePlayerDied(GameObject killer)
     {
-        var rb = _player.GetComponent<Rigidbody2D>();
+        /*var rb = _player.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
-        }
+        }*/
+        if (_player == null) return;
 
         telemetryManager.PlayerDied();
         telemetryManager.SetTotalScore(_player.GetScore());
@@ -156,12 +166,44 @@ public class LevelManager : MonoBehaviour
         {
             autoRecorder.RestartRecordingAndSave();
         }
-        // Restart the same chosen 8 maps from the beginning, preserving order
-        RebuildQueueFromPlayedMaps();
-        _player.ResetStats();
-        _player.ResetScore();
-        LoadNextMap();
-        //_player.ResetStats();
+
+        _player.OnDied -= HandlePlayerDied;
+        Destroy(_player.gameObject);
+        mapInstantiator.ClearCurrentPlayerReference();
+        _player = null;
+
+        ReloadCurrentMap();
+        _hasSpawnPos = false;
+
+        StartCoroutine(HookPlayerNextFrame());
+    }
+
+    IEnumerator HookPlayerNextFrame()
+    {
+        yield return null;
+        yield return new WaitForSeconds(0.05f);
+
+        CacheSpawnAndHookPlayer();
+    }
+
+    void ReloadCurrentMap()
+    {
+        FixOptComps(playMap);
+        mapInstantiator.makeMap(MapArchiveExporter.MapFromDto(playMap));
+
+        StartCoroutine(WaitForEnemies());
+
+        float[] behaviors = new float[5]
+        {
+        playMap.geoBehavior[0],
+        playMap.furnBehavior[0],
+        playMap.furnBehavior[1],
+        playMap.enemyBehavior[0],
+        playMap.enemyBehavior[1]
+        };
+
+        telemetryManager.SetBehavior(behaviors);
+        telemetryManager.SetTotalAmountOfOptionalComponents(playMap.optionalComponents.Count);
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -173,18 +215,29 @@ public class LevelManager : MonoBehaviour
             _player.MovementSpeedMultiplier,
             _player.DamageMultiplier
         );
+
         _player.IncreaseScore(300);
         telemetryManager.SetTotalScore(_player.GetScore());
         telemetryManager.UploadData();
+
         machines = FindObjectsByType<StateMachine>(FindObjectsSortMode.None);
+
         float[] behaviors = new float[5] { playMap.geoBehavior[0], playMap.furnBehavior[0], playMap.furnBehavior[1], playMap.enemyBehavior[0], playMap.enemyBehavior[1] };
         telemetryManager.SetBehavior(behaviors);
-        _player.ResetStats();
-        
+
+        //_player.ResetStats();
+
+        _player.OnDied -= HandlePlayerDied;
+
+        mapInstantiator.ClearCurrentPlayerReference();
+
+        Destroy(_player.gameObject);
+        _player = null;
+
         LoadNextMap();
 
         _hasSpawnPos = false;
-        CacheSpawnAndHookPlayer();
+        StartCoroutine(HookPlayerNextFrame());
     }
 
     void BuildLevelLoop(List<MapArchiveExporter.MapDTO> archiveMaps)

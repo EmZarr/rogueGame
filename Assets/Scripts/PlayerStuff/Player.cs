@@ -160,9 +160,7 @@ public class Player : MonoBehaviour
         {
             rb.linearVelocity = Vector2.zero;
             OnDied?.Invoke(attacker);
-
-            //Destroy(gameObject);
-            StartCoroutine(RespawnRoutine());
+            return;
         }
         _ui.updateHealth(_health);
     }
@@ -401,6 +399,13 @@ public class Player : MonoBehaviour
         _ui.updateHealth(_health);
         _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
 
+    }
+
+    public void RefreshUI()
+    {
+        _ui.updateHealth(_health);
+        _ui.updateScore(_score);
+        _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
     }
 
     public void ResetScore()
