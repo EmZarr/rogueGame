@@ -20,6 +20,8 @@ public class TelemetryManager : MonoBehaviour
 
     float powerUpsTaken;
 
+    float healthBarrelsTaken;
+
     float totalMapPowerUps;
 
     float enemiesKilled;
@@ -162,6 +164,11 @@ public class TelemetryManager : MonoBehaviour
         lootTaken += 1;
     }
 
+    public void HealthBarrelTaken()
+    {
+        healthBarrelsTaken +=1;
+    }
+
     public void StartTimer()
     {
         timerStarted = true;
@@ -211,7 +218,7 @@ public class TelemetryManager : MonoBehaviour
             MapScore = CurrentMapScore,
             MapScorePercentage = CurrentMapScore/TotalMapScore * 100f,
             enemiesKilledPct = eneKilledPerc,
-            HealthBarrelsTaken = totalLoot - powerUpsTaken,
+            HealthBarrelsTaken = healthBarrelsTaken,
             PowerUpsTaken = powerUpsTaken,
             AvgEnemiesAliveOnPowerUpTaken = powerUpsTaken > 0? averageEnemiesAliveOnLootPickup/powerUpsTaken : 0,
             lootTakenPct = lootGathPerc,

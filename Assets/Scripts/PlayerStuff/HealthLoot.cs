@@ -24,6 +24,7 @@ public class HealthLoot : MonoBehaviour
             // prevent re-triggering
             _collider.enabled = false;
             telemetryManager.LootPickedUp();
+            telemetryManager.HealthBarrelTaken();
             // play explosion animation
             _barrelAnimator.SetTrigger("Explode");
         }
