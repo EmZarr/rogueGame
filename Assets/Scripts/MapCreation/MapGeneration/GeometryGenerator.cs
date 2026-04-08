@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.PackageManager;
 using UnityEngine;
-using static UnityEditor.Recorder.OutputPath;
 
 public static class GeometryGenerator
 {
@@ -24,8 +21,8 @@ public static class GeometryGenerator
     // Randomly adds and removes chunks from a map
     public static Map MutateMapGeometry(Map map, float mutateSize = 0.2f, int maxChunkSize = 15)
     {
-        // We add/remove an amount of chunks equal to 20% of existing
-        int amountToMutate = (int)(map.chunkCount() * mutateSize);
+        // We add/remove an amount of chunks equal to 20% of existing. Min 1
+       int amountToMutate = Mathf.Max(1, Mathf.RoundToInt(map.chunkCount() * mutateSize));
 
         // Randomly either remove or add a chunk. Unless sizes too exterme.
         for (int i = 0; i < amountToMutate; i++) {
@@ -66,6 +63,10 @@ public static class GeometryGenerator
         if (room.chunks.Count == 0)
         {
             map.rooms.Remove(room);
+        }
+        else
+        {
+            room.position = FindBottomLeftTile(room);
         }
     }
 
@@ -126,14 +127,44 @@ public static class GeometryGenerator
 
                 map.rooms.Remove(otherRoom);
             }
+            mainRoom.position = FindBottomLeftTile(mainRoom);
         }
     }
 
     // Adds main path, entry and exit tiles and order index to all rooms
     public static void BuildRoomTopology(Map map)
     {
+        // Clear old
+        map.connections.Clear();
+        foreach (var room in map.rooms)
+        {
+            room.onMainPath = false;
+            room.orderIndex = 0;
+            room.entryTile = null;
+            room.exitTile = null;
+        }
+
+        // case for 0 and 1 rooms
         if (map.rooms == null || map.rooms.Count == 0)
             return;
+
+        if (map.rooms.Count == 1)
+        {
+            Room only = map.rooms[0];
+            map.startRoom = only;
+            map.endRoom = only;
+            map.mainPathRooms = new List<Room> { only };
+
+            only.onMainPath = true;
+            only.orderIndex = 1;
+
+            Vector2Int a = only.position;
+            Vector2Int b = FindFurthestTileInRoom(only, a);
+
+            only.entryTile = a;
+            only.exitTile = b;
+            return;
+        }
 
         // 1. Find start + end (furthest pair)
         var (start, end) = FindFurthestRooms(map.rooms);
@@ -142,15 +173,24 @@ public static class GeometryGenerator
         map.endRoom = end;
 
         // 2. Build main path (and mark entry/exit inline)
-        var mainPath = BuildAndMarkMainPath(start, end, map.rooms);
+        var mainPath = BuildAndMarkMainPath(start, end, map.rooms, map.connections);
 
         map.mainPathRooms = mainPath;
 
         // 3. Attach optional rooms
-        AttachOptionalRooms(map.rooms, mainPath);
+        AttachOptionalRooms(map.rooms, mainPath, map.connections);
+
+        // 4. Add tiles too rooms and Calc size factor and order factor 
+        
+
     }
 
-    public static List<Room> BuildAndMarkMainPath(Room start, Room end, List<Room> rooms)
+    public static void AddTileListToRooms(Map map)
+    {
+
+    }
+
+    public static List<Room> BuildAndMarkMainPath(Room start, Room end, List<Room> rooms, List<RoomConnection> connections)
     {
         var path = new List<Room>();
         var visited = new HashSet<Room>();
@@ -159,8 +199,6 @@ public static class GeometryGenerator
         visited.Add(current);
         path.Add(current);
 
-        // start entry
-        current.entryTile = current.GetAnyTile();
         current.onMainPath = true;
         current.orderIndex = 1;
 
@@ -170,43 +208,50 @@ public static class GeometryGenerator
         {
             Room bestNext = null;
             int bestScore = int.MaxValue;
+            int bestStepDist = int.MaxValue;
             Vector2Int bestExit = default;
             Vector2Int bestEntry = default;
 
             foreach (var candidate in rooms)
             {
-                // Been here before
                 if (visited.Contains(candidate))
                     continue;
-                // Distance to candidate
+
                 var (stepDist, exitTile, entryTile) = FindClosestTiles(current, candidate);
-                // Distance from candidate to end
                 var (endDist, _, _) = FindClosestTiles(candidate, end);
 
-                // Score is combination of length to new room, and the amount gained towards end, here counting double 
                 int score = endDist + stepDist * 2;
 
                 if (score < bestScore)
                 {
                     bestScore = score;
+                    bestStepDist = stepDist;
                     bestNext = candidate;
-                    bestExit = exitTile;   // from current -> next
-                    bestEntry = entryTile; // into next
+                    bestExit = exitTile;
+                    bestEntry = entryTile;
                 }
             }
 
             if (bestNext == null)
                 break;
 
-            // mark exit of current
-            current.exitTile = bestExit;
+            Room previous = current;
 
-            // move forward
+            previous.exitTile = bestExit;
+
+            connections.Add(new RoomConnection
+            {
+                roomA = previous,
+                roomB = bestNext,
+                tileA = bestExit,
+                tileB = bestEntry,
+                length = bestStepDist
+            });
+
             current = bestNext;
             visited.Add(current);
             path.Add(current);
 
-            // mark entry of new room
             current.entryTile = bestEntry;
 
             order++;
@@ -214,13 +259,13 @@ public static class GeometryGenerator
             current.onMainPath = true;
         }
 
-        // final room exit
-        current.exitTile = current.GetAnyTile();
+        current.exitTile = FindFurthestTileInRoom(current, current.entryTile.Value);
+        start.entryTile = FindFurthestTileInRoom(start, start.exitTile.Value);
 
         return path;
     }
 
-    public static void AttachOptionalRooms(List<Room> allRooms, List<Room> mainPath)
+    public static void AttachOptionalRooms(List<Room> allRooms, List<Room> mainPath, List<RoomConnection> connections)
     {
         var mainSet = new HashSet<Room>(mainPath);
 
@@ -232,24 +277,37 @@ public static class GeometryGenerator
             Room bestMain = null;
             int bestDist = int.MaxValue;
             Vector2Int bestEntry = default;
+            Vector2Int bestMainTile = default;
 
             foreach (var main in mainPath)
             {
-                var (dist, entry, _) = FindClosestTiles(room, main);
+                var (dist, roomTile, mainTile) = FindClosestTiles(room, main);
 
                 if (dist < bestDist)
                 {
                     bestDist = dist;
                     bestMain = main;
-                    bestEntry = entry;
+                    bestEntry = roomTile;
+                    bestMainTile = mainTile;
                 }
             }
 
             room.entryTile = bestEntry;
             room.exitTile = FindFurthestTileInRoom(room, bestEntry);
+            room.orderIndex = bestMain.orderIndex;
+
+            connections.Add(new RoomConnection
+            {
+                roomA = room,
+                roomB = bestMain,
+                tileA = bestEntry,
+                tileB = bestMainTile,
+                length = bestDist
+            });
         }
     }
 
+    // Helpers
 
     public static (int dist, Vector2Int aTile, Vector2Int bTile) FindClosestTiles(Room a, Room b)
     {
@@ -312,6 +370,46 @@ public static class GeometryGenerator
         }
 
         return (bestA, bestB);
+    }
+
+    public static Vector2Int FindFurthestTileInRoom(Room room, Vector2Int fromTile)
+    {
+        int bestDist = -1;
+        Vector2Int bestTile = fromTile;
+
+        foreach (var chunk in room.chunks)
+        {
+            for (int x = chunk.XMin; x <= chunk.XMax; x++)
+            {
+                for (int y = chunk.YMin; y <= chunk.YMax; y++)
+                {
+                    Vector2Int tile = new Vector2Int(x, y);
+                    int dist = Mathf.Abs(tile.x - fromTile.x) + Mathf.Abs(tile.y - fromTile.y);
+
+                    if (dist > bestDist)
+                    {
+                        bestDist = dist;
+                        bestTile = tile;
+                    }
+                }
+            }
+        }
+
+        return bestTile;
+    }
+    public static Vector2Int FindBottomLeftTile(Room room)
+    {
+        RoomChunk best = room.chunks[0];
+
+        foreach (var chunk in room.chunks)
+        {
+            if (chunk.XMin < best.XMin || (chunk.XMin == best.XMin && chunk.YMin < best.YMin))
+            {
+                best = chunk;
+            }
+        }
+
+        return new Vector2Int(best.XMin, best.YMin);
     }
 
 }
