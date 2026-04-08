@@ -37,12 +37,15 @@ public class Map
 public class Room
 {
     public List<RoomChunk> chunks = new();
+    public List<(Vector2Int pos, int type)> tiles = new();
     public List<(Vector2Int pos, int type)> enemies = new();
     public List<(Vector2Int pos, int type)> loot = new();
     public List<(Vector2Int pos, int type)> obstacles = new();
     public Vector2Int position;
     public bool onMainPath = false;
     public int orderIndex = 0;
+    public float sizeModifier = 0f;
+    public float orderModifier = 0f;
 
     public Vector2Int? entryTile = null;
     public Vector2Int? exitTile = null;
