@@ -111,7 +111,7 @@ public class LevelManager : MonoBehaviour
 
         foreach (var m in machines)
         {
-            if (m != null && m.GetState() is not IdleState)
+            if (m != null && m.GetState() is not (IdleState or ProtectState))
             {
                 anyInCombat = true;
                 break;
