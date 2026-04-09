@@ -21,6 +21,7 @@ public class AttackState : BaseState
 
     public override void Execute()
     {
+        Debug.Log(_enemy._data.enemyType.ToString() + "Attacking executing");
         if (_attackInProgress)
             return;
 

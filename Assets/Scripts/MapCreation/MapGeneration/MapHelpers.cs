@@ -28,6 +28,18 @@ public class Map
     public Room endRoom;
 
     public List<Room> mainPathRooms = new();
+
+    public Map() { }
+    public Map(Map other)
+    {
+        rooms = new List<Room>(other.rooms);
+        connections = new List<RoomConnection>(other.connections);
+        startRoom = other.startRoom;
+        endRoom = other.endRoom;
+        mainPathRooms = new List<Room>(other.mainPathRooms);
+    }
+    public Map Clone() => new Map(this);
+
     public int chunkCount()
     {
         int i = 0;
@@ -51,6 +63,7 @@ public class Map
         }
         return i;
     }
+    
 }
 // The finished encounter rooms
 [Serializable]

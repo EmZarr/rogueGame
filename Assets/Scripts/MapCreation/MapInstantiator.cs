@@ -132,15 +132,14 @@ public class MapInstantiator : MonoBehaviour
                         switch (mapStyle)
                         {
                             case 0:
-                                tilemapWall.SetTile(cell, tilesGroundWalls[0]);;
+                                tilemapWall.SetTile(cell, tilesGroundWalls[3]);
                                 break;
                             case 1:
-                                tilemapWall.SetTile(cell, tilesFarmWalls[0]);
+                                tilemapWall.SetTile(cell, tilesFarmWalls[3]);
                                 tilemapBase.SetTile(cell, tilesGroundBase[2]);
                                 break;
                             case 2:
-                                tilemapWall.SetTile(cell, tilesForestWalls[0]);
-                                //tilemapBase.SetTile(cell, tilesForestBase[0]);
+                                tilemapWall.SetTile(cell, tilesForestWalls[3]);
                                 break;
                         }
                         break;
@@ -149,15 +148,14 @@ public class MapInstantiator : MonoBehaviour
                         switch (mapStyle)
                         {
                             case 0:
-                                tilemapWall.SetTile(cell, tilesGroundWalls[1]);;
+                                tilemapWall.SetTile(cell, tilesGroundWalls[0]);
                                 break;
                             case 1:
-                                tilemapWall.SetTile(cell, tilesFarmWalls[1]);
+                                tilemapWall.SetTile(cell, tilesFarmWalls[0]);
                                 tilemapBase.SetTile(cell, tilesGroundBase[2]);
                                 break;
                             case 2:
-                                tilemapWall.SetTile(cell, tilesForestWalls[1]);
-                                //tilemapBase.SetTile(cell, tilesForestBase[0]);
+                                tilemapWall.SetTile(cell, tilesForestWalls[0]);
                                 break;
                         }
                         break;
@@ -166,7 +164,23 @@ public class MapInstantiator : MonoBehaviour
                         switch (mapStyle)
                         {
                             case 0:
-                                tilemapWall.SetTile(cell, tilesGroundWalls[2]);;
+                                tilemapWall.SetTile(cell, tilesGroundWalls[1]);
+                                break;
+                            case 1:
+                                tilemapWall.SetTile(cell, tilesFarmWalls[1]);
+                                tilemapBase.SetTile(cell, tilesGroundBase[2]);
+                                break;
+                            case 2:
+                                tilemapWall.SetTile(cell, tilesForestWalls[1]);
+                                break;
+                        }
+                        break;
+
+                    case 6:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapWall.SetTile(cell, tilesGroundWalls[2]);
                                 break;
                             case 1:
                                 tilemapWall.SetTile(cell, tilesFarmWalls[2]);
@@ -174,6 +188,70 @@ public class MapInstantiator : MonoBehaviour
                                 break;
                             case 2:
                                 tilemapWall.SetTile(cell, tilesForestWalls[2]);
+                                break;
+                        }
+                        break;
+
+                    case 7:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapWall.SetTile(cell, tilesGroundWalls[6]); // B11_N
+                                break;
+                            case 1:
+                                tilemapWall.SetTile(cell, tilesFarmWalls[6]);   // B11_N
+                                tilemapBase.SetTile(cell, tilesGroundBase[2]);
+                                break;
+                            case 2:
+                                tilemapWall.SetTile(cell, tilesForestWalls[6]); // B11_N
+                                break;
+                        }
+                        break;
+
+                    case 8:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapWall.SetTile(cell, tilesGroundWalls[7]); // B11_W
+                                break;
+                            case 1:
+                                tilemapWall.SetTile(cell, tilesFarmWalls[7]);   // B11_W
+                                tilemapBase.SetTile(cell, tilesGroundBase[2]);
+                                break;
+                            case 2:
+                                tilemapWall.SetTile(cell, tilesForestWalls[7]); // B11_W
+                                break;
+                        }
+                        break;
+
+                    case 9:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapWall.SetTile(cell, tilesGroundWalls[4]); // B11_S
+                                break;
+                            case 1:
+                                tilemapWall.SetTile(cell, tilesFarmWalls[4]);   // B11_S
+                                tilemapBase.SetTile(cell, tilesGroundBase[2]);
+                                break;
+                            case 2:
+                                tilemapWall.SetTile(cell, tilesForestWalls[4]); // B11_S
+                                break;
+                        }
+                        break;
+
+                    case 10:
+                        switch (mapStyle)
+                        {
+                            case 0:
+                                tilemapWall.SetTile(cell, tilesGroundWalls[5]); // B11_E
+                                break;
+                            case 1:
+                                tilemapWall.SetTile(cell, tilesFarmWalls[5]);   // B11_E
+                                tilemapBase.SetTile(cell, tilesGroundBase[2]);
+                                break;
+                            case 2:
+                                tilemapWall.SetTile(cell, tilesForestWalls[5]); // B11_E
                                 break;
                         }
                         break;

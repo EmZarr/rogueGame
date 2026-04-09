@@ -14,6 +14,7 @@ public class GetInRangeState : BaseState
 
     public override void Execute()
     {
+        Debug.Log(_enemy._data.enemyType.ToString() + "GetInRangeState executing");
         if (!EnsurePlayer()) return;
         if (_agent == null || !_agent.isActiveAndEnabled || !_agent.isOnNavMesh) return;
 
