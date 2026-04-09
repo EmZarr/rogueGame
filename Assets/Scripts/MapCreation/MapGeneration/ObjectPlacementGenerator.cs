@@ -19,18 +19,9 @@ public static class ObjectPlacementGenerator
     public static Map CreateEnemiesOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
         // Makes a occupied tile list
-        HashSet<Vector2Int> occupiedPositions = new();
+        HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
         foreach (Room room in map.rooms)
         {
-            foreach (var e in room.enemies)
-                occupiedPositions.Add(e.pos);
-
-            foreach (var l in room.loot)
-                occupiedPositions.Add(l.pos);
-
-            foreach (var o in room.obstacles)
-                occupiedPositions.Add(o.pos);
-
             // Finds budget based on size, order base and randomness
             room.enemyBudget = baseBudget
             * room.sizeModifier
@@ -56,18 +47,7 @@ public static class ObjectPlacementGenerator
     {
 
         // add occupied tiles
-        HashSet<Vector2Int> occupiedPositions = new();
-        foreach (Room room in map.rooms)
-        {
-            foreach (var e in room.enemies)
-                occupiedPositions.Add(e.pos);
-
-            foreach (var l in room.loot)
-                occupiedPositions.Add(l.pos);
-
-            foreach (var o in room.obstacles)
-                occupiedPositions.Add(o.pos);
-        }
+        HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
 
         // Mutates a few budgets, and adds/removes enemies accordingly
         int budgetsToMutate = Mathf.Max(1, Mathf.RoundToInt(map.rooms.Count * mutateSize));
@@ -109,20 +89,7 @@ public static class ObjectPlacementGenerator
     {
 
         // Find Random unoccupied tile
-        Vector2Int tile;
-        int tries = 0;
-        do
-        {
-            tile = room.tiles[Random.Range(0, room.tiles.Count)].pos;
-            tries++;
-        }
-        while (occupied.Contains(tile) && tries < 1000);
-
-        if (tries >= 1000)
-        {
-            Debug.Log("WARNING, FULLY OCCUPIED ROOM");
-            return false;
-        }
+        if (!TryGetRandomFreeTile(room, occupied, out Vector2Int tile)) return false;
 
         // Choose enemy type randomly, add enemy, update budget and occupied
         EnemyType randomType = MapHelpers.EnemyTypes[Random.Range(0, MapHelpers.EnemyTypes.Length)];
@@ -159,18 +126,9 @@ public static class ObjectPlacementGenerator
     public static Map CreateLootOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
         // Makes a occupied tile list
-        HashSet<Vector2Int> occupiedPositions = new();
+        HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
         foreach (Room room in map.rooms)
         {
-            foreach (var e in room.enemies)
-                occupiedPositions.Add(e.pos);
-
-            foreach (var l in room.loot)
-                occupiedPositions.Add(l.pos);
-
-            foreach (var o in room.obstacles)
-                occupiedPositions.Add(o.pos);
-
             // Finds budget based on size, and randomness
             room.lootBudget = baseBudget
             * room.sizeModifier
@@ -194,18 +152,7 @@ public static class ObjectPlacementGenerator
     public static Map MutateLoot(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
     {
         // add occupied tiles
-        HashSet<Vector2Int> occupiedPositions = new();
-        foreach (Room room in map.rooms)
-        {
-            foreach (var e in room.enemies)
-                occupiedPositions.Add(e.pos);
-
-            foreach (var l in room.loot)
-                occupiedPositions.Add(l.pos);
-
-            foreach (var o in room.obstacles)
-                occupiedPositions.Add(o.pos);
-        }
+        HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
 
         // Mutates a few budgets, and adds/removes enemies accordingly
         int budgetsToMutate = Mathf.Max(1, Mathf.RoundToInt(map.rooms.Count * mutateSize));
@@ -245,20 +192,7 @@ public static class ObjectPlacementGenerator
     public static bool PlaceRandomLoot(Room room, HashSet<Vector2Int> occupied)
     {
         // Find Random unoccupied tile
-        Vector2Int tile;
-        int tries = 0;
-        do
-        {
-            tile = room.tiles[Random.Range(0, room.tiles.Count)].pos;
-            tries++;
-        }
-        while (occupied.Contains(tile) && tries < 1000);
-
-        if (tries >= 1000)
-        {
-            Debug.Log("WARNING, FULLY OCCUPIED ROOM");
-            return false;
-        }
+        if (!TryGetRandomFreeTile(room, occupied, out Vector2Int tile)) return false;
 
         // Choose loot type randomly, add loot, update budget and occupied
         LootType randomType = MapHelpers.LootTypes[Random.Range(0, MapHelpers.LootTypes.Length)];
@@ -293,18 +227,9 @@ public static class ObjectPlacementGenerator
     public static Map CreateObstaclesOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
         // Makes a occupied tile list
-        HashSet<Vector2Int> occupiedPositions = new();
+        HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
         foreach (Room room in map.rooms)
         {
-            foreach (var e in room.enemies)
-                occupiedPositions.Add(e.pos);
-
-            foreach (var l in room.loot)
-                occupiedPositions.Add(l.pos);
-
-            foreach (var o in room.obstacles)
-                occupiedPositions.Add(o.pos);
-
             // Finds budget based on size, and randomness
             room.obstacleBudget = baseBudget
             * room.sizeModifier
@@ -327,18 +252,7 @@ public static class ObjectPlacementGenerator
     public static Map MutateObstacles(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
     {
         // add occupied tiles
-        HashSet<Vector2Int> occupiedPositions = new();
-        foreach (Room room in map.rooms)
-        {
-            foreach (var e in room.enemies)
-                occupiedPositions.Add(e.pos);
-
-            foreach (var l in room.loot)
-                occupiedPositions.Add(l.pos);
-
-            foreach (var o in room.obstacles)
-                occupiedPositions.Add(o.pos);
-        }
+        HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
 
         // Mutates a few budgets, and adds/removes obstacles accordingly
         int budgetsToMutate = Mathf.Max(1, Mathf.RoundToInt(map.rooms.Count * mutateSize));
@@ -378,20 +292,7 @@ public static class ObjectPlacementGenerator
     public static bool PlaceRandomObstacle(Room room, HashSet<Vector2Int> occupied)
     {
         // Find Random unoccupied tile
-        Vector2Int tile;
-        int tries = 0;
-        do
-        {
-            tile = room.tiles[Random.Range(0, room.tiles.Count)].pos;
-            tries++;
-        }
-        while (occupied.Contains(tile) && tries < 1000);
-
-        if (tries >= 1000)
-        {
-            Debug.Log("WARNING, FULLY OCCUPIED ROOM");
-            return false;
-        }
+        if (!TryGetRandomFreeTile(room, occupied, out Vector2Int tile)) return false;
 
         // Choose loot type randomly, add loot, update budget and occupied
         ObstacleType randomType = MapHelpers.ObstacleTypes[Random.Range(0, MapHelpers.ObstacleTypes.Length)];
@@ -418,6 +319,47 @@ public static class ObjectPlacementGenerator
 
         // Free tile
         occupied.Remove(obstacle.pos);
+    }
+
+
+    // Helpers
+
+    private static HashSet<Vector2Int> GetOccupiedPositions(Map map)
+    {
+        HashSet<Vector2Int> occupied = new();
+
+        foreach (Room room in map.rooms)
+        {
+            foreach (var e in room.enemies)
+                occupied.Add(e.pos);
+
+            foreach (var l in room.loot)
+                occupied.Add(l.pos);
+
+            foreach (var o in room.obstacles)
+                occupied.Add(o.pos);
+        }
+
+        return occupied;
+    }
+
+    private static bool TryGetRandomFreeTile(Room room, HashSet<Vector2Int> occupied, out Vector2Int tile)
+    {
+        int tries = 0;
+        do
+        {
+            tile = room.tiles[Random.Range(0, room.tiles.Count)].pos;
+            tries++;
+        }
+        while (occupied.Contains(tile) && tries < 1000);
+
+        if (tries >= 1000)
+        {
+            Debug.LogWarning("WARNING, FULLY OCCUPIED ROOM");
+            return false;
+        }
+
+        return true;
     }
 
 }
