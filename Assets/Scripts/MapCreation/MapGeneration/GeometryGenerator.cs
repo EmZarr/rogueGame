@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.IO;
 using UnityEngine;
+using Unity.VisualScripting;
 
 public static class GeometryGenerator
 {
@@ -162,13 +163,19 @@ public static class GeometryGenerator
         // 3. Attach optional rooms while making connections
         AttachOptionalRooms(map, cachedClosestTiles);
 
-        // 4. make tiles on main path path tiles
-        MarkMainPathTiles(map);
-
-        // 5. Calc size factor and order factor
+        // 4. Calc size factor and order factor
         FindModifiersForRooms(map);
 
     }
+
+    public static void AddDecorToMap(Map map)
+    {
+        // 1. make tiles on main path path tiles
+        MarkMainPathTiles(map);
+
+        // TODO - Hot stuff
+    }
+
     // Adds all tiles in a room to the room
     public static void BuildRoomTiles(Map map)
     {
