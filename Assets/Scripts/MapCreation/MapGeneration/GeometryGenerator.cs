@@ -121,6 +121,7 @@ public static class GeometryGenerator
 
             for (int r = 1; r < roomsWeAreIn.Count; r++)
             {
+                // add all chunks from the other rooms into the chosen main room
                 Room otherRoom = roomsWeAreIn[r];
 
                 foreach (var chunk in otherRoom.chunks)
@@ -134,7 +135,7 @@ public static class GeometryGenerator
         }
     }
 
-    // Adds main path, entry and exit tiles and order index, modifiers, all meta info too rooms
+    // Adds all meta data like path, entry and exit, tiles, modifiers. 
     public static void BuildRoomTopology(Map map)
     {
         if (map.rooms == null || map.rooms.Count == 0)
@@ -146,34 +147,7 @@ public static class GeometryGenerator
         // Make lists of tiles
         BuildRoomTiles(map);
 
-        // Clear old
-        map.connections.Clear();
-        foreach (var room in map.rooms)
-        {
-            room.onMainPath = false;
-            room.orderIndex = 0;
-            room.entryTile = null;
-            room.exitTile = null;
-        }
-        //case for one
-        if (map.rooms.Count == 1)
-        {
-            Room only = map.rooms[0];
-            map.startRoom = only;
-            map.endRoom = only;
-            map.mainPathRooms = new List<Room> { only };
-
-            only.onMainPath = true;
-            only.orderIndex = 1;
-
-            Vector2Int a = only.position;
-            Vector2Int b = FindFurthestTileInRoom(only, a);
-
-            only.entryTile = a;
-            only.exitTile = b;
-            return;
-        }
-
+        // We want to find the two closest tiles in two rooms a lot, so we save our results when we do in this dict to avoid repeat search
         var cachedClosestTiles = new Dictionary<(Room, Room), ClosestTilesResult>();
 
         // 1. Find start + end (furthest pair)
@@ -183,12 +157,10 @@ public static class GeometryGenerator
         map.endRoom = end;
 
         // 2. Build main path (and mark entry/exit tiles) while making connections
-        var mainPath = BuildAndMarkMainPath(start, end, map.rooms, map.connections, cachedClosestTiles);
-
-        map.mainPathRooms = mainPath;
+        BuildAndMarkMainPath(map, start, end, cachedClosestTiles);
 
         // 3. Attach optional rooms while making connections
-        AttachOptionalRooms(map.rooms, mainPath, map.connections, cachedClosestTiles);
+        AttachOptionalRooms(map, cachedClosestTiles);
 
         // 4. make tiles on main path path tiles
         MarkMainPathTiles(map);
@@ -197,13 +169,13 @@ public static class GeometryGenerator
         FindModifiersForRooms(map);
 
     }
-
+    // Adds all tiles in a room to the room
     public static void BuildRoomTiles(Map map)
     {
         foreach (Room room in map.rooms)
         {
             room.tiles.Clear();
-
+            // Only uniques count
             HashSet<Vector2Int> uniqueTiles = new HashSet<Vector2Int>();
 
             foreach (RoomChunk chunk in room.chunks)
@@ -224,13 +196,14 @@ public static class GeometryGenerator
         }
     }
 
+    // Marks tiles on main path as path type
     public static void MarkMainPathTiles(Map map)
     {
         foreach (Room room in map.rooms)
         {
             if (!room.onMainPath || !room.entryTile.HasValue || !room.exitTile.HasValue)
                 continue;
-
+            
             HashSet<Vector2Int> pathTiles = new HashSet<Vector2Int>(
                 GetManhattanPath(room.entryTile.Value, room.exitTile.Value)
             );
@@ -247,13 +220,14 @@ public static class GeometryGenerator
         }
     }
 
-
+    //Finds modifer for room order and size
     public static void FindModifiersForRooms(Map map)
     {
         int mainPathCount = map.mainPathRooms.Count;
 
         foreach (Room room in map.rooms)
         {
+            //assumes that average room size is 100f
             room.sizeModifier = Mathf.Clamp(room.tiles.Count / 100f, 0f, 3f);
 
             if (mainPathCount <= 1)
@@ -262,14 +236,45 @@ public static class GeometryGenerator
             }
             else
             {
-                float t = (room.orderIndex - 1f) / (mainPathCount - 1f);
-                room.orderModifier = Mathf.Clamp(t * 3f, 0f, 3f);
+                //get the relative order from 0-1
+                float t = (room.orderIndex - 1f) / (mainPathCount - 1f); 
+                room.orderModifier = Mathf.Clamp(t * 3f, 0f, 3f); 
             }
         }
     }
 
-    public static List<Room> BuildAndMarkMainPath(Room start, Room end, List<Room> rooms, List<RoomConnection> connections, Dictionary<(Room, Room), ClosestTilesResult> cached)
+    //Method that builds the mainpath
+    public static Map BuildAndMarkMainPath(Map map, Room start, Room end, Dictionary<(Room, Room), ClosestTilesResult> cached)
     {
+
+        // Clear old
+        map.connections.Clear();
+        foreach (var room in map.rooms)
+        {
+            room.onMainPath = false;
+            room.orderIndex = 0;
+            room.entryTile = null;
+            room.exitTile = null;
+        }
+        //Case if we only have one room
+        if (map.rooms.Count == 1)
+        {
+            Room only = map.rooms[0];
+            map.startRoom = only;
+            map.endRoom = only;
+            map.mainPathRooms = new List<Room> { only };
+
+            only.onMainPath = true;
+            only.orderIndex = 1;
+
+            Vector2Int a = only.position;
+            Vector2Int b = FindFurthestTileInRoom(only, a);
+
+            only.entryTile = a;
+            only.exitTile = b;
+            return map;
+        }
+
         var path = new List<Room>();
         var visited = new HashSet<Room>();
 
@@ -282,6 +287,8 @@ public static class GeometryGenerator
 
         int order = 1;
 
+        // Starts from start room. For each other room, find distances to that room, and progress to end room.
+        // Choose based on combination, biased towards end room. Then repeats with the chosen rooms
         while (current != end)
         {
             Room bestNext = null;
@@ -290,11 +297,12 @@ public static class GeometryGenerator
             Vector2Int bestExit = default;
             Vector2Int bestEntry = default;
 
-            foreach (var candidate in rooms)
+            foreach (var candidate in map.rooms)
             {
                 if (visited.Contains(candidate))
                     continue;
 
+               
                 var stepResult = GetClosestTilesCached(current, candidate, cached);
                 var endResult = GetClosestTilesCached(candidate, end, cached);
 
@@ -316,8 +324,8 @@ public static class GeometryGenerator
             Room previous = current;
 
             previous.exitTile = bestExit;
-
-            connections.Add(new RoomConnection
+            // Add the connections so we can make corridors.
+            map.connections.Add(new RoomConnection
             {
                 roomA = previous,
                 roomB = bestNext,
@@ -339,15 +347,16 @@ public static class GeometryGenerator
 
         current.exitTile = FindFurthestTileInRoom(current, current.entryTile.Value);
         start.entryTile = FindFurthestTileInRoom(start, start.exitTile.Value);
-
-        return path;
+        map.mainPathRooms = path;
+        return map;
     }
 
-    public static void AttachOptionalRooms(List<Room> allRooms, List<Room> mainPath, List<RoomConnection> connections, Dictionary<(Room, Room), ClosestTilesResult> cached)
+    // For each optional room, find closest room on main path and make connection to it.
+    public static void AttachOptionalRooms(Map map, Dictionary<(Room, Room), ClosestTilesResult> cached)
     {
-        var mainSet = new HashSet<Room>(mainPath);
+        var mainSet = new HashSet<Room>(map.mainPathRooms);
 
-        foreach (var room in allRooms)
+        foreach (var room in map.rooms)
         {
             if (mainSet.Contains(room))
                 continue;
@@ -357,7 +366,7 @@ public static class GeometryGenerator
             Vector2Int bestEntry = default;
             Vector2Int bestMainTile = default;
 
-            foreach (var main in mainPath)
+            foreach (var main in map.mainPathRooms)
             {
                 var result = GetClosestTilesCached(room, main, cached);
 
@@ -373,8 +382,8 @@ public static class GeometryGenerator
             room.entryTile = bestEntry;
             room.exitTile = FindFurthestTileInRoom(room, bestEntry);
             room.orderIndex = bestMain.orderIndex;
-
-            connections.Add(new RoomConnection
+            // Add the connections so we can make corridors.
+            map.connections.Add(new RoomConnection
             {
                 roomA = room,
                 roomB = bestMain,

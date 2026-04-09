@@ -4,7 +4,17 @@ using UnityEngine;
 
 public static class MapHelpers
 {
-    
+    public static readonly Dictionary<EnemyType, float> EnemyCosts = new()
+    {
+        { EnemyType.Melee, 0.5f },
+        { EnemyType.Ranged, 1f },
+        { EnemyType.Bomber, 0.5f },
+        { EnemyType.Assassin, 1f },
+        { EnemyType.Guardian, 2f }
+    };
+    public static readonly EnemyType[] EnemyTypes =
+    (EnemyType[])Enum.GetValues(typeof(EnemyType));
+
 }
 
 
@@ -31,6 +41,16 @@ public class Map
         }
         return i;
     }
+    public int enemyCount()
+    {
+        int i = 0;
+
+        foreach (Room room in rooms)
+        {
+            i += room.enemies.Count;
+        }
+        return i;
+    }
 }
 // The finished encounter rooms
 [Serializable]
@@ -46,6 +66,8 @@ public class Room
     public int orderIndex = 0;
     public float sizeModifier = 0f;
     public float orderModifier = 0f;
+    public float enemyBudget = 0f;
+    public float enemyBudgetUsed = 0f;
 
     public Vector2Int? entryTile = null;
     public Vector2Int? exitTile = null;
