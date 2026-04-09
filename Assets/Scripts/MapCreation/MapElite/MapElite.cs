@@ -1,10 +1,7 @@
-﻿using NUnit.Framework.Internal;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using System.Text;
 
 public class MapElite : MonoBehaviour
@@ -14,15 +11,11 @@ public class MapElite : MonoBehaviour
     [SerializeField] int totalIterations = 50;       // I
     [SerializeField] int initialRandomSolutions = 20; // G
 
-
-    [Header("Controls")]
-    public InputActionReference runElites;
     MapGenerator mapGenerator;
 
     private Dictionary<Vector2, MapCandidate> geoArchive = new Dictionary<Vector2, MapCandidate>();
-    private Dictionary<(Vector2, Vector2), MapCandidate> furnArchive = new Dictionary<(Vector2, Vector2), MapCandidate>();
-    private Dictionary<(Vector2, Vector2, Vector2), MapCandidate> enemArchive = new Dictionary<(Vector2, Vector2, Vector2), MapCandidate>();
-    private Dictionary<(Vector2, Vector2, Vector2), MapCandidate> combinedArchive = new Dictionary<(Vector2, Vector2, Vector2), MapCandidate>();
+    //private Dictionary<(Vector2, Vector2), MapCandidate> furnArchive = new Dictionary<(Vector2, Vector2), MapCandidate>();
+    //private Dictionary<(Vector2, Vector2, Vector2), MapCandidate> enemArchive = new Dictionary<(Vector2, Vector2, Vector2), MapCandidate>();
 
     private void Awake()
     {
@@ -31,17 +24,18 @@ public class MapElite : MonoBehaviour
     void Start()
     {
 
-        //runElites.action.Enable();
-        //runElites.action.performed += ctx => RunMapElitesGeometry();
-        mapGenerator = GetComponent<MapGenerator>();
+        mapGenerator = GetComponent<MapGenerator>()
+            ;
         RunMapElitesGeometry();
         MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
-        RunMapElitesFurnishing();
+
+        /*RunMapElitesFurnishing();
         MapArchiveExporter.ExportArchiveToJson(furnArchive.Values, "furnArchive_maps.json");
         RunMapElitesEnemies();
         MapArchiveExporter.ExportArchiveToJson(enemArchive.Values, "enemArchive_maps.json");
-        //RunMapElitesCombined();
-        //MapArchiveExporter.ExportArchiveToJson(combinedArchive.Values, "combArchive_maps.json");
+        */
+
+        //add for furn and enem here
 
     }
 
@@ -49,13 +43,11 @@ public class MapElite : MonoBehaviour
     public void RunMapElitesGeometry()
     {
         int iter = 0;
-
         // Delta only for replacements (overwrites), averaged per log interval
         float sumDeltaCombined = 0f;
         int deltaCount = 0;
 
         const float geoThreshold = 0.8f;
-
         const int logEvery = 500;
 
         string path = Path.Combine(Application.dataPath, "GeoFitness.csv");
@@ -73,7 +65,8 @@ public class MapElite : MonoBehaviour
             }
             else
             {
-                MapCandidate parent = SelectRandomGeometry();
+                //MapCandidate parent = SelectRandomGeometry(); OLD
+                MapCandidate parent = SelectRandom(geoArchive);
                 candidate = MutateGeometry(parent);
             }
 
@@ -82,16 +75,15 @@ public class MapElite : MonoBehaviour
                 BehaviorFunctions.GetComponentCountBehavior(candidate.mapData),
                 0
             );
-
             candidate.geoFitness = FitnessFunctions.GetGeometryFitness(candidate);
 
             // Store candidate + track delta on overwrite
             var key = candidate.geoBehavior;
-
             if (!geoArchive.TryGetValue(key, out var prev))
             {
                 geoArchive[key] = candidate;
             }
+
             else if (candidate.CombinedFitness > prev.CombinedFitness)
             {
                 float delta = candidate.CombinedFitness - prev.CombinedFitness;
@@ -104,7 +96,7 @@ public class MapElite : MonoBehaviour
                 }
             }
 
-            // Log
+            //Log
             if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
             {
                 int elitesTotal = geoArchive.Count;
@@ -125,6 +117,8 @@ public class MapElite : MonoBehaviour
 
         File.WriteAllText(path, sb.ToString());
     }
+
+
 
 
     public void RunMapElitesEnemies()
@@ -282,103 +276,15 @@ public class MapElite : MonoBehaviour
         File.WriteAllText(path, sb.ToString());
     }
 
-
-    public void RunMapElitesCombined()
-    {
-        int iter = 0;
-
-        // Delta only for replacements (overwrites), averaged per log interval
-        float sumDeltaCombined = 0f;
-        int deltaCount = 0;
-
-        const float combinedThreshold = 2.4f;
-
-        const int logEvery = 500;
-
-        string path = Path.Combine(Application.dataPath, "CombFitness.csv");
-        var sb = new StringBuilder();
-        sb.AppendLine("iterations, archive avg total fitness, archive avg geo fitness, archive avg enemy fitness, archive avg furnish fitness, avg delta total fitness, elites total, elites totalFitness above 0.8");
-
-        for (int i = 0; i < totalIterations; i++)
-        {
-            // Generate candidate
-            MapCandidate candidate;
-            if (iter <= initialRandomSolutions)
-            {
-                candidate = GenerateRandomFurnishing(GenerateRandomEnemies(GenerateRandomGeometry()));
-                iter++;
-            }
-            else
-            {
-                MapCandidate parent = SelectRandomCombined();
-                candidate = MutateFurnishing(MutateEnemies(MutateGeometry(parent)));
-            }
-
-            // Behaviors
-            candidate.geoBehavior = new Vector2(
-                BehaviorFunctions.GetComponentCountBehavior(candidate.mapData),
-                0
-            );
-
-            candidate.furnBehavior = new Vector2(BehaviorFunctions.FurnishingBehaviorExploration(candidate.mapData), BehaviorFunctions.FurnishingBehaviorSafety(candidate.mapData));
-
-            candidate.enemyBehavior = new Vector2(BehaviorFunctions.EnemyRoleCompositionBehavior(candidate.mapData.enemies, 20), BehaviorFunctions.EnemyDifficultyBehavior(candidate.mapData));
-
-            var key = candidate.CombinedBehavior;
-
-            // Fitness
-            candidate.geoFitness = FitnessFunctions.GetGeometryFitness(candidate);
-
-            candidate.furnFitness = FitnessFunctions.GetFurnishingFitness(candidate);
-            candidate.enemFitness = FitnessFunctions.GetEnemyFitness(candidate);
-
-            // Store candidate + track delta on overwrite
-            if (!combinedArchive.TryGetValue(key, out var prev))
-            {
-                combinedArchive[key] = candidate;
-            }
-            else if (candidate.CombinedFitness > prev.CombinedFitness)
-            {
-                float delta = candidate.CombinedFitness - prev.CombinedFitness;
-                combinedArchive[key] = candidate;
-
-                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
-                {
-                    sumDeltaCombined += delta;
-                    deltaCount++;
-                }
-            }
-
-            // Log
-            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
-            {
-                int elitesTotal = combinedArchive.Count;
-
-                float archiveAvgTotal = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.CombinedFitness) : 0f;
-                float archiveAvgGeo = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.geoFitness) : 0f;
-                float archiveAvgEne = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.enemFitness) : 0f;
-                float archiveAvgFurn = (elitesTotal > 0) ? combinedArchive.Values.Average(e => e.furnFitness) : 0f;
-
-                int elitesAboveThreshold = combinedArchive.Values.Count(e => e.CombinedFitness > combinedThreshold);
-
-                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
-
-                sb.AppendLine($"{i}, {archiveAvgTotal}, {archiveAvgGeo}, {archiveAvgEne}, {archiveAvgFurn}, {avgDelta}, {elitesTotal}, {elitesAboveThreshold}");
-
-                sumDeltaCombined = 0f;
-                deltaCount = 0;
-            }
-        }
-
-        File.WriteAllText(path, sb.ToString());
-    }
-
-
-
     MapCandidate GenerateRandomGeometry()
     {
-        MapCandidate candidate = new MapCandidate(mapGenerator.MakeMap());
-        return candidate;
+        /*MapCandidate candidate = new MapCandidate(mapGenerator.MakeMap());
+        return candidate;*/
+        var map = new Map();
+        GeometryGenerator.CreateMapGeometry(map);
+        GeometryGenerator.BuildRoomTopology(map);
+        return new MapCandidate(map);
+
     }
 
     MapCandidate GenerateRandomEnemies(MapCandidate parent)
@@ -402,6 +308,7 @@ public class MapElite : MonoBehaviour
 
         return child;
     }
+    /*
     MapCandidate SelectRandomGeometry()
     {
         //Return random solution in the archive
@@ -418,18 +325,23 @@ public class MapElite : MonoBehaviour
     {
         //Return random solution in the archive
         return enemArchive.Values.ToList()[Random.Range(0, enemArchive.Count)];
-    }
+    }*/
 
-    MapCandidate SelectRandomCombined()
+    MapCandidate SelectRandom(Dictionary<Vector2, MapCandidate> archive) //made select random more generic, can be used for all 3 archives
     {
-        //Return random solution in the archive
-        return combinedArchive.Values.ToList()[Random.Range(0, combinedArchive.Count)];
+        var list = archive.Values.ToList();
+        return list[Random.Range(0, list.Count)];
     }
 
     MapCandidate MutateGeometry(MapCandidate parent)
     {
-        var child = new MapCandidate(parent.mapData.Clone());
+        /*var child = new MapCandidate(parent.mapData.Clone());
         child.mapData = mapGenerator.mutateGeometry(child.mapData);
+        return child;*/
+
+        var child = new MapCandidate(parent.mapData.Clone());
+        GeometryGenerator.MutateMapGeometry(child.mapData);
+        GeometryGenerator.BuildRoomTopology(child.mapData);
         return child;
     }
 
@@ -459,7 +371,7 @@ public class MapCandidate
     public float geoFitness;
     public float enemFitness;
     public float furnFitness;
-    public MapInfo mapData;
+    public Map mapData;
 
     public float CombinedFitness => geoFitness + enemFitness + furnFitness;
     // Behavior slices
@@ -467,11 +379,7 @@ public class MapCandidate
     public Vector2 furnBehavior;
     public Vector2 enemyBehavior;
 
-    // Combined key
-    public (Vector2 geo, Vector2 furn, Vector2 enemy) CombinedBehavior
-        => (geoBehavior, furnBehavior, enemyBehavior);
-
-    public MapCandidate(MapInfo map)
+    public MapCandidate(Map map)
     {
         mapData = map;
         geoFitness = 0f;
