@@ -14,6 +14,10 @@ public static class MapHelpers
     };
     public static readonly EnemyType[] EnemyTypes =
     (EnemyType[])Enum.GetValues(typeof(EnemyType));
+    public static readonly LootType[] LootTypes =
+    (LootType[])Enum.GetValues(typeof(LootType));
+    public static readonly ObstacleType[] ObstacleTypes =
+    (ObstacleType[])Enum.GetValues(typeof(ObstacleType));
 
 }
 
@@ -63,7 +67,29 @@ public class Map
         }
         return i;
     }
-    
+
+    public int lootCount()
+    {
+        int i = 0;
+
+        foreach (Room room in rooms)
+        {
+            i += room.loot.Count;
+        }
+        return i;
+    }
+
+    public int obstacleCount()
+    {
+        int i = 0;
+
+        foreach (Room room in rooms)
+        {
+            i += room.obstacles.Count;
+        }
+        return i;
+    }
+
 }
 // The finished encounter rooms
 [Serializable]
@@ -81,6 +107,10 @@ public class Room
     public float orderModifier = 0f;
     public float enemyBudget = 0f;
     public float enemyBudgetUsed = 0f;
+    public float lootBudget = 0f;
+    public float lootBudgetUsed = 0f;
+    public float obstacleBudget = 0f;
+    public float obstacleBudgetUsed = 0f;
 
     public Vector2Int? entryTile = null;
     public Vector2Int? exitTile = null;
