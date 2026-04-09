@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -35,9 +36,9 @@ public class MapSurroundingsGenerator : MonoBehaviour
         spawnedTrees.Clear();
     }
 
-    public void GenerateSurroundings(int[,] map)
+    public void GenerateSurroundings(Map map)
     {
-        if (map == null)
+        if (map == null || map.rooms == null || map.rooms.Count == 0)
             return;
 
         if (tilemapBase == null || tilemapDecour == null)
@@ -48,6 +49,10 @@ public class MapSurroundingsGenerator : MonoBehaviour
 
         ClearSurroundings();
 
+        var floorTiles = new HashSet<Vector2Int>(
+            map.rooms.SelectMany(r => r.tiles.Select(t => t.pos))
+        );
+
         if (!TryGetUsedBounds(map, out int minX, out int maxX, out int minY, out int maxY))
             return;
 
@@ -55,72 +60,47 @@ public class MapSurroundingsGenerator : MonoBehaviour
         {
             for (int y = minY - padding; y <= maxY + padding; y++)
             {
-                // Skip only actual map cells that are used
-                if (x >= 0 && x < map.GetLength(0) &&
-                    y >= 0 && y < map.GetLength(1) &&
-                    map[x, y] != 0)
-                {
+                if (floorTiles.Contains(new Vector2Int(x, y)))
                     continue;
-                }
 
                 Vector3Int cell = new Vector3Int(x, y, 0);
 
-                // Do not overwrite already placed tiles
                 if (tilemapBase.GetTile(cell) != null)
                     continue;
 
-                // Place forest ground
-                TileBase baseTile = tilesForestBase[Random.Range(0, tilesForestBase.Length)];
-                tilemapBase.SetTile(cell, baseTile);
+                tilemapBase.SetTile(cell, tilesForestBase[Random.Range(0, tilesForestBase.Length)]);
 
-                // Place forest decor
-                if (tilesForestDecour != null &&
-                    tilesForestDecour.Length > 0 &&
-                    Random.Range(0, 100) < decorChance)
-                {
-                    TileBase decorTile = tilesForestDecour[Random.Range(0, tilesForestDecour.Length)];
-                    tilemapDecour.SetTile(cell, decorTile);
-                }
+                if (tilesForestDecour != null && tilesForestDecour.Length > 0 && Random.Range(0, 100) < decorChance)
+                    tilemapDecour.SetTile(cell, tilesForestDecour[Random.Range(0, tilesForestDecour.Length)]);
 
-                // Place trees
                 int distance = GetDistanceFromUsedArea(x, y, minX, maxX, minY, maxY);
 
-                if (distance >= minTreeDistanceFromMap &&
-                    treePrefabs != null &&
-                    treePrefabs.Count > 0 &&
-                    Random.Range(0, 100) < treeChance)
+                if (distance >= minTreeDistanceFromMap && treePrefabs != null && treePrefabs.Count > 0 && Random.Range(0, 100) < treeChance)
                 {
                     Vector3 worldPos = tilemapBase.GetCellCenterWorld(cell);
-                    GameObject prefab = treePrefabs[Random.Range(0, treePrefabs.Count)];
-                    GameObject tree = Instantiate(prefab, worldPos, Quaternion.identity, transform);
+                    GameObject tree = Instantiate(treePrefabs[Random.Range(0, treePrefabs.Count)], worldPos, Quaternion.identity, transform);
                     spawnedTrees.Add(tree);
                 }
             }
         }
     }
 
-    private bool TryGetUsedBounds(int[,] map, out int minX, out int maxX, out int minY, out int maxY)
+    private bool TryGetUsedBounds(Map map, out int minX, out int maxX, out int minY, out int maxY)
     {
-        minX = int.MaxValue;
-        maxX = int.MinValue;
-        minY = int.MaxValue;
-        maxY = int.MinValue;
+        minX = int.MaxValue; maxX = int.MinValue;
+        minY = int.MaxValue; maxY = int.MinValue;
 
         bool foundAny = false;
 
-        for (int x = 0; x < map.GetLength(0); x++)
+        foreach (var room in map.rooms)
         {
-            for (int y = 0; y < map.GetLength(1); y++)
+            foreach (var (pos, _) in room.tiles)
             {
-                if (map[x, y] == 0)
-                    continue;
-
                 foundAny = true;
-
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
+                if (pos.x < minX) minX = pos.x;
+                if (pos.x > maxX) maxX = pos.x;
+                if (pos.y < minY) minY = pos.y;
+                if (pos.y > maxY) maxY = pos.y;
             }
         }
 

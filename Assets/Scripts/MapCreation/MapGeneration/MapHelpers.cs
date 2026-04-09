@@ -158,6 +158,25 @@ public enum ObstacleType
     Pillar
 }
 
+public enum WallType
+{
+    WallSouth = 0,
+    WallEast = 1,
+    WallNorth = 2,
+    WallWest = 3,
+    CornerSouth = 4,
+    CornerEast = 5,
+    CornerNorth = 6,
+    CornerWest = 7
+}
+
+public enum MapStyle
+{
+    Ground = 0,
+    Farm = 1,
+    Forest = 2
+}
+
 
 
 
