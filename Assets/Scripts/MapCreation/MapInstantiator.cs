@@ -119,29 +119,29 @@ public class MapInstantiator : MonoBehaviour
                 }
             }
 
-            // --- TODO: Place obstacles ---
-            // foreach (var (pos, type) in room.obstacles)
-            // {
-            //     var cell = new Vector3Int(pos.x, pos.y, 0);
-            //     tilemapBase.SetTile(cell, tilesFarmBase[0]);
-            //     tilemapWall.SetTile(cell, tilesFarmWalls[GetWallIndex(pos, floorTiles)]);
-            // }
+            //place obstacles
+            foreach (var (pos, type) in room.obstacles)
+            {
+                var cell = new Vector3Int(pos.x, pos.y, 0);
+                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                tilemapWall.SetTile(cell, tilesFarmWalls[GetWallIndex(pos, floorTiles)]);
+            }
 
-            // --- TODO: Place loot ---
-            // foreach (var (pos, type) in room.loot)
-            // {
-            //     var cell = new Vector3Int(pos.x, pos.y, 0);
-            //     tilemapBase.SetTile(cell, tilesFarmBase[0]);
-            //     spawnedLoot.Add(Instantiate(furnishingPrefabs[(int)type], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity));
-            // }
+            //Place loot 
+            foreach (var (pos, type) in room.loot)
+            {
+                var cell = new Vector3Int(pos.x, pos.y, 0);
+                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                spawnedLoot.Add(Instantiate(furnishingPrefabs[(int)type], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity));
+            }
 
-            // --- TODO: Queue enemies for spawning ---
-            // foreach (var (pos, type) in room.enemies)
-            // {
-            //     var cell = new Vector3Int(pos.x, pos.y, 0);
-            //     tilemapBase.SetTile(cell, tilesFarmBase[0]);
-            //     enemiesToSpawn.Add((enemyPrefabs[(int)type], tilemapBase.GetCellCenterWorld(cell)));
-            // }
+            // Queue enemies for spawning
+            foreach (var (pos, type) in room.enemies)
+            {
+                var cell = new Vector3Int(pos.x, pos.y, 0);
+                tilemapBase.SetTile(cell, tilesFarmBase[0]);
+                enemiesToSpawn.Add((enemyPrefabs[(int)type], tilemapBase.GetCellCenterWorld(cell)));
+            }
         }
 
         // paint walls
