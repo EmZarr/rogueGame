@@ -90,6 +90,53 @@ public class Map
         return i;
     }
 
+    public float TotalCorridorLength()
+    {
+        if (connections == null)
+            return 0f;
+
+        float total = 0f;
+
+        foreach (var connection in connections)
+        {
+            total += connection.length;
+        }
+
+        return total;
+    }
+
+    public float TotalTileCount()
+    {
+        if (rooms == null)
+            return 0f;
+
+        float total = 0f;
+
+        foreach (var room in rooms)
+        {
+            total += room.tiles.Count;
+        }
+
+        return total;
+    }
+
+    public List<(Vector2Int pos, int type)> GetAllEnemies()
+    {
+        var allEnemies = new List<(Vector2Int pos, int type)>();
+
+        if (rooms == null)
+            return allEnemies;
+
+        foreach (var room in rooms)
+        {
+            if (room?.enemies == null)
+                continue;
+
+            allEnemies.AddRange(room.enemies);
+        }
+
+        return allEnemies;
+    }
 }
 // The finished encounter rooms
 [Serializable]
@@ -97,6 +144,8 @@ public class Room
 {
     public List<RoomChunk> chunks = new();
     public List<(Vector2Int pos, int type)> tiles = new();
+    // for faster lookup
+    public HashSet<Vector2Int> tileSet = new();
     public List<(Vector2Int pos, int type)> enemies = new();
     public List<(Vector2Int pos, int type)> loot = new();
     public List<(Vector2Int pos, int type)> obstacles = new();
@@ -119,6 +168,22 @@ public class Room
     {
         chunks = new List<RoomChunk>();
         this.position = pos;
+    }
+
+    public float GetLootTypeShare(LootType type)
+    {
+        if (loot == null || loot.Count == 0)
+            return 0f;
+
+        int count = 0;
+
+        foreach (var item in loot)
+        {
+            if (item.type == (int)type)
+                count++;
+        }
+
+        return (float)count / loot.Count;
     }
 }
 
@@ -157,6 +222,31 @@ public class RoomConnection
     public Vector2Int tileB;
 
     public float length;
+}
+
+public class MapCandidate
+{
+    public float geoFitness;
+    public float enemFitness;
+    public float furnFitness;
+    public Map mapData;
+
+    public float CombinedFitness => geoFitness + enemFitness + furnFitness;
+    // Behavior slices
+    public Vector2 geoBehavior;
+    public Vector2 furnBehavior;
+    public Vector2 enemyBehavior;
+
+    public MapCandidate(Map map)
+    {
+        mapData = map;
+        geoFitness = 0f;
+        enemFitness = 0f;
+        furnFitness = 0f;
+        geoBehavior = new Vector2();
+        furnBehavior = new Vector2();
+        enemyBehavior = new Vector2();
+    }
 }
 
 public enum EnemyType
@@ -206,6 +296,8 @@ public enum MapStyle
     Farm = 1,
     Forest = 2
 }
+
+
 
 
 

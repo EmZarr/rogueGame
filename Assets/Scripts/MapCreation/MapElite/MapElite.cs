@@ -11,8 +11,6 @@ public class MapElite : MonoBehaviour
     [SerializeField] int totalIterations = 50;       // I
     [SerializeField] int initialRandomSolutions = 20; // G
 
-    MapGenerator mapGenerator;
-
     private Dictionary<Vector2, MapCandidate> geoArchive = new Dictionary<Vector2, MapCandidate>();
     //private Dictionary<(Vector2, Vector2), MapCandidate> furnArchive = new Dictionary<(Vector2, Vector2), MapCandidate>();
     //private Dictionary<(Vector2, Vector2, Vector2), MapCandidate> enemArchive = new Dictionary<(Vector2, Vector2, Vector2), MapCandidate>();
@@ -23,9 +21,6 @@ public class MapElite : MonoBehaviour
     }
     void Start()
     {
-
-        mapGenerator = GetComponent<MapGenerator>()
-            ;
         RunMapElitesGeometry();
         MapArchiveExporter.ExportArchiveToJson(geoArchive.Values, "geoArchive_maps.json");
 
@@ -363,30 +358,5 @@ public class MapElite : MonoBehaviour
         child.geoFitness = parent.geoFitness;
         child.mapData = mapGenerator.mutateFurnishing(child.mapData);
         return child;
-    }
-}
-
-public class MapCandidate
-{
-    public float geoFitness;
-    public float enemFitness;
-    public float furnFitness;
-    public Map mapData;
-
-    public float CombinedFitness => geoFitness + enemFitness + furnFitness;
-    // Behavior slices
-    public Vector2 geoBehavior;
-    public Vector2 furnBehavior;
-    public Vector2 enemyBehavior;
-
-    public MapCandidate(Map map)
-    {
-        mapData = map;
-        geoFitness = 0f;
-        enemFitness = 0f;
-        furnFitness = 0f;
-        geoBehavior = new Vector2();
-        furnBehavior = new Vector2();
-        enemyBehavior = new Vector2();
     }
 }

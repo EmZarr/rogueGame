@@ -6,14 +6,28 @@ using static UnityEditor.Recorder.OutputPath;
 
 public static class ObjectPlacementGenerator
 {
+    // How much more loot does optional rooms get
+    public const float OptionalLootModifier = 2f;
+    // The max ratio of powerups to health we want on main path
+    public const float PowerRatioInMain = 0.3f;
+    // The minimum ratio of powerups to health we want in optional rooms
+    public const float PowerRatioInOptional = 0.6f;
+
+    public const float DefaultMutateSize = 0.2f;
+
+    public static readonly Vector2 DefaultBudgetModifierRange = new(0.25f, 6f);
+
+    public const int DefaultEnemyBaseBudget = 10;
+    public const int DefaultLootBaseBudget = 4;
+    public const int DefaultObstacleBaseBudget = 4;
     public static Map CreateEnemiesOnMap(Map map)
     {
-        return CreateEnemiesOnMap(map, 10, new Vector2(0.25f, 6f));
+        return CreateEnemiesOnMap(map, DefaultEnemyBaseBudget, DefaultBudgetModifierRange);
     }
 
     public static Map CreateEnemiesOnMap(Map map, int baseBudget)
     {
-        return CreateEnemiesOnMap(map, baseBudget, new Vector2(0.25f, 6f));
+        return CreateEnemiesOnMap(map, baseBudget, DefaultBudgetModifierRange);
     }
 
     public static Map CreateEnemiesOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
@@ -40,7 +54,7 @@ public static class ObjectPlacementGenerator
 
     public static Map MutateEnemies(Map map)
     {
-        return MutateEnemies(map, 0.2f, new Vector2(0.25f, 6f), 10);
+        return MutateEnemies(map, DefaultMutateSize, DefaultBudgetModifierRange, DefaultEnemyBaseBudget);
     }
 
     public static Map MutateEnemies(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
@@ -121,18 +135,21 @@ public static class ObjectPlacementGenerator
 
     public static Map CreateLootOnMap(Map map)
     {
-        return CreateLootOnMap(map, 4, new Vector2(0.5f, 3f));
+        return CreateLootOnMap(map, DefaultLootBaseBudget, DefaultBudgetModifierRange);
     }
     public static Map CreateLootOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
         // Makes a occupied tile list
-        HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
+        HashSet <Vector2Int> occupiedPositions = GetOccupiedPositions(map);
         foreach (Room room in map.rooms)
         {
-            // Finds budget based on size, and randomness
+
+            // Finds budget based on size, and randomness. More loot for optional
+            float roomLootModifier = room.onMainPath ? 1f : OptionalLootModifier;
             room.lootBudget = baseBudget
             * room.sizeModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y);
+            * Random.Range(budgetModifierRange.x, budgetModifierRange.y)
+            * roomLootModifier;
             room.lootBudgetUsed = 0f;
             // Place enemies
             while (room.lootBudgetUsed < room.lootBudget)
@@ -147,7 +164,7 @@ public static class ObjectPlacementGenerator
 
     public static Map MutateLoot(Map map)
     {
-        return MutateLoot(map, 0.2f, new Vector2(0.5f, 3f), 4);
+        return MutateLoot(map, DefaultMutateSize, DefaultBudgetModifierRange, DefaultLootBaseBudget);
     }
     public static Map MutateLoot(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
     {
@@ -161,7 +178,8 @@ public static class ObjectPlacementGenerator
             Room roomToMutate = map.rooms[Random.Range(0, map.rooms.Count)];
             roomToMutate.lootBudget = baseBudget
             * roomToMutate.sizeModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y);
+            * Random.Range(budgetModifierRange.x, budgetModifierRange.y)
+            * OptionalLootModifier;
 
             while (roomToMutate.lootBudgetUsed > roomToMutate.lootBudget)
             {
@@ -196,8 +214,23 @@ public static class ObjectPlacementGenerator
 
         // Choose loot type randomly, add loot, update budget and occupied
         LootType randomType = MapHelpers.LootTypes[Random.Range(0, MapHelpers.LootTypes.Length)];
+
+        var ratio = room.GetLootTypeShare(LootType.Powerup);
+
+        // If main room has more powerups than allowed
+        if (room.onMainPath && ratio > PowerRatioInMain)
+        {
+            randomType = LootType.Health;
+        }
+        // If optional room has less powerups than allowed
+        else if (!room.onMainPath && ratio < PowerRatioInOptional) 
+        {
+            randomType = LootType.Powerup;
+        }
+
         room.loot.Add((tile, (int)randomType));
         room.lootBudgetUsed += 1;
+        
         occupied.Add(tile);
         return true;
     }
@@ -222,7 +255,7 @@ public static class ObjectPlacementGenerator
     }
     public static Map CreateObstaclesOnMap(Map map)
     {
-        return CreateObstaclesOnMap(map, 4, new Vector2(0.5f, 3f));
+        return CreateObstaclesOnMap(map, DefaultObstacleBaseBudget, DefaultBudgetModifierRange);
     }
     public static Map CreateObstaclesOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
@@ -247,7 +280,7 @@ public static class ObjectPlacementGenerator
     }
     public static Map MutateObstacles(Map map)
     {
-        return MutateObstacles(map, 0.2f, new Vector2(0.5f, 3f), 4);
+        return MutateObstacles(map, DefaultMutateSize, DefaultBudgetModifierRange, DefaultObstacleBaseBudget);
     }
     public static Map MutateObstacles(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
     {

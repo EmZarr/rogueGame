@@ -7,11 +7,11 @@ using Unity.VisualScripting;
 public static class GeometryGenerator
 {
     // Create a fresh set of rooms and chunks for a map.
-    public static Map CreateMapGeometry(Map map, int maxChunkSize = 15, int maxChunkAmount = 100)
+    public static Map CreateMapGeometry(Map map, int maxChunkSize = 13, int maxChunkAmount = 100)
     {
         map.rooms = new List<Room>();
         // How many chunks are we placing?
-        int chunkAmount = UnityEngine.Random.Range(4, maxChunkAmount);
+        int chunkAmount = UnityEngine.Random.Range(10, maxChunkAmount);
 
         for (int i = 0; i < chunkAmount; i++)
         {
@@ -22,7 +22,7 @@ public static class GeometryGenerator
     }
 
     // Randomly adds and removes chunks from a map
-    public static Map MutateMapGeometry(Map map, float mutateSize = 0.2f, int maxChunkSize = 15)
+    public static Map MutateMapGeometry(Map map, float mutateSize = 0.2f, int maxChunkSize = 13)
     {
         // We add/remove an amount of chunks equal to 20% of existing. Min 1
        int amountToMutate = Mathf.Max(1, Mathf.RoundToInt(map.chunkCount() * mutateSize));
@@ -78,8 +78,8 @@ public static class GeometryGenerator
     public static void AddRandomRoomChunk(Map map, int maxChunkSize) {
         // Make a random chunk of random size, shape and position
         Vector2Int chunkSize = new Vector2Int(
-            UnityEngine.Random.Range(3, maxChunkSize),
-            UnityEngine.Random.Range(3, maxChunkSize)
+            UnityEngine.Random.Range(4, maxChunkSize),
+            UnityEngine.Random.Range(4, maxChunkSize)
         );
 
         Vector2Int chunkPosition = new Vector2Int(
@@ -195,6 +195,8 @@ public static class GeometryGenerator
                     }
                 }
             }
+
+            room.tileSet = uniqueTiles;
 
             foreach (var tile in uniqueTiles)
             {

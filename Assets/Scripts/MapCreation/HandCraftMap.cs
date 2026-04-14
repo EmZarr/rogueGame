@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class HandCraftMap : MonoBehaviour
-{
+{/*
     [SerializeField] private MapGenerator generator;
     [SerializeField] private List<HandcraftedMapData> handcraftedMaps = new List<HandcraftedMapData>();
     private readonly List<MapCandidate> archive = new List<MapCandidate>();
@@ -181,9 +181,9 @@ public class HandCraftMap : MonoBehaviour
         {
             map.mapArray[p.x, p.y] = t;
         }
-    }
+    }*/
 }
-
+/*
 [Serializable]
 public class HandcraftedMapData
 {
@@ -197,4 +197,4 @@ public struct SpawnEntry
 {
     public Vector2Int position;
     public int type;
-}
+}*/
