@@ -1161,9 +1161,16 @@ MonoBehaviour:
   - {fileID: 5086782275875845498, guid: 3b6a584d68eae7349b7377d4c354e96f, type: 3}
   - {fileID: 7478037528052263297, guid: ed534ca038c4da141b60375581a40542, type: 3}
   - {fileID: 7478037528052263297, guid: c82706e725f2f8148bb5e94378943127, type: 3}
+  lootPrefabs:
+  - {fileID: 7478037528052263297, guid: c82706e725f2f8148bb5e94378943127, type: 3}
+  - {fileID: 7478037528052263297, guid: ed534ca038c4da141b60375581a40542, type: 3}
+  obstaclePrefabs:
+  - {fileID: 5086782275875845498, guid: 559cb05fec2e64844814060a26f89a6b, type: 3}
+  - {fileID: 5086782275875845498, guid: 559cb05fec2e64844814060a26f89a6b, type: 3}
   levelManager: {fileID: 1723517302}
   surroundingsGenerator: {fileID: 859900379}
   telemetryManager: {fileID: 859900376}
+  mapStyle: 1
 --- !u!156049354 &859900374
 Grid:
   m_ObjectHideFlags: 0

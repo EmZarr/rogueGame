@@ -50,7 +50,10 @@ public class MapInstantiator : MonoBehaviour
 
     [SerializeField] GameObject playerPrefab;
     [SerializeField] List<GameObject> enemyPrefabs;
-    [SerializeField] List<GameObject> furnishingPrefabs;
+
+    //new furn prefabs seperated obstacles and loot
+    [SerializeField] List<GameObject> lootPrefabs;
+    [SerializeField] List<GameObject> obstaclePrefabs;
 
     [SerializeField] GameObject levelManager;
 
@@ -119,12 +122,12 @@ public class MapInstantiator : MonoBehaviour
                 }
             }
 
-            //place obstacles
+            //place obstacles later we actually use an obstacle
             foreach (GridEntry gridEntry in room.obstacles)
             {
                 var cell = new Vector3Int(gridEntry.pos.x, gridEntry.pos.y, 0);
                 tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                tilemapWall.SetTile(cell, tilesFarmWalls[GetWallIndex(gridEntry.pos, floorTiles)]);
+                spawnedObjects.Add(Instantiate(obstaclePrefabs[gridEntry.type], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity));
             }
 
             //Place loot 
@@ -132,7 +135,7 @@ public class MapInstantiator : MonoBehaviour
             {
                 var cell = new Vector3Int(gridEntry.pos.x, gridEntry.pos.y, 0);
                 tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                spawnedLoot.Add(Instantiate(furnishingPrefabs[(int)gridEntry.type], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity));
+                spawnedLoot.Add(Instantiate(lootPrefabs[gridEntry.type], tilemapBase.GetCellCenterWorld(cell), Quaternion.identity));
             }
 
             // Queue enemies for spawning
@@ -140,8 +143,9 @@ public class MapInstantiator : MonoBehaviour
             {
                 var cell = new Vector3Int(gridEntry.pos.x, gridEntry.pos.y, 0);
                 tilemapBase.SetTile(cell, tilesFarmBase[0]);
-                enemiesToSpawn.Add((enemyPrefabs[(int)gridEntry.type], tilemapBase.GetCellCenterWorld(cell)));
+                enemiesToSpawn.Add((enemyPrefabs[gridEntry.type], tilemapBase.GetCellCenterWorld(cell)));
             }
+
         }
 
         // paint walls
@@ -265,17 +269,19 @@ public class MapInstantiator : MonoBehaviour
         bool left = floorTiles.Contains(pos + Vector2Int.left);
         bool right = floorTiles.Contains(pos + Vector2Int.right);
 
-        if (left && down) return (int)WallType.CornerSouth;
-        if (down && right) return (int)WallType.CornerEast;
-        if (right && up) return (int)WallType.CornerNorth;
+        // Corners take priority — check perpendicular pairs
         if (up && left) return (int)WallType.CornerWest;
+        if (up && right) return (int)WallType.CornerNorth;
+        if (down && left) return (int)WallType.CornerSouth;
+        if (down && right) return (int)WallType.CornerEast;
 
-        if (up) return (int)WallType.WallSouth;
-        if (left) return (int)WallType.WallEast;
-        if (down) return (int)WallType.WallNorth;
-        if (right) return (int)WallType.WallWest;
+        // Straight walls
+        if (up) return (int)WallType.WallWest;
+        if (down) return (int)WallType.WallEast;
+        if (left) return (int)WallType.WallSouth;
+        if (right) return (int)WallType.WallNorth;
 
-        return (int)WallType.WallWest; ; // random wall for fallback
+        return (int)WallType.WallSouth;
     }
 
 
