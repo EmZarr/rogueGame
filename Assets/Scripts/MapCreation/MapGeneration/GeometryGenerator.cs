@@ -236,8 +236,8 @@ public static class GeometryGenerator
 
         foreach (Room room in map.rooms)
         {
-            //assumes that average room size is 100
-            room.sizeModifier = Mathf.Clamp(room.tiles.Count / 100f, 0f, 3f);
+            //assumes that average room size is 150 (Was 197, and then 128 in test)
+            room.sizeModifier = Mathf.Clamp(room.tiles.Count / 150f, 0f, 2f);
 
             if (mainPathCount <= 1)
             {
@@ -247,7 +247,7 @@ public static class GeometryGenerator
             {
                 //get the relative order from 0-1
                 float t = (room.orderIndex - 1f) / (mainPathCount - 1f); 
-                room.orderModifier = Mathf.Clamp(t * 3f, 0f, 3f); 
+                room.orderModifier = Mathf.Clamp(t * 2f, 0f, 2f); 
             }
         }
     }
