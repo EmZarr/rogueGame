@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Made for handcrafted maps. Does not work after refactor
 public class HandCraftMap : MonoBehaviour
 {/*
     [SerializeField] private MapGenerator generator;

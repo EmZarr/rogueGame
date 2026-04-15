@@ -17,7 +17,8 @@ public static class ObjectPlacementGenerator
 
     public static readonly Vector2 DefaultBudgetModifierRange = new(0.25f, 4f);
 
-    public const int DefaultEnemyBaseBudget = 6;
+    // Base budget before modifiers
+    public const int DefaultEnemyBaseBudget = 4;
     public const int DefaultLootBaseBudget = 2;
     public const int DefaultObstacleBaseBudget = 3;
     public static Map CreateEnemiesOnMap(Map map)
@@ -32,8 +33,8 @@ public static class ObjectPlacementGenerator
 
     public static Map CreateEnemiesOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
-        // Makes a occupied tile list
         HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
+
         foreach (Room room in map.rooms)
         {
             // Finds budget based on size, order base and randomness
