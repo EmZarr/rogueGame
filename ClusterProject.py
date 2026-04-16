@@ -20,7 +20,7 @@ from py_pcha import PCHA
 ANALYSIS_ALGORITHM = "archetypal"
 
 ANALYSIS_KWARGS = {
-    "n_archetypes": 3,   # number of archetypes
+    "n_archetypes": 5,   # number of archetypes
     "delta": 0.1,        # regularization / robustness parameter for PCHA
 }
 
@@ -81,14 +81,14 @@ def make_analyzer(name="archetypal", **kwargs):
 
     if name == "archetypal":
         return ArchetypalAnalysisModel(
-            n_archetypes=kwargs.get("n_archetypes", 3),
+            n_archetypes=kwargs.get("n_archetypes", 5),
             delta=kwargs.get("delta", 0.1),
         )
 
     raise ValueError(f"Unsupported analysis algorithm: {name}")
 
 
-def make_projector(name="pca", n_components=2, **kwargs):
+def make_projector(name="pca", n_components=5, **kwargs):
     name = name.lower()
 
     if name == "pca":
@@ -172,7 +172,7 @@ def analyze_entries(entries=None, return_projection_model=False):
     analyzer = make_analyzer(ANALYSIS_ALGORITHM, **ANALYSIS_KWARGS)
     labels = analyzer.fit_predict(X_model)
 
-    projector = make_projector(PROJECTION_METHOD, n_components=2, **PROJECTION_KWARGS)
+    projector = make_projector(PROJECTION_METHOD, n_components=5, **PROJECTION_KWARGS)
     coords_2d = projector.fit_transform(X_model)
 
     print(f"\nAnalysis algorithm: {ANALYSIS_ALGORITHM}")
