@@ -10,7 +10,7 @@ public static class MapHelpers
         { EnemyType.Ranged, 1f },
         { EnemyType.Bomber, 0.5f },
         { EnemyType.Assassin, 1f },
-        { EnemyType.Guardian, 2f }
+        { EnemyType.Guardian, 3f }
     };
     public static readonly EnemyType[] EnemyTypes =
     (EnemyType[])Enum.GetValues(typeof(EnemyType));
@@ -421,9 +421,3 @@ public enum MapStyle
     Farm = 1,
     Forest = 2
 }
-
-
-
-
-
-

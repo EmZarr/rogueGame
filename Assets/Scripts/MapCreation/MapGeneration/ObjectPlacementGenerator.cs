@@ -15,7 +15,7 @@ public static class ObjectPlacementGenerator
 
     public const float DefaultMutateSize = 0.2f;
 
-    public static readonly Vector2 DefaultBudgetModifierRange = new(0.25f, 4f);
+    public static readonly Vector2 DefaultBudgetModifierRange = new(0.5f, 3f);
 
     // Base budget before modifiers
     public const int DefaultEnemyBaseBudget = 4;

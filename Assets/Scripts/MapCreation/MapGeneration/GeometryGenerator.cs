@@ -70,7 +70,11 @@ public static class GeometryGenerator
         }
         else
         {
-            room.position = FindBottomLeftTile(room);
+            map.rooms.Remove(room);
+            foreach (RoomChunk chunk in room.chunks)
+            {
+                AddChunk(map, chunk);
+            }
         }
     }
 
@@ -93,6 +97,11 @@ public static class GeometryGenerator
             size = chunkSize
         };
 
+        AddChunk(map, ourChunk);
+    }
+
+    private static void AddChunk(Map map, RoomChunk ourChunk)
+    {
         // Find all rooms the chunk touches / overlaps
         var roomsWeAreIn = new List<Room>();
         foreach (var room in map.rooms)
@@ -237,7 +246,7 @@ public static class GeometryGenerator
         foreach (Room room in map.rooms)
         {
             //assumes that average room size is 150 (Was 197, and then 128 in test)
-            room.sizeModifier = Mathf.Clamp(room.tiles.Count / 150f, 0f, 2f);
+            room.sizeModifier = Mathf.Clamp(room.tiles.Count / 150f, 0.5f, 1.5f);
 
             if (mainPathCount <= 1)
             {
@@ -247,7 +256,7 @@ public static class GeometryGenerator
             {
                 //get the relative order from 0-1
                 float t = (room.orderIndex - 1f) / (mainPathCount - 1f); 
-                room.orderModifier = Mathf.Clamp(t * 2f, 0f, 2f); 
+                room.orderModifier = Mathf.Clamp(t * 1.5f, 0.5f, 1.5f); 
             }
         }
     }

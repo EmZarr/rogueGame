@@ -6,11 +6,9 @@ using h = FitnessAndBehaviorHelpers;
 
 public static class EnemFitAndBehav
 {
-    private const float MaxDifficultyDensityForBehavior = 0.15f;
+    private const float MaxDifficultyDensityForBehavior = 0.25f;
     // How many enemies does loot counteract
     private const float lootCounteract = 0.5f;
-    // How many enemies does obstacle count for
-    private const float obstacleEnemCount = 0.5f;
 
     public static (float fitness, (int enemyType, int difficulty) behavior) GetEnemyFitnessAndBehavior(Map map)
     {
@@ -46,20 +44,18 @@ public static class EnemFitAndBehav
         {
             // How different is room comp from map comp
             compositionConsistencySum += GetCompositionSimilarity(mapEnemyComp, GetEnemyComposition(room.enemies));
-            
+
             // Total room difficulty:
             // - enemies count by their actual used budget
             // - loot counts negative portion enemy
-            // - obstacles count as portion an enemy
             float roomDifficulty =
                 room.enemyBudgetUsed -
-                room.loot.Count * lootCounteract +
-                room.obstacles.Count * obstacleEnemCount;
+                room.loot.Count * lootCounteract;
 
             // Difficulty per tile in the room
             float difficultyDensity = roomDifficulty / room.tiles.Count;
 
-            // Normalize so 15% = 1, 0% = 0
+            // Normalize so 20% = 1, 0% = 0
             float normalizedDifficultyDensity = Mathf.Clamp01(difficultyDensity / MaxDifficultyDensityForBehavior);
 
             difficultyPerRoom.Add(normalizedDifficultyDensity);
@@ -71,7 +67,7 @@ public static class EnemFitAndBehav
 
         float behaviorConsistency = compositionConsistencySum/map.rooms.Count;
 
-        return((EnemyRoleCompositionBehavior(allEnemies, 20), h.GetBehaviorRange(3, averageRoomDifficultyDensity)),behaviorConsistency, difficultyPerRoom);
+        return((EnemyRoleCompositionBehavior(allEnemies, 20), h.GetBehaviorRange(4, averageRoomDifficultyDensity)),behaviorConsistency, difficultyPerRoom);
     }
 
     private static float GetDifficultyScalingScore(Map map, List<float> difficultyPerRoom)
