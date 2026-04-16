@@ -147,6 +147,22 @@ public class MapInstantiator : MonoBehaviour
             }
 
         }
+        
+        foreach (var connection in map.connections)
+        {
+
+            var path = GeometryGenerator.GetManhattanPath(connection.tileA, connection.tileB);
+            foreach (var pos in path)
+            {
+                for (int dx = 0; dx <= 1; dx++)
+                {
+                    var offsetPos = new Vector2Int(pos.x + dx, pos.y);
+                    var cell = new Vector3Int(offsetPos.x, offsetPos.y, 0);
+                    floorTiles.Add(offsetPos);
+                    tilemapBase.SetTile(cell, GetBaseTiles()[Random.Range(0, 5)]);
+                }
+            }
+        }
 
         // paint walls
         foreach (var pos in new HashSet<Vector2Int>(floorTiles))
