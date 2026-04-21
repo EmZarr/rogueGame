@@ -283,7 +283,6 @@ public class MapElite : MonoBehaviour
         ObjectPlacementGenerator.CreateEnemiesOnMap(child);
         return child;
     }
-
     protected static Map GenerateRandomFurnishing(Map parent)
     {
         var child = parent.Clone();
@@ -291,7 +290,6 @@ public class MapElite : MonoBehaviour
         ObjectPlacementGenerator.CreateObstaclesOnMap(child);
         return child;
     }
-
     protected static Map SelectRandom<TKey>(Dictionary<TKey, Map> archive)
     {
         var list = archive.Values.ToList();

@@ -119,7 +119,7 @@ public static class EnemFitAndBehav
         return (float)goodPairs / totalPairs;
     }
 
-    private static float[] GetEnemyComposition(List<GridEntry> enemies)
+    public static float[] GetEnemyComposition(List<GridEntry> enemies)
     {
         float[] composition = new float[MapHelpers.EnemyTypes.Length];
 
@@ -149,7 +149,7 @@ public static class EnemFitAndBehav
     // Returns:
     // 1 → identical compositions
     // 0 → completely different compositions
-    private static float GetCompositionSimilarity(float[] a, float[] b)
+    public static float GetCompositionSimilarity(float[] a, float[] b)
     {
         if (a == null || b == null || a.Length != b.Length)
             return 0f;
