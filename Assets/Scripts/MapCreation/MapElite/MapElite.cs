@@ -289,7 +289,6 @@ public class MapElite : MonoBehaviour
 
         return child;
     }
-
     Map GenerateRandomFurnishing(Map parent)
     {
         var child = new Map(parent.Clone());
@@ -302,7 +301,7 @@ public class MapElite : MonoBehaviour
         return child;
     }
 
-    Map SelectRandom<TKey>(Dictionary<TKey, Map> archive)
+    public Map SelectRandom<TKey>(Dictionary<TKey, Map> archive)
     {
         var list = archive.Values.ToList();
         return list[Random.Range(0, list.Count)];
