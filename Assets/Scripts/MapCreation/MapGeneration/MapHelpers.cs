@@ -100,6 +100,12 @@ public class Map
     public Vector2Int geoBehavior = new Vector2Int();
     public Vector2Int furnBehavior = new Vector2Int();
     public Vector2Int enemyBehavior = new Vector2Int();
+    public (Vector2Int, Vector2Int, Vector2Int) combinedBehavior => (geoBehavior, furnBehavior, enemyBehavior);
+
+    // For CMA-ME
+    public int difficulty;
+    public float[] enemyComp = new float[MapHelpers.EnemyTypes.Length];
+
     public Map() { }
     public Map(Map other)
     {
@@ -143,6 +149,9 @@ public class Map
         geoBehavior = other.geoBehavior;
         furnBehavior = other.furnBehavior;
         enemyBehavior = other.enemyBehavior;
+        difficulty = other.difficulty;
+        enemyComp = other.enemyComp;
+
     }
     public Map Clone() => new Map(this);
 

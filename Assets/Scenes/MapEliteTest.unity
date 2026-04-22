@@ -436,8 +436,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4f6ae296224daa4cb4507d17a2c05b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
-  totalIterations: 1000
-  initialRandomSolutions: 100
+  totalIterations: 50000
+  initialRandomSolutions: 2500
 --- !u!1 &1085453243
 GameObject:
   m_ObjectHideFlags: 0

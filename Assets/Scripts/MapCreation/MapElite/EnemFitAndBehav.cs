@@ -35,7 +35,7 @@ public static class EnemFitAndBehav
         var allEnemies = map.GetAllEnemies();
 
         List<float> difficultyPerRoom = new List<float>(map.rooms.Count);
-        float[] mapEnemyComp = GetEnemyComposition(allEnemies);
+        map.enemyComp = GetEnemyComposition(allEnemies);
 
         float difficultyDensitySum = 0f;
         float compositionConsistencySum = 0f;
@@ -43,7 +43,7 @@ public static class EnemFitAndBehav
         foreach (var room in map.rooms)
         {
             // How different is room comp from map comp
-            compositionConsistencySum += GetCompositionSimilarity(mapEnemyComp, GetEnemyComposition(room.enemies));
+            compositionConsistencySum += GetCompositionSimilarity(map.enemyComp, GetEnemyComposition(room.enemies));
 
             // Total room difficulty:
             // - enemies count by their actual used budget
@@ -67,7 +67,8 @@ public static class EnemFitAndBehav
 
         float behaviorConsistency = compositionConsistencySum/map.rooms.Count;
 
-        return((EnemyRoleCompositionBehavior(allEnemies, 20), h.GetBehaviorRange(4, averageRoomDifficultyDensity)),behaviorConsistency, difficultyPerRoom);
+        map.difficulty = h.GetBehaviorRange(4, averageRoomDifficultyDensity);
+        return ((EnemyRoleCompositionBehavior(allEnemies, 20), map.difficulty),behaviorConsistency, difficultyPerRoom);
     }
 
     private static float GetDifficultyScalingScore(Map map, List<float> difficultyPerRoom)
@@ -118,7 +119,7 @@ public static class EnemFitAndBehav
         return (float)goodPairs / totalPairs;
     }
 
-    private static float[] GetEnemyComposition(List<GridEntry> enemies)
+    public static float[] GetEnemyComposition(List<GridEntry> enemies)
     {
         float[] composition = new float[MapHelpers.EnemyTypes.Length];
 
@@ -148,7 +149,7 @@ public static class EnemFitAndBehav
     // Returns:
     // 1 → identical compositions
     // 0 → completely different compositions
-    private static float GetCompositionSimilarity(float[] a, float[] b)
+    public static float GetCompositionSimilarity(float[] a, float[] b)
     {
         if (a == null || b == null || a.Length != b.Length)
             return 0f;
