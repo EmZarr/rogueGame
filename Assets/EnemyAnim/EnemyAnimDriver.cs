@@ -59,11 +59,16 @@ public class EnemyAnimDriver : MonoBehaviour
 
     public void Tick()
     {
+        if (_deathFired || animator == null) return;
+
         Vector2 vel = GetVelocity2D();
 
         bool locked = enemy.IsStunned || animator.GetBool(InAction);
 
-        if (!locked)
+        var sm = enemy.GetComponent<StateMachine>();
+        bool isIdle = sm != null && sm.GetState() is IdleState;
+
+        if (!locked && !isIdle)
         {
             if (enemy._data.enemyType == EnemyType.Guardian && guardianShield != null)
             {

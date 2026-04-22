@@ -37,7 +37,9 @@ public class GuardianProtectZone : DamageZone
         {
             healShield(Time.deltaTime * healRate);
         }
-        if (!enemy.IsStunned) {
+        var sm = enemy.GetComponent<StateMachine>();
+        bool isIdle = sm != null && sm.GetState() is IdleState;
+        if (!enemy.IsStunned && !isIdle) {
             UpdateFacingTransform(1.0f, 40f);
         }
     }
