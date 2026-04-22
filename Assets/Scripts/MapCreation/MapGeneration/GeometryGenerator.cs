@@ -82,8 +82,8 @@ public static class GeometryGenerator
     public static void AddRandomRoomChunk(Map map, int maxChunkSize) {
         // Make a random chunk of random size, shape and position
         Vector2Int chunkSize = new Vector2Int(
-            UnityEngine.Random.Range(4, maxChunkSize),
-            UnityEngine.Random.Range(4, maxChunkSize)
+            UnityEngine.Random.Range(3, maxChunkSize),
+            UnityEngine.Random.Range(3, maxChunkSize)
         );
 
         Vector2Int chunkPosition = new Vector2Int(

@@ -9,7 +9,8 @@ public class MapElite : MonoBehaviour
 
     [Header("MAP-Elites Parameters")]
     [SerializeField] protected int totalIterations = 50;       // I
-    [SerializeField] int initialRandomSolutions = 20; // G
+    [SerializeField] protected int initialRandomSolutions = 20; // G
+    [SerializeField] protected TrainingLogger trainingLogger; // G
 
     protected Dictionary<Vector2, Map> geoArchive = new Dictionary<Vector2, Map>();
     protected Dictionary<(Vector2, Vector2), Map> furnArchive = new Dictionary<(Vector2, Vector2), Map>();
@@ -34,30 +35,16 @@ public class MapElite : MonoBehaviour
 
     public void RunMapElitesGeometry()
     {
-        int iter = 0;
-        // Delta only for replacements (overwrites), averaged per log interval
-        float sumDeltaCombined = 0f;
-        int deltaCount = 0;
-
-        const float geoThreshold = 0.8f;
-        const int logEvery = 500;
-
-        string path = Path.Combine(Application.dataPath, "GeoFitness.csv");
-        var sb = new StringBuilder();
-        sb.AppendLine("iterations, archive avg geometry fitness, archive avg total fitness, avg delta total fitness, elites total, elites geoFitness above 0.8");
-
         for (int i = 0; i < totalIterations; i++)
         {
             // --- Generate candidate ---
             Map candidate;
-            if (iter <= initialRandomSolutions)
+            if (i <= initialRandomSolutions)
             {
                 candidate = GenerateRandomGeometry();
-                iter++;
             }
             else
             {
-                //MapCandidate parent = SelectRandomGeometry(); OLD
                 Map parent = SelectRandom(geoArchive);
                 candidate = MutateGeometry(parent);
             }
@@ -73,68 +60,24 @@ public class MapElite : MonoBehaviour
             {
                 geoArchive[key] = candidate;
             }
-
             else if (candidate.CombinedFitness > prev.CombinedFitness)
             {
-                float delta = candidate.CombinedFitness - prev.CombinedFitness;
                 geoArchive[key] = candidate;
-
-                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
-                {
-                    sumDeltaCombined += delta;
-                    deltaCount++;
-                }
             }
-
-            //Log
-            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
-            {
-                int elitesTotal = geoArchive.Count;
-
-                float archiveAvgGeo = (elitesTotal > 0) ? geoArchive.Values.Average(e => e.geoFitness) : 0f;
-                float archiveAvgTotal = (elitesTotal > 0) ? geoArchive.Values.Average(e => e.CombinedFitness) : 0f;
-
-                int elitesAboveGeoThreshold = geoArchive.Values.Count(e => e.geoFitness > geoThreshold);
-
-                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
-
-                sb.AppendLine($"{i}, {archiveAvgGeo}, {archiveAvgTotal}, {avgDelta}, {elitesTotal}, {elitesAboveGeoThreshold}");
-
-                sumDeltaCombined = 0f;
-                deltaCount = 0;
-            }
+            trainingLogger?.LogGeometry(i, geoArchive);
         }
-
-        File.WriteAllText(path, sb.ToString());
     }
-
-
-
 
     public void RunMapElitesEnemies()
     {
-        int iter = 0;
-
-        // Delta only for replacements (overwrites), averaged per log interval
-        float sumDeltaCombined = 0f;
-        int deltaCount = 0;
-
-        const float enemThreshold = 0.8f;
-
-        const int logEvery = 500;
-
-        string path = Path.Combine(Application.dataPath, "EneFitness.csv");
-        var sb = new StringBuilder();
-        sb.AppendLine("iterations, archive avg enemy fitness, archive avg total fitness, avg delta total fitness, elites total, elites enemFitness above 0.8");
 
         for (int i = 0; i < totalIterations * 3; i++)
         {
             // Generate candidate
             Map candidate;
-            if (iter <= initialRandomSolutions)
+            if (i <= initialRandomSolutions)
             {
                 candidate = GenerateRandomEnemies(SelectRandom(furnArchive));
-                iter++;
             }
             else
             {
@@ -156,63 +99,23 @@ public class MapElite : MonoBehaviour
             }
             else if (candidate.CombinedFitness > prev.CombinedFitness)
             {
-                float delta = candidate.CombinedFitness - prev.CombinedFitness;
                 enemArchive[key] = candidate;
-
-                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
-                {
-                    sumDeltaCombined += delta;
-                    deltaCount++;
-                }
             }
+            trainingLogger?.LogEnemies(i, enemArchive);
 
-            // Log
-            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
-            {
-                int elitesTotal = enemArchive.Count;
-
-                float archiveAvgEne = (elitesTotal > 0) ? enemArchive.Values.Average(e => e.enemFitness) : 0f;
-                float archiveAvgTotal = (elitesTotal > 0) ? enemArchive.Values.Average(e => e.CombinedFitness) : 0f;
-
-                int elitesAboveThreshold = enemArchive.Values.Count(e => e.enemFitness > enemThreshold);
-
-                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
-
-                sb.AppendLine($"{i}, {archiveAvgEne}, {archiveAvgTotal}, {avgDelta}, {elitesTotal}, {elitesAboveThreshold}");
-
-                sumDeltaCombined = 0f;
-                deltaCount = 0;
-            }
         }
-
-        File.WriteAllText(path, sb.ToString());
     }
 
 
     public void RunMapElitesFurnishing()
     {
-        int iter = 0;
-
-        // Delta only for replacements (overwrites), averaged per log interval
-        float sumDeltaCombined = 0f;
-        int deltaCount = 0;
-
-        const float furnThreshold = 0.8f;
-
-        const int logEvery = 500;
-
-        string path = Path.Combine(Application.dataPath, "FurFitness.csv");
-        var sb = new StringBuilder();
-        sb.AppendLine("iterations, archive avg furnish fitness, archive avg total fitness, avg delta total fitness, elites total, elites furnFitness above 0.8");
-
         for (int i = 0; i < totalIterations; i++)
         {
             // Generate candidate
             Map candidate;
-            if (iter <= initialRandomSolutions)
+            if (i <= initialRandomSolutions)
             {
                 candidate = GenerateRandomFurnishing(SelectRandom(geoArchive));
-                iter++;
             }
             else
             {
@@ -234,36 +137,10 @@ public class MapElite : MonoBehaviour
             }
             else if (candidate.CombinedFitness > prev.CombinedFitness)
             {
-                float delta = candidate.CombinedFitness - prev.CombinedFitness;
                 furnArchive[key] = candidate;
-
-                if (!float.IsNaN(delta) && !float.IsInfinity(delta))
-                {
-                    sumDeltaCombined += delta;
-                    deltaCount++;
-                }
             }
-
-            // Log 
-            if ((i > 0 && i % logEvery == 0) || i == totalIterations - 1)
-            {
-                int elitesTotal = furnArchive.Count;
-
-                float archiveAvgFurn = (elitesTotal > 0) ? furnArchive.Values.Average(e => e.furnFitness) : 0f;
-                float archiveAvgTotal = (elitesTotal > 0) ? furnArchive.Values.Average(e => e.CombinedFitness) : 0f;
-
-                int elitesAboveThreshold = furnArchive.Values.Count(e => e.furnFitness > furnThreshold);
-
-                float avgDelta = (deltaCount > 0) ? (sumDeltaCombined / deltaCount) : 0f;
-
-                sb.AppendLine($"{i}, {archiveAvgFurn}, {archiveAvgTotal}, {avgDelta}, {elitesTotal}, {elitesAboveThreshold}");
-
-                sumDeltaCombined = 0f;
-                deltaCount = 0;
-            }
+            trainingLogger?.LogFurnishing(i, furnArchive);
         }
-
-        File.WriteAllText(path, sb.ToString());
     }
 
     protected static Map GenerateRandomGeometry()

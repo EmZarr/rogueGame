@@ -6,6 +6,7 @@ using System.Text;
 using JetBrains.Annotations;
 using UnityEditorInternal;
 using System;
+using static UnityEditor.Progress;
 
 public class CMA_ME : MapElite
 {
@@ -24,21 +25,44 @@ public class CMA_ME : MapElite
 
     private void RunCMA_EMEnemies()
     {
+
         // Make 10 emitters, starting random places
         List<Emitter> emitters = new List<Emitter>();
         for (int i = 0; i < 10; i++) {
             emitters.Add(new Emitter(furnArchive));
         }
 
-        for (int i = 0; i < totalIterations * 3; i++) {
-            Emitter e = emitters
-            .OrderBy(em => em.totalGenerated)
-            .First();
-            Map candidate = e.GenerateMap();
-            var (fitness, behavior) = EnemFitAndBehav.GetEnemyFitnessAndBehavior(candidate);
-            candidate.enemFitness = fitness;
-            candidate.enemyBehavior = new Vector2Int(behavior.enemyType, behavior.difficulty);
-            e.ReturnSolution(candidate, enemArchive);
+        for (int i = 0; i < totalIterations * 3; i++)
+        {
+            if (i < initialRandomSolutions)
+            {
+                Map candidate = GenerateRandomEnemies(SelectRandom(furnArchive).Clone());
+
+                var (fitness, behavior) = EnemFitAndBehav.GetEnemyFitnessAndBehavior(candidate);
+                candidate.enemFitness = fitness;
+                candidate.enemyBehavior = new Vector2Int(behavior.enemyType, behavior.difficulty);
+
+                if (!enemArchive.ContainsKey(candidate.combinedBehavior) ||
+                    enemArchive[candidate.combinedBehavior].enemFitness < candidate.enemFitness)
+                {
+                    enemArchive[candidate.combinedBehavior] = candidate;
+                }
+            }
+            else
+            {
+                Emitter e = emitters
+                    .OrderBy(em => em.totalGenerated)
+                    .First();
+
+                Map candidate = e.GenerateMap();
+
+                var (fitness, behavior) = EnemFitAndBehav.GetEnemyFitnessAndBehavior(candidate);
+                candidate.enemFitness = fitness;
+                candidate.enemyBehavior = new Vector2Int(behavior.enemyType, behavior.difficulty);
+
+                e.ReturnSolution(candidate, enemArchive);
+            }
+            trainingLogger?.LogEnemies(i, enemArchive);
         }
 
     }
@@ -198,8 +222,7 @@ public class CMA_ME : MapElite
 
         public Map GenerateMap()
         {
-            // TODO, bias mutation with biases
-            return MutateEnemies(referenceMap);
+            return ObjectPlacementGenerator.BiasedMutateEnemies(referenceMap.Clone(), compBias, diffBias);
         }
     }
 

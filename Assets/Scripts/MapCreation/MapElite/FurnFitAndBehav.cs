@@ -54,6 +54,6 @@ public static class FurnFitAndBehav
 
         float behaviorConsistency = (h.GetConsistencyScore(roomLootScores, averageRoomLootDensity) + h.GetConsistencyScore(roomObstacleScores, averageRoomObstacleDensity)) / 2;
 
-        return ((h.GetBehaviorRange(3, averageRoomLootDensity), h.GetBehaviorRange(3, averageRoomObstacleDensity)),behaviorConsistency);
+        return ((h.GetBehaviorRange(4, averageRoomLootDensity), h.GetBehaviorRange(4, averageRoomObstacleDensity)),behaviorConsistency);
     }
 }
