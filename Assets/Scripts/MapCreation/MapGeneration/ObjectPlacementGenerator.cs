@@ -18,9 +18,9 @@ public static class ObjectPlacementGenerator
     public static readonly Vector2 DefaultBudgetModifierRange = new(0.5f, 3f);
 
     // Base budget before modifiers
-    public const int DefaultEnemyBaseBudget = 4;
+    public const int DefaultEnemyBaseBudget = 3;
     public const int DefaultLootBaseBudget = 2;
-    public const int DefaultObstacleBaseBudget = 3;
+    public const int DefaultObstacleBaseBudget = 6;
     public static Map CreateEnemiesOnMap(Map map)
     {
         return CreateEnemiesOnMap(map, DefaultEnemyBaseBudget, DefaultBudgetModifierRange);

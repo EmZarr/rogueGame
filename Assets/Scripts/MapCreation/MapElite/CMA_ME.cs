@@ -25,7 +25,6 @@ public class CMA_ME : MapElite
 
     private void RunCMA_EMEnemies()
     {
-
         // Make 10 emitters, starting random places
         List<Emitter> emitters = new List<Emitter>();
         for (int i = 0; i < 10; i++) {

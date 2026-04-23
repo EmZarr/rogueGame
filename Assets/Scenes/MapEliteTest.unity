@@ -455,7 +455,7 @@ MonoBehaviour:
   enableLogging: 1
   logEveryNIterations: 5000
   fileName: training_log.csv
-  geoBehaviorBins: 10
+  geoBehaviorBins: 20
   furnLootBins: 4
   furnObstacleBins: 4
   enemyTypeBins: 126

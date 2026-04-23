@@ -7,8 +7,8 @@ public static class FurnFitAndBehav
 {
     // We treat 15% density as "max interesting" for binning purposes.
     // Anything above this is clamped into the top bin.
-    private const float MaxLootDensityForBehavior = 0.15f;
-    private const float MaxObstacleDensityForBehavior = 0.15f;
+    private const float MaxLootDensityForBehavior = 0.04f;
+    private const float MaxObstacleDensityForBehavior = 0.13f;
 
     public static (float fitness, (int lootDensity, int obstacleDensity) behavior) GetFurnFitnessAndBehavior(Map map)
     {
@@ -54,6 +54,6 @@ public static class FurnFitAndBehav
 
         float behaviorConsistency = (h.GetConsistencyScore(roomLootScores, averageRoomLootDensity) + h.GetConsistencyScore(roomObstacleScores, averageRoomObstacleDensity)) / 2;
 
-        return ((h.GetBehaviorRange(4, averageRoomLootDensity), h.GetBehaviorRange(4, averageRoomObstacleDensity)),behaviorConsistency);
+        return ((h.GetBehaviorRange(3, averageRoomLootDensity), h.GetBehaviorRange(3, averageRoomObstacleDensity)),behaviorConsistency);
     }
 }

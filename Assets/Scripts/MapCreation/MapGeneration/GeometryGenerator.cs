@@ -246,7 +246,7 @@ public static class GeometryGenerator
         foreach (Room room in map.rooms)
         {
             //assumes that average room size is 150 (Was 197, and then 128 in test)
-            room.sizeModifier = Mathf.Clamp(room.tiles.Count / 150f, 0.5f, 1.5f);
+            room.sizeModifier = Mathf.Clamp(room.tiles.Count / 150f, 0.25f, 2f);
 
             if (mainPathCount <= 1)
             {

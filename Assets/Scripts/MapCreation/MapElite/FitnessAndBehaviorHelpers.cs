@@ -60,13 +60,42 @@ public static class FitnessAndBehaviorHelpers
     // [0.1–0.2) → 1
     // ...
     // [0.9–1.0] → 9
-    public static int GetBehaviorRange(int resolution, double value)
+    public static int GetBehaviorRange(int resolution, float value, float min = 0f, float max = 1f)
     {
-        // Convert value to bin index by scaling to resolution
-        int bin = (int)(value * resolution);
+        if (resolution <= 1)
+            return 0;
 
-        // Clamp upper bound (handles value == 1.0 case)
-        // Without this, value = 1.0 → bin = resolution (out of bounds)
+        if (max <= min + 1e-6f)
+            return 0;
+
+        float normalized = Mathf.InverseLerp(min, max, value);
+        int bin = Mathf.FloorToInt(normalized * resolution);
+
+        if (bin >= resolution)
+            bin = resolution - 1;
+
+        return bin;
+    }
+
+
+    public static int GetBehaviorRangeSmooth(
+    int resolution,
+    float value,
+    float min,
+    float max)
+    {
+        if (resolution <= 1)
+            return 0;
+
+        if (max <= min + 1e-6f)
+            return 0;
+
+        float normalized = Mathf.InverseLerp(min, max, value);
+
+        // Smoothstep remap
+        float curved = normalized * normalized * (3f - 2f * normalized);
+
+        int bin = Mathf.FloorToInt(curved * resolution);
         if (bin >= resolution)
             bin = resolution - 1;
 

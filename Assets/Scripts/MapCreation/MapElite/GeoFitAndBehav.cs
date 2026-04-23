@@ -55,18 +55,23 @@ public static class GeoFitAndBehav
 
         // find average score and score for each rooms
         float opennessSum = 0f;
+        float weightedOpennessSum = 0f;
+        int totalTiles = 0;
 
         foreach (Room room in map.rooms)
         {
             float roomOpenness = ComputeRoomOpenness(room);
             roomOpennessScores.Add(roomOpenness);
             opennessSum += roomOpenness;
+            weightedOpennessSum += roomOpenness * room.tiles.Count;
+            totalTiles+= room.tiles.Count;
+
         }
 
-        float averageOpenness = opennessSum / map.rooms.Count;
+        float averageOpenness = weightedOpennessSum / totalTiles;
         float behaviorConsistency = h.GetConsistencyScore(roomOpennessScores, averageOpenness);
 
-        return (h.GetBehaviorRange(10, averageOpenness), behaviorConsistency);
+        return (h.GetBehaviorRangeSmooth(12, averageOpenness, 0.18f, 0.9f), behaviorConsistency);
     }
 
     // Computes how "open" a single tile is within a room
@@ -96,14 +101,13 @@ public static class GeoFitAndBehav
 
         // Safety check (should never really happen)
         if (total == 0) return 0f;
-
         // Return fraction of nearby tiles that are floor tiles (0..1)
         return (float)floorCount / total;
     }
 
     // Computes the average openness of an entire room
     // by averaging openness over all its tiles
-    static float ComputeRoomOpenness(Room room, int opennessRadius = 4)
+    static float ComputeRoomOpenness(Room room, int opennessRadius = 6)
     {
         // Guard against invalid room
         if (room == null || room.tiles == null || room.tiles.Count == 0)

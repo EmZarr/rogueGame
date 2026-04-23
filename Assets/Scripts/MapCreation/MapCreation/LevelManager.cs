@@ -76,6 +76,7 @@ public class LevelManager : MonoBehaviour
         RebuildQueueFromPlayedMaps();
 
         LoadNextMap();
+        LoadNextMap();
 
         _hasSpawnPos = false;
         CacheSpawnAndHookPlayer();
