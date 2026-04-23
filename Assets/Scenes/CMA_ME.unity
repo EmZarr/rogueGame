@@ -437,8 +437,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 956c36e35afc52e409a0c338b8ee79d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CMA_ME
-  totalIterations: 50000
-  initialRandomSolutions: 2500
+  totalIterations: 5001
+  initialRandomSolutions: 250
   trainingLogger: {fileID: 859900377}
 --- !u!114 &859900377
 MonoBehaviour:
@@ -453,13 +453,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrainingLogger
   enableLogging: 1
-  logEveryNIterations: 5000
+  logEveryNIterations: 500
   fileName: training_log.csv
-  geoBehaviorBins: 10
-  furnLootBins: 4
-  furnObstacleBins: 4
+  geoBehaviorBins: 12
+  furnLootBins: 3
+  furnObstacleBins: 3
   enemyTypeBins: 126
-  enemyDifficultyBins: 4
+  enemyDifficultyBins: 3
   fitnessThreshold: 0.8
 --- !u!1 &1085453243
 GameObject:

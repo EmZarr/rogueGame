@@ -67,7 +67,7 @@ public static class EnemFitAndBehav
 
         float behaviorConsistency = compositionConsistencySum/map.rooms.Count;
 
-        map.difficulty = h.GetBehaviorRange(4, averageRoomDifficultyDensity);
+        map.difficulty = h.GetBehaviorRange(3, averageRoomDifficultyDensity);
         return ((EnemyRoleCompositionBehavior(allEnemies, 20), map.difficulty),behaviorConsistency, difficultyPerRoom);
     }
 
