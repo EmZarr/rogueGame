@@ -163,6 +163,13 @@ public class MapInstantiator : MonoBehaviour
                 }
             }
         }
+        var astarPath = AStarPathfinder.FindPath(map.startRoom.entryTile, map.endRoom.exitTile, floorTiles);
+        foreach (var pos in astarPath)
+        {
+            var cell = new Vector3Int(pos.x, pos.y, 0);
+            tilemapRoad.SetTile(cell, GetRoadTiles()[0]);
+        }
+
 
         // paint walls
         foreach (var pos in new HashSet<Vector2Int>(floorTiles))
@@ -213,6 +220,8 @@ public class MapInstantiator : MonoBehaviour
         // make surroundings
         if (surroundingsGenerator != null)
             surroundingsGenerator.GenerateSurroundings(map);
+
+
 
         // telemtry part
         telemetryManager.SetTotalLoot(spawnedLoot.Count);

@@ -363,8 +363,12 @@ public static class GeometryGenerator
             current.onMainPath = true;
         }
 
-        current.exitTile = FindFurthestTileInRoom(current, current.entryTile);
-        start.entryTile = FindFurthestTileInRoom(start, start.exitTile);
+        //current.exitTile = FindFurthestTileInRoom(current, current.entryTile);
+        //start.entryTile = FindFurthestTileInRoom(start, start.exitTile);
+        var furthest = FindFurthestTiles(start, current);
+        start.entryTile = furthest.aTile;
+        current.exitTile = furthest.bTile;
+
         map.mainPathRooms = path;
         return map;
     }
@@ -477,6 +481,39 @@ public static class GeometryGenerator
         public Vector2Int bTile;
     }
 
+    //FindFurthestTiles
+    public static ClosestTilesResult FindFurthestTiles(Room a, Room b)
+    {
+        int bestDist = -1;
+        Vector2Int bestA = default;
+        Vector2Int bestB = default;
+
+        foreach (var tileA in a.tiles)
+        {
+            Vector2Int ta = tileA.pos;
+
+            foreach (var tileB in b.tiles)
+            {
+                Vector2Int tb = tileB.pos;
+                int d = Mathf.Abs(ta.x - tb.x) + Mathf.Abs(ta.y - tb.y);
+
+                if (d > bestDist)  // > instead of 
+                {
+                    bestDist = d;
+                    bestA = ta;
+                    bestB = tb;
+                }
+            }
+        }
+
+        return new ClosestTilesResult
+        {
+            dist = bestDist,
+            aTile = bestA,
+            bTile = bestB
+        };
+    }
+
     // Finds the two rooms furthest away from eachother
     public static (Room a, Room b) FindFurthestRooms(List<Room> rooms, Dictionary<(Room, Room), ClosestTilesResult> cached)
     {
@@ -488,7 +525,8 @@ public static class GeometryGenerator
         {
             for (int j = i + 1; j < rooms.Count; j++)
             {
-                var result = GetClosestTilesCached(rooms[i], rooms[j], cached);
+                //var result = GetClosestTilesCached(rooms[i], rooms[j], cached);
+                var result = FindFurthestTiles(rooms[i], rooms[j]);
 
                 if (result.dist > bestDist)
                 {

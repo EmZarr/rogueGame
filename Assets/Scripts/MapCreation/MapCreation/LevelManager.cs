@@ -14,7 +14,7 @@ public class LevelManager : MonoBehaviour
     [SerializeField] SpriteRenderer sprite;
     [SerializeField] AutoRecorder autoRecorder;
 
-    private StateMachine[] machines;
+    private StateMachine[] machines = System.Array.Empty<StateMachine>();
 
     // The active infinite loop qMueue: always 8 maps in fixed order
     public Queue<Map> finalMaps;

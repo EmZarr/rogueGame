@@ -134,13 +134,16 @@ public class Enemy : MonoBehaviour
         var sm = GetComponent<StateMachine>();
         sm.enabled = false;
 
-        if (_agent != null)
+        if (_agent != null && _agent.enabled && _agent.isOnNavMesh)
         {
             _agent.isStopped = true;
             _agent.enabled = false;
         }
 
         if (animDriver != null) animDriver.TriggerDead();
+
+        var anim = GetComponent<Animator>();
+        if (anim != null) StartCoroutine(DisableAnimatorAfterDelay(anim, 2f));
 
         telemetryManager.EnemyKilled();
         float scoreAmount;
@@ -314,6 +317,12 @@ public class Enemy : MonoBehaviour
         Vector3 center = Application.isPlaying ? HomePosition : transform.position;
 
         Gizmos.DrawWireSphere(center, _data.wanderRadius);
+    }
+
+    IEnumerator DisableAnimatorAfterDelay(Animator anim, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (anim != null) anim.enabled = false;
     }
 
 
