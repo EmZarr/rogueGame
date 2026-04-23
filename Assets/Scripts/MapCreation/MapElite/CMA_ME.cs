@@ -33,7 +33,7 @@ public class CMA_ME : MapElite
 
         for (int i = 0; i < totalIterations * 3; i++)
         {
-            if (i < initialRandomSolutions)
+            /*if (i < initialRandomSolutions)
             {
                 Map candidate = GenerateRandomEnemies(SelectRandom(furnArchive).Clone());
 
@@ -47,7 +47,7 @@ public class CMA_ME : MapElite
                     enemArchive[candidate.combinedBehavior] = candidate;
                 }
             }
-            else
+            else*/
             {
                 Emitter e = emitters
                     .OrderBy(em => em.totalGenerated)
@@ -63,6 +63,9 @@ public class CMA_ME : MapElite
             }
             trainingLogger?.LogEnemies(i, enemArchive);
         }
+        foreach (Emitter emitter in emitters) {
+            Debug.Log("Amount of restarts: " + emitter.restartAmount + " out of " + emitter.nonRestart);
+        }
 
     }
 
@@ -70,6 +73,8 @@ public class CMA_ME : MapElite
     {
         // Current search center, our "mean"
         public Map referenceMap;
+        public int restartAmount = 0;
+        public int nonRestart = 0;
 
         // Learned mutation tendencies, our "Covariance Matrix" 
         public float[] compBias = new float[MapHelpers.EnemyTypes.Length];
@@ -138,6 +143,7 @@ public class CMA_ME : MapElite
         {
             if (parents.Count > 0)
             {
+                nonRestart++;
                 // Improvement emitter ordering:
                 // 1. new cells first
                 // 2. larger fitness delta after
@@ -180,6 +186,7 @@ public class CMA_ME : MapElite
             else
             {
                 // No successful children in this batch -> restart
+                restartAmount++;
                 referenceMap = CMA_ME.SelectRandom(archive).Clone();
 
                 compBias = new float[MapHelpers.EnemyTypes.Length];

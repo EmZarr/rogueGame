@@ -15,6 +15,8 @@ public static class ObjectPlacementGenerator
 
     public const float DefaultMutateSize = 0.2f;
 
+    public const float BiasStrength = 2f;
+
     public static readonly Vector2 DefaultBudgetModifierRange = new(0.5f, 3f);
 
     // Base budget before modifiers
@@ -135,7 +137,7 @@ public static class ObjectPlacementGenerator
         for (int i = 0; i < room.enemies.Count; i++)
         {
             EnemyType type = (EnemyType)room.enemies[i].type;
-            total += 1f - compBias[(int)type];
+            total += Mathf.Max(0f, 1f - BiasStrength * compBias[(int)type]);
         }
 
         float r = Random.Range(0f, total);
@@ -145,7 +147,7 @@ public static class ObjectPlacementGenerator
         for (int i = 0; i < room.enemies.Count; i++)
         {
             EnemyType type = (EnemyType)room.enemies[i].type;
-            r -= 1f - compBias[(int)type];
+            r -= Mathf.Max(0f, 1f - BiasStrength * compBias[(int)type]);
 
             if (r <= 0f)
             {
@@ -168,7 +170,7 @@ public static class ObjectPlacementGenerator
         // -1 = never picked, 0 = normal chance, +1 = double chance
         float total = 0f;
         for (int i = 0; i < count; i++)
-            total += 1f + bias[i];
+            total += Mathf.Max(0f, 1f + BiasStrength * bias[i]);
 
         // Pick a random point inside the total weight range
         float r = Random.Range(0f, total);
@@ -177,7 +179,7 @@ public static class ObjectPlacementGenerator
         // Each subtraction "consumes" one enemy type's portion
         for (int i = 0; i < count; i++)
         {
-            r -= 1f + bias[i];
+            r -= Mathf.Max(0f, 1f + BiasStrength * bias[i]);
 
             // When we cross zero, we've landed in this enemy's "slice"
             if (r <= 0f)

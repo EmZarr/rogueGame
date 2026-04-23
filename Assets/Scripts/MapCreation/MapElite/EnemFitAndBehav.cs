@@ -6,7 +6,7 @@ using h = FitnessAndBehaviorHelpers;
 
 public static class EnemFitAndBehav
 {
-    private const float MaxDifficultyDensityForBehavior = 0.2f;
+    private const float MaxDifficultyDensityForBehavior = 0.15f;
     // How many enemies does loot counteract
     private const float lootCounteract = 0.5f;
 
@@ -55,7 +55,7 @@ public static class EnemFitAndBehav
             // Difficulty per tile in the room
             float difficultyDensity = roomDifficulty / room.tiles.Count;
 
-            // Normalize so 20% = 1, 0% = 0
+            // Normalize so 15% = 1, 0% = 0
             float normalizedDifficultyDensity = Mathf.Clamp01(difficultyDensity / MaxDifficultyDensityForBehavior);
 
             difficultyPerRoom.Add(normalizedDifficultyDensity);

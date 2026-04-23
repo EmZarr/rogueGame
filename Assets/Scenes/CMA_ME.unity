@@ -437,8 +437,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 956c36e35afc52e409a0c338b8ee79d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CMA_ME
-  totalIterations: 5001
-  initialRandomSolutions: 250
+  totalIterations: 50000
+  initialRandomSolutions: 2500
   trainingLogger: {fileID: 859900377}
 --- !u!114 &859900377
 MonoBehaviour:
@@ -453,7 +453,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrainingLogger
   enableLogging: 1
-  logEveryNIterations: 500
+  logEveryNIterations: 5000
   fileName: training_log.csv
   geoBehaviorBins: 12
   furnLootBins: 3
