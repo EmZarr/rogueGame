@@ -349,7 +349,15 @@ public class RoomChunk
             (YMin - clearance) <= other.YMax &&
             (YMax + clearance) >= other.YMin;
 
-        return xOverlap && yOverlap;
+        bool xNear = 
+            (XMin - clearance) <= other.XMax && 
+            (XMax + clearance) >= other.XMin;
+        bool yNear = 
+            (YMin - clearance) <= other.YMax && 
+            (YMax + clearance) >= other.YMin;
+
+
+        return (xOverlap && yNear) || (yOverlap && xNear);
     }
 }
 

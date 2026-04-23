@@ -32,6 +32,7 @@ public class Player : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        _ui = FindAnyObjectByType<UI>();
     }
 
     private void OnDestroy()
@@ -62,7 +63,7 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
-        _ui = FindAnyObjectByType<UI>();
+        //_ui = FindAnyObjectByType<UI>();
         _shield = GetComponentInChildren<Shield>();
         telemetryManager = FindFirstObjectByType<TelemetryManager>();
         popup = FindFirstObjectByType<PopUpCreator>();
@@ -129,7 +130,12 @@ public class Player : MonoBehaviour
     {
         if (_isInvinsible)
         {
-            telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType] += 1;
+            var enemy = attacker?.GetComponentInParent<Enemy>();
+
+            if (enemy != null)
+            {
+                telemetryManager.defenseToEnemy[telemetryManager.loadOutNumber, (int)attacker.GetComponentInParent<Enemy>()._data.enemyType] += 1;
+            }
             return;
         }
 
