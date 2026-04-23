@@ -45,7 +45,7 @@ public static class ObjectPlacementGenerator
             room.enemyBudgetUsed = 0f;
             // Place enemies
             while (room.enemyBudgetUsed < room.enemyBudget) {
-                bool success = PlaceRandomEnemy(room, occupiedPositions);
+                bool success = PlaceRandomEnemy(room, occupiedPositions, new float[MapHelpers.EnemyTypes.Length]);
                 if (!success) break;
             }
 
@@ -55,13 +55,13 @@ public static class ObjectPlacementGenerator
 
     public static Map MutateEnemies(Map map)
     {
-        return MutateEnemies(map, DefaultMutateSize, DefaultBudgetModifierRange, DefaultEnemyBaseBudget);
+        return MutateEnemies(map, new float[MapHelpers.EnemyTypes.Length], 0.0f, DefaultMutateSize, DefaultBudgetModifierRange, DefaultEnemyBaseBudget);
     }
 
-    public static Map MutateEnemies(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
+    public static Map MutateEnemies(Map map, float[] compBias, float diffBias, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
     {
 
-        // add occupied tiles
+        // get occupied tiles
         HashSet<Vector2Int> occupiedPositions = GetOccupiedPositions(map);
 
         // Mutates a few budgets, and adds/removes enemies accordingly
@@ -72,15 +72,16 @@ public static class ObjectPlacementGenerator
             roomToMutate.enemyBudget = baseBudget
             * roomToMutate.sizeModifier
             * roomToMutate.orderModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y);
+            * Random.Range(budgetModifierRange.x, budgetModifierRange.y)
+            * (1f + diffBias * 0.25f); ; // diff bias is -1 to 1, so now 0.75 to 1.25.
 
             while (roomToMutate.enemyBudgetUsed > roomToMutate.enemyBudget)
             {
-                RemoveRandomEnemy(roomToMutate, occupiedPositions);
+                RemoveRandomEnemy(roomToMutate, occupiedPositions, compBias);
             }
             while (roomToMutate.enemyBudgetUsed < roomToMutate.enemyBudget)
             {
-                bool success = PlaceRandomEnemy(roomToMutate, occupiedPositions);
+                bool success = PlaceRandomEnemy(roomToMutate, occupiedPositions, compBias);
                 if (!success) break;
             }
 
@@ -93,45 +94,98 @@ public static class ObjectPlacementGenerator
         {
             Room roomToMutate =  map.rooms[Random.Range(0, map.rooms.Count)];
 
-            RemoveRandomEnemy(roomToMutate, occupiedPositions);
-            bool success = PlaceRandomEnemy(roomToMutate, occupiedPositions);
+            RemoveRandomEnemy(roomToMutate, occupiedPositions, compBias);
+            bool success = PlaceRandomEnemy(roomToMutate, occupiedPositions, compBias);
             if (!success) break;
         }
         return map;
     }
 
-    public static bool PlaceRandomEnemy(Room room, HashSet<Vector2Int> occupied)
+    public static Map BiasedMutateEnemies(Map map, float[] compBias, float diffBias)
+    {
+        return MutateEnemies(map, compBias, diffBias, DefaultMutateSize, DefaultBudgetModifierRange, DefaultEnemyBaseBudget);
+    }
+    
+
+    public static bool PlaceRandomEnemy(Room room, HashSet<Vector2Int> occupied, float[] compBias)
     {
 
         // Find Random unoccupied tile
         if (!TryGetRandomFreeTile(room, occupied, out Vector2Int tile)) return false;
 
         // Choose enemy type randomly, add enemy, update budget and occupied
-        EnemyType randomType = MapHelpers.EnemyTypes[Random.Range(0, MapHelpers.EnemyTypes.Length)];
+        EnemyType randomType = GetBiasedRandomEnemy(compBias);
         room.enemies.Add(new GridEntry(tile, (int)randomType));
         room.enemyBudgetUsed += MapHelpers.EnemyCosts[randomType];
         occupied.Add(tile);
         return true;
     }
 
-    public static void RemoveRandomEnemy(Room room, HashSet<Vector2Int> occupied)
+    public static void RemoveRandomEnemy(Room room, HashSet<Vector2Int> occupied, float[] compBias)
     {
         if (room.enemies == null || room.enemies.Count == 0)
             return;
 
-        int index = Random.Range(0, room.enemies.Count);
+        float total = 0f;
 
-        var enemy = room.enemies[index];
+        // Sum removal chance for each existing enemy instance.
+        // Removal uses inverted bias (- instead of plus):
+        // positive bias = lower removal chance
+        // negative bias = higher removal chance
+        for (int i = 0; i < room.enemies.Count; i++)
+        {
+            EnemyType type = (EnemyType)room.enemies[i].type;
+            total += 1f - compBias[(int)type];
+        }
 
-        // Remove from list
-        room.enemies.RemoveAt(index);
+        float r = Random.Range(0f, total);
 
-        // Update budget
-        EnemyType type = (EnemyType)enemy.type;
-        room.enemyBudgetUsed -= MapHelpers.EnemyCosts[type];
+        // Walk along the line until we reach the random point
+        // Each subtraction "consumes" one enemy type's portion
+        for (int i = 0; i < room.enemies.Count; i++)
+        {
+            EnemyType type = (EnemyType)room.enemies[i].type;
+            r -= 1f - compBias[(int)type];
 
-        // Free tile
-        occupied.Remove(enemy.pos);
+            if (r <= 0f)
+            {
+                var enemy = room.enemies[i];
+
+                room.enemies.RemoveAt(i);
+                room.enemyBudgetUsed -= MapHelpers.EnemyCosts[type];
+                occupied.Remove(enemy.pos);
+                return;
+            }
+        }
+    }
+
+    private static EnemyType GetBiasedRandomEnemy(float[] bias)
+    {
+        int count = MapHelpers.EnemyTypes.Length;
+
+        // Add up the chance for each enemy type.
+        // Convert bias (-1 -> 1) into weights (0 -> 2)
+        // -1 = never picked, 0 = normal chance, +1 = double chance
+        float total = 0f;
+        for (int i = 0; i < count; i++)
+            total += 1f + bias[i];
+
+        // Pick a random point inside the total weight range
+        float r = Random.Range(0f, total);
+
+        // Walk along the line until we reach the random point
+        // Each subtraction "consumes" one enemy type's portion
+        for (int i = 0; i < count; i++)
+        {
+            r -= 1f + bias[i];
+
+            // When we cross zero, we've landed in this enemy's "slice"
+            if (r <= 0f)
+                return MapHelpers.EnemyTypes[i];
+        }
+
+        // Fallback
+        return MapHelpers.EnemyTypes[count - 1];
     }
 
     public static Map CreateLootOnMap(Map map)

@@ -32,7 +32,7 @@ public static class MapJsonExporter
 
         var wrapper = new MapListWrapper(maps);
 
-        string json = JsonUtility.ToJson(wrapper, true);
+        string json = JsonUtility.ToJson(wrapper, false);
         string path = Path.Combine(Application.dataPath, fileName);
 
         File.WriteAllText(path, json);
