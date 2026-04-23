@@ -6,7 +6,7 @@ using h = FitnessAndBehaviorHelpers;
 
 public static class EnemFitAndBehav
 {
-    private const float MaxDifficultyDensityForBehavior = 0.25f;
+    private const float MaxDifficultyDensityForBehavior = 0.2f;
     // How many enemies does loot counteract
     private const float lootCounteract = 0.5f;
 
