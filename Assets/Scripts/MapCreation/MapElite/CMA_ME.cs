@@ -33,7 +33,7 @@ public class CMA_ME : MapElite
 
         for (int i = 0; i < totalIterations * 3; i++)
         {
-            /*if (i < initialRandomSolutions)
+            if (i < initialRandomSolutions)
             {
                 Map candidate = GenerateRandomEnemies(SelectRandom(furnArchive).Clone());
 
@@ -47,7 +47,7 @@ public class CMA_ME : MapElite
                     enemArchive[candidate.combinedBehavior] = candidate;
                 }
             }
-            else*/
+            else
             {
                 Emitter e = emitters
                     .OrderBy(em => em.totalGenerated)
