@@ -672,7 +672,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SelectorLogger
   enableLogging: 1
   logEveryNIterations: 5000
-  fileName: selector_logNew.csv
+  fileName: selector_logNewElite.csv
   geoBehaviorBins: 10
   furnLootBins: 3
   furnObstacleBins: 3

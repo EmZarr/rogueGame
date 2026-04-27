@@ -1118,7 +1118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 881bbdd5c674cfe439a579ff8d8e8671, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  _health: 150
+  _health: 200
   _maxSpeed: 8
   _shieldMask:
     serializedVersion: 2
