@@ -58,6 +58,8 @@ public static class MapJsonExporter
             return new List<Map>();
         }
 
+        Debug.Log($"JSON length: {json?.Length}");
+        
         MapListWrapper wrapper = JsonUtility.FromJson<MapListWrapper>(json);
 
         if (wrapper == null || wrapper.wrappedMaps == null)

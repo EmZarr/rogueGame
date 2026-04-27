@@ -61,7 +61,7 @@ public class RandomMapGenerator : MonoBehaviour
             newEneMap.enemFitness = fitness;
             enemArchive.Add(newEneMap);
         }
-        MapJsonExporter.SaveMaps(enemArchive, "Random_Maps.json");
+        MapJsonExporter.SaveMaps(enemArchive, "Random_MapsEasy.json");
     }
 
 

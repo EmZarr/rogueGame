@@ -22,8 +22,8 @@ public class MapSelector : MonoBehaviour
     void SelectMaps(List<Map> maps)
     {
         List<Map> selectedMaps = new List<Map>();
-        var diverseEnemyBehaviorMaps = SelectMostDiverseEnemyBehavior(maps, 4);
-        var diverseExplorationBehaviorMaps = SelectMostDiverseExplorationBehavior(maps, 4);
+        var diverseEnemyBehaviorMaps = SelectMostDiverseEnemyBehavior(maps, 3);
+        var diverseExplorationBehaviorMaps = SelectMostDiverseExplorationBehavior(maps, 3);
         //Debug.Log("Enemy Maps final: " + diverseEnemyBehaviorMaps.Count);
         //Debug.Log("Explore Maps final: " + diverseExplorationBehaviorMaps.Count);
 

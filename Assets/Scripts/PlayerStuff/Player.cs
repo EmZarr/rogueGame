@@ -188,9 +188,9 @@ public class Player : MonoBehaviour
     {
 
         _health += health;
-        if (_health > 150)
+        if (_health > 200)
         {
-            _health = 150;
+            _health = 200;
             popup.CreatePopUp(0, transform.position, 3);
         }
         else
@@ -401,7 +401,7 @@ public class Player : MonoBehaviour
         _activeTempMultiplier = 1f;
         HeavyDashCooldownDecrease = 1f;
         _loadoutState.SetSpeed(1f);
-        _health = 150;
+        _health = 200;
         _ui.updateHealth(_health);
         _ui.updateBuffs(_attackSpeedMultiplier, _moveSpeedMultiplier, _damageMultiplier);
 

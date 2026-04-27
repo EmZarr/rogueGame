@@ -1222,7 +1222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8d89683a442c9e459dc4e55422f1938, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TelemetrySender
-  webAppUrl: https://script.google.com/macros/s/AKfycbz_cKb8qIPiAt15s_gNel7HpOCnMPGLR_C3S7lmuRFucRBP4lHrQscHCVXyydgGfzcZ/exec
+  webAppUrl: https://script.google.com/macros/s/AKfycbyKudcHlu2nqVABANsM2JFire81ivzQXVJRyrgpyKbBg259AT3hmGObw8_80dXCHih2TQ/exec
 --- !u!114 &859900378
 MonoBehaviour:
   m_ObjectHideFlags: 0
