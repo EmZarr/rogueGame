@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEngine;
 using System.Text;
+using UnityEngine;
 
 public class MapElite : MonoBehaviour
 {
@@ -15,6 +17,10 @@ public class MapElite : MonoBehaviour
     protected Dictionary<Vector2, Map> geoArchive = new Dictionary<Vector2, Map>();
     protected Dictionary<(Vector2, Vector2), Map> furnArchive = new Dictionary<(Vector2, Vector2), Map>();
     protected Dictionary<(Vector2, Vector2, Vector2), Map> enemArchive = new Dictionary<(Vector2, Vector2, Vector2), Map>();
+
+    [ThreadStatic] private static System.Random _rng;
+    private static System.Random Rng => _rng ??= new System.Random();
+
 
     protected void Awake()
     {
@@ -35,37 +41,42 @@ public class MapElite : MonoBehaviour
 
     public void RunMapElitesGeometry()
     {
-        for (int i = 0; i < totalIterations; i++)
+        var safeArchive = new ConcurrentDictionary<Vector2, Map>();
+
+        var options = new System.Threading.Tasks.ParallelOptions
         {
-            // --- Generate candidate ---
+            MaxDegreeOfParallelism = 15
+        };
+
+        System.Threading.Tasks.Parallel.For(0, totalIterations, options, i =>
+        {
+            var snapshot = new Dictionary<Vector2, Map>(safeArchive);
             Map candidate;
-            if (i <= initialRandomSolutions)
+            if (i <= initialRandomSolutions || snapshot.Count == 0)
             {
                 candidate = GenerateRandomGeometry();
             }
             else
             {
-                Map parent = SelectRandom(geoArchive);
+                Map parent = SelectRandom(new Dictionary<Vector2, Map>(safeArchive));
                 candidate = MutateGeometry(parent);
             }
 
-            // behavior + fitness
             var (fitness, behavior) = GeoFitAndBehav.GetGeoFitnessAndBehavior(candidate);
             candidate.geoBehavior = new Vector2Int(behavior, 0);
             candidate.geoFitness = fitness;
 
-            // Store candidate + track delta on overwrite
-            var key = candidate.geoBehavior;
-            if (!geoArchive.TryGetValue(key, out var prev))
-            {
-                geoArchive[key] = candidate;
-            }
-            else if (candidate.CombinedFitness > prev.CombinedFitness)
-            {
-                geoArchive[key] = candidate;
-            }
-            trainingLogger?.LogGeometry(i, geoArchive);
-        }
+            safeArchive.AddOrUpdate(
+                candidate.geoBehavior,
+                candidate,
+                (key, existing) => candidate.CombinedFitness > existing.CombinedFitness ? candidate : existing
+            );
+        });
+
+        foreach (var kvp in safeArchive)
+            geoArchive[kvp.Key] = kvp.Value;
+
+        trainingLogger?.LogGeometry(totalIterations, geoArchive);
     }
 
     public void RunMapElitesEnemies()
@@ -109,38 +120,42 @@ public class MapElite : MonoBehaviour
 
     public void RunMapElitesFurnishing()
     {
-        for (int i = 0; i < totalIterations; i++)
+        var safeArchive = new ConcurrentDictionary<(Vector2, Vector2), Map>();
+
+        var options = new System.Threading.Tasks.ParallelOptions
         {
-            // Generate candidate
+            MaxDegreeOfParallelism = 15
+        };
+
+        System.Threading.Tasks.Parallel.For(0, totalIterations, options, i =>
+        {
             Map candidate;
-            if (i <= initialRandomSolutions)
+            if (i <= initialRandomSolutions || safeArchive.Count == 0)
             {
-                candidate = GenerateRandomFurnishing(SelectRandom(geoArchive));
+                Map parent = SelectRandom(new Dictionary<Vector2, Map>(geoArchive));
+                candidate = GenerateRandomFurnishing(parent);
             }
             else
             {
-                Map parent = SelectRandom(furnArchive);
+                Map parent = SelectRandom(new Dictionary<(Vector2, Vector2), Map>(safeArchive));
                 candidate = MutateFurnishing(parent);
             }
 
-            // behavior + fitness 
             var (fitness, behavior) = FurnFitAndBehav.GetFurnFitnessAndBehavior(candidate);
             candidate.furnBehavior = new Vector2Int(behavior.lootDensity, behavior.obstacleDensity);
             candidate.furnFitness = fitness;
 
-            // Store candidate + track delta on overwrite
-            var key = (candidate.geoBehavior, candidate.furnBehavior);
+            safeArchive.AddOrUpdate(
+                (candidate.geoBehavior, candidate.furnBehavior),
+                candidate,
+                (key, existing) => candidate.CombinedFitness > existing.CombinedFitness ? candidate : existing
+            );
+        });
 
-            if (!furnArchive.TryGetValue(key, out var prev))
-            {
-                furnArchive[key] = candidate;
-            }
-            else if (candidate.CombinedFitness > prev.CombinedFitness)
-            {
-                furnArchive[key] = candidate;
-            }
-            trainingLogger?.LogFurnishing(i, furnArchive);
-        }
+        foreach (var kvp in safeArchive)
+            furnArchive[kvp.Key] = kvp.Value;
+
+        trainingLogger?.LogFurnishing(totalIterations, furnArchive);
     }
 
     protected static Map GenerateRandomGeometry()
@@ -170,7 +185,7 @@ public class MapElite : MonoBehaviour
     protected static Map SelectRandom<TKey>(Dictionary<TKey, Map> archive)
     {
         var list = archive.Values.ToList();
-        return list[Random.Range(0, list.Count)];
+        return list[Rng.Next(0, list.Count)];
     }
 
     protected static Map MutateGeometry(Map parent)
