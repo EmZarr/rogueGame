@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 //using UnityEditor.Profiling.Memory.Experimental;
 //using UnityEditor.Timeline;
@@ -6,6 +7,8 @@ using UnityEngine;
 
 public static class ObjectPlacementGenerator
 {
+    [ThreadStatic] private static System.Random _rng;
+    private static System.Random Rng => _rng ??= new System.Random();
     // How much more loot does optional rooms get
     public const float OptionalLootModifier = 2f;
     // The max ratio of powerups to health we want on main path
@@ -13,7 +16,7 @@ public static class ObjectPlacementGenerator
     // The minimum ratio of powerups to health we want in optional rooms
     public const float PowerRatioInOptional = 0.6f;
 
-    public const float DefaultMutateSize = 0.3f;
+    public const float DefaultMutateSize = 0.2f;
 
     public const float BiasStrength = 2f;
 
@@ -43,7 +46,7 @@ public static class ObjectPlacementGenerator
             room.enemyBudget = baseBudget
             * room.sizeModifier
             * room.orderModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y);
+            * (float)(Rng.NextDouble() * (budgetModifierRange.y - budgetModifierRange.x) + budgetModifierRange.x);
             room.enemyBudgetUsed = 0f;
             if (room.enemyBudget < room.tiles.Count * 0.03f)
             {
@@ -74,11 +77,11 @@ public static class ObjectPlacementGenerator
         int budgetsToMutate = Mathf.Max(1, Mathf.RoundToInt(map.rooms.Count * mutateSize));
         for (int i = 0; i < budgetsToMutate; i++)
         {
-            Room roomToMutate = map.rooms[Random.Range(0, map.rooms.Count)];
+            Room roomToMutate = map.rooms[Rng.Next(0, map.rooms.Count)];
             roomToMutate.enemyBudget = baseBudget
             * roomToMutate.sizeModifier
             * roomToMutate.orderModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y)
+            * (float)(Rng.NextDouble() * (budgetModifierRange.y - budgetModifierRange.x) + budgetModifierRange.x)
             * (1f + diffBias * 0.25f); ; // diff bias is -1 to 1, so now 0.75 to 1.25.
             if (roomToMutate.enemyBudget < roomToMutate.tiles.Count * 0.03f)
             {
@@ -101,7 +104,7 @@ public static class ObjectPlacementGenerator
 
         for (int i = 0; i < amountToMutate; i++)
         {
-            Room roomToMutate =  map.rooms[Random.Range(0, map.rooms.Count)];
+            Room roomToMutate = map.rooms[Rng.Next(0, map.rooms.Count)];
 
             RemoveRandomEnemy(roomToMutate, occupiedPositions, compBias);
             bool success = PlaceRandomEnemy(roomToMutate, occupiedPositions, compBias);
@@ -149,7 +152,7 @@ public static class ObjectPlacementGenerator
             total += Mathf.Exp(-BiasStrength * compBias[(int)type]);
         }
 
-        float r = Random.Range(0f, total);
+        float r = (float)(Rng.NextDouble() * total);
 
         // Walk along the line until we reach the random point
         // Each subtraction "consumes" one enemy type's portion
@@ -185,7 +188,7 @@ public static class ObjectPlacementGenerator
             total += weights[i];
         }
         // Pick a random point inside the total weight range
-        float r = Random.Range(0f, total);
+        float r = (float)(Rng.NextDouble() * total);
 
         // Walk along the line until we reach the random point
         // Each subtraction "consumes" one enemy type's portion
@@ -215,7 +218,7 @@ public static class ObjectPlacementGenerator
             float roomLootModifier = room.onMainPath ? 1f : OptionalLootModifier;
             room.lootBudget = baseBudget
             * room.sizeModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y)
+            * (float)(Rng.NextDouble() * (budgetModifierRange.y - budgetModifierRange.x) + budgetModifierRange.x)
             * roomLootModifier;
             room.lootBudgetUsed = 0f;
             // Place enemies
@@ -242,10 +245,10 @@ public static class ObjectPlacementGenerator
         int budgetsToMutate = Mathf.Max(1, Mathf.RoundToInt(map.rooms.Count * mutateSize));
         for (int i = 0; i < budgetsToMutate; i++)
         {
-            Room roomToMutate = map.rooms[Random.Range(0, map.rooms.Count)];
+            Room roomToMutate = map.rooms[Rng.Next(0, map.rooms.Count)];
             roomToMutate.lootBudget = baseBudget
             * roomToMutate.sizeModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y)
+            * (float)(Rng.NextDouble() * (budgetModifierRange.y - budgetModifierRange.x) + budgetModifierRange.x)
             * OptionalLootModifier;
 
             while (roomToMutate.lootBudgetUsed > roomToMutate.lootBudget)
@@ -265,7 +268,7 @@ public static class ObjectPlacementGenerator
 
         for (int i = 0; i < amountToMutate; i++)
         {
-            Room roomToMutate = map.rooms[Random.Range(0, map.rooms.Count)];
+            Room roomToMutate = map.rooms[Rng.Next(0, map.rooms.Count)];
 
             RemoveRandomLoot(roomToMutate, occupiedPositions);
             bool success = PlaceRandomLoot(roomToMutate, occupiedPositions);
@@ -280,7 +283,7 @@ public static class ObjectPlacementGenerator
         if (!TryGetRandomFreeTile(room, occupied, out Vector2Int tile)) return false;
 
         // Choose loot type randomly, add loot, update budget and occupied
-        LootType randomType = MapHelpers.LootTypes[Random.Range(0, MapHelpers.LootTypes.Length)];
+        LootType randomType = MapHelpers.LootTypes[Rng.Next(0, MapHelpers.LootTypes.Length)];
 
         var ratio = room.GetLootTypeShare(LootType.Powerup);
 
@@ -307,7 +310,7 @@ public static class ObjectPlacementGenerator
         if (room.loot == null || room.loot.Count == 0)
             return;
 
-        int index = Random.Range(0, room.loot.Count);
+        int index = Rng.Next(0, room.loot.Count);
 
         var loot = room.loot[index];
 
@@ -333,7 +336,7 @@ public static class ObjectPlacementGenerator
             // Finds budget based on size, and randomness
             room.obstacleBudget = baseBudget
             * room.sizeModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y);
+            * (float)(Rng.NextDouble() * (budgetModifierRange.y - budgetModifierRange.x) + budgetModifierRange.x);
             room.obstacleBudgetUsed = 0f;
             // Place enemies
             while (room.obstacleBudgetUsed < room.obstacleBudget)
@@ -358,10 +361,10 @@ public static class ObjectPlacementGenerator
         int budgetsToMutate = Mathf.Max(1, Mathf.RoundToInt(map.rooms.Count * mutateSize));
         for (int i = 0; i < budgetsToMutate; i++)
         {
-            Room roomToMutate = map.rooms[Random.Range(0, map.rooms.Count)];
+            Room roomToMutate = map.rooms[Rng.Next(0, map.rooms.Count)];
             roomToMutate.obstacleBudget = baseBudget
             * roomToMutate.sizeModifier
-            * Random.Range(budgetModifierRange.x, budgetModifierRange.y);
+            * (float)(Rng.NextDouble() * (budgetModifierRange.y - budgetModifierRange.x) + budgetModifierRange.x);
 
             while (roomToMutate.obstacleBudgetUsed > roomToMutate.obstacleBudget)
             {
@@ -380,7 +383,7 @@ public static class ObjectPlacementGenerator
 
         for (int i = 0; i < amountToMutate; i++)
         {
-            Room roomToMutate = map.rooms[Random.Range(0, map.rooms.Count)];
+            Room roomToMutate = map.rooms[Rng.Next(0, map.rooms.Count)];
 
             RemoveRandomObstacle(roomToMutate, occupiedPositions);
             bool success = PlaceRandomObstacle(roomToMutate, occupiedPositions);
@@ -395,7 +398,7 @@ public static class ObjectPlacementGenerator
         if (!TryGetRandomFreeTile(room, occupied, out Vector2Int tile)) return false;
 
         // Choose loot type randomly, add loot, update budget and occupied
-        ObstacleType randomType = MapHelpers.ObstacleTypes[Random.Range(0, MapHelpers.ObstacleTypes.Length)];
+        ObstacleType randomType = MapHelpers.ObstacleTypes[Rng.Next(0, MapHelpers.ObstacleTypes.Length)];
         room.obstacles.Add(new GridEntry(tile, (int)randomType));
         room.obstacleBudgetUsed += 1;
         occupied.Add(tile);
@@ -407,7 +410,7 @@ public static class ObjectPlacementGenerator
         if (room.obstacles == null || room.obstacles.Count == 0)
             return;
 
-        int index = Random.Range(0, room.obstacles.Count);
+        int index = Rng.Next(0, room.obstacles.Count);
 
         var obstacle = room.obstacles[index];
 
@@ -448,7 +451,7 @@ public static class ObjectPlacementGenerator
         int tries = 0;
         do
         {
-            tile = room.tiles[Random.Range(0, room.tiles.Count)].pos;
+            tile = room.tiles[Rng.Next(0, room.tiles.Count)].pos;
             tries++;
         }
         while (occupied.Contains(tile) && tries < 1000);

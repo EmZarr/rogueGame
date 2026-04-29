@@ -1,17 +1,20 @@
-using System.Collections.Generic;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
 using Unity.VisualScripting;
+using UnityEngine;
 
 public static class GeometryGenerator
 {
+    [ThreadStatic] private static System.Random _rng;
+    private static System.Random Rng => _rng ??= new System.Random();
     // Create a fresh set of rooms and chunks for a map.
     public static Map CreateMapGeometry(Map map, int maxChunkSize = 13, int maxChunkAmount = 100)
     {
         map.rooms = new List<Room>();
         // How many chunks are we placing?
-        int chunkAmount = UnityEngine.Random.Range(10, maxChunkAmount);
+        int chunkAmount = Rng.Next(10, maxChunkAmount);
 
         for (int i = 0; i < chunkAmount; i++)
         {
@@ -29,7 +32,7 @@ public static class GeometryGenerator
 
         // Randomly either remove or add a chunk. Unless sizes too exterme.
         for (int i = 0; i < amountToMutate; i++) {
-            bool addChunk = UnityEngine.Random.value < 0.5f;
+            bool addChunk = Rng.NextDouble() < 0.5;
             int chunkCounk = map.chunkCount();
             if (chunkCounk < 10) addChunk = true;
             else if (chunkCounk > 100) addChunk = false;
@@ -54,13 +57,13 @@ public static class GeometryGenerator
             return;
 
         // Pick random room
-        Room room = map.rooms[Random.Range(0, map.rooms.Count)];
+        Room room = map.rooms[Rng.Next(0, map.rooms.Count)];
 
         if (room.chunks.Count == 0)
             return;
 
         // Pick random chunk
-        int index = Random.Range(0, room.chunks.Count);
+        int index = Rng.Next(0, room.chunks.Count);
         room.chunks.RemoveAt(index);
 
         // If room becomes empty, remove it
@@ -82,14 +85,15 @@ public static class GeometryGenerator
     public static void AddRandomRoomChunk(Map map, int maxChunkSize) {
         // Make a random chunk of random size, shape and position
         Vector2Int chunkSize = new Vector2Int(
-            UnityEngine.Random.Range(3, maxChunkSize),
-            UnityEngine.Random.Range(3, maxChunkSize)
+            Rng.Next(3, maxChunkSize),
+            Rng.Next(3, maxChunkSize)
         );
 
         Vector2Int chunkPosition = new Vector2Int(
-            UnityEngine.Random.Range(0, 100),
-            UnityEngine.Random.Range(0, 100)
-        );
+           Rng.Next(0, 100),
+           Rng.Next(0, 100)
+       );
+
 
         RoomChunk ourChunk = new RoomChunk
         {
@@ -256,7 +260,7 @@ public static class GeometryGenerator
             {
                 //get the relative order from 0-1
                 float t = (room.orderIndex - 1f) / (mainPathCount - 1f); 
-                room.orderModifier = Mathf.Clamp(t, 0.5f, 1f); 
+                room.orderModifier = Mathf.Clamp(t * 1f, 0.75f, 1f); 
             }
         }
     }

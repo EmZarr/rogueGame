@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using System.Text;
 using JetBrains.Annotations;
+using System.Collections.Concurrent;
 //using UnityEditorInternal;
 using System;
 //using static UnityEditor.Progress;
@@ -25,48 +26,60 @@ public class CMA_ME : MapElite
 
     private void RunCMA_EMEnemies()
     {
-        // Make 15 emitters, starting random places
+        int completedEnem = 0;
+
         List<Emitter> emitters = new List<Emitter>();
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 15; i++)
             emitters.Add(new Emitter(furnArchive));
-        }
 
-        for (int i = 0; i < totalIterations * 3; i++)
+        var safeArchive = new ConcurrentDictionary<(Vector2, Vector2, Vector2), Map>();
+
+        // Random phase - same as before but writing to safeArchive
+        for (int i = 0; i < initialRandomSolutions; i++)
         {
-            if (i < initialRandomSolutions)
+            Map candidate = GenerateRandomEnemies(SelectRandom(furnArchive).Clone());
+            var (fitness, behavior) = EnemFitAndBehav.GetEnemyFitnessAndBehavior(candidate);
+            candidate.enemFitness = fitness;
+            candidate.enemyBehavior = new Vector2Int(behavior.enemyType, behavior.difficulty);
+
+            safeArchive.AddOrUpdate(
+                candidate.combinedBehavior,
+                candidate,
+                (key, existing) => existing.enemFitness < candidate.enemFitness ? candidate : existing
+            );
+        }
+
+        // Emitter phase - now parallel
+        int perEmitter = (totalIterations * 3 - initialRandomSolutions) / emitters.Count;
+
+        var options = new System.Threading.Tasks.ParallelOptions
+        {
+            MaxDegreeOfParallelism = System.Environment.ProcessorCount - 2 // leave some cores free
+        };
+
+        System.Threading.Tasks.Parallel.ForEach(emitters, options, e =>
+        {
+            for (int i = 0; i < perEmitter; i++)
             {
-                Map candidate = GenerateRandomEnemies(SelectRandom(furnArchive).Clone());
-
-                var (fitness, behavior) = EnemFitAndBehav.GetEnemyFitnessAndBehavior(candidate);
-                candidate.enemFitness = fitness;
-                candidate.enemyBehavior = new Vector2Int(behavior.enemyType, behavior.difficulty);
-
-                if (!enemArchive.ContainsKey(candidate.combinedBehavior) ||
-                    enemArchive[candidate.combinedBehavior].enemFitness < candidate.enemFitness)
-                {
-                    enemArchive[candidate.combinedBehavior] = candidate;
-                }
-            }
-            else
-            {
-                Emitter e = emitters
-                    .OrderBy(em => em.totalGenerated)
-                    .First();
-
                 Map candidate = e.GenerateMap();
-
                 var (fitness, behavior) = EnemFitAndBehav.GetEnemyFitnessAndBehavior(candidate);
                 candidate.enemFitness = fitness;
                 candidate.enemyBehavior = new Vector2Int(behavior.enemyType, behavior.difficulty);
+                e.ReturnSolution(candidate, safeArchive);
 
-                e.ReturnSolution(candidate, enemArchive);
+                int completed = System.Threading.Interlocked.Increment(ref completedEnem);
+                if (trainingLogger != null && completed % trainingLogger.LogEveryNIterations == 0)
+                    trainingLogger.LogEnemies(completed, new Dictionary<(Vector2, Vector2, Vector2), Map>(safeArchive));
             }
-            trainingLogger?.LogEnemies(i, enemArchive);
-        }
-        foreach (Emitter emitter in emitters) {
-            Debug.Log("Amount of restarts: " + emitter.restartAmount + " out of " + emitter.nonRestart);
-        }
+        });
+        //trainingLogger?.LogEnemies(totalIterations * 3, enemArchive);
 
+        // Copy back to enemArchive if needed elsewhere
+        foreach (var kvp in safeArchive)
+            enemArchive[kvp.Key] = kvp.Value;
+
+        foreach (Emitter emitter in emitters)
+            Debug.Log("Restarts: " + emitter.restartAmount + " out of " + emitter.nonRestart);
     }
 
     public class Emitter
@@ -96,14 +109,14 @@ public class CMA_ME : MapElite
         public int totalGenerated = 0;
 
         // Batch size before update / restart
-        public const int lambda = 30;
+        public const int lambda = 37;
 
         public Emitter(Dictionary<(Vector2, Vector2), Map> archive)
         {
             referenceMap = GenerateRandomEnemies(SelectRandom(archive).Clone());
         }
 
-        public void ReturnSolution(Map map, Dictionary<(Vector2, Vector2, Vector2), Map> archive)
+        public void ReturnSolution(Map map, ConcurrentDictionary<(Vector2, Vector2, Vector2), Map> archive)
         {
             sampledThisGeneration++;
             totalGenerated++;
@@ -111,6 +124,7 @@ public class CMA_ME : MapElite
             bool discoveredNewCell = false;
             float fitnessDelta = 0f;
 
+            /*
             // New cell
             if (!archive.ContainsKey(map.combinedBehavior))
             {
@@ -121,6 +135,16 @@ public class CMA_ME : MapElite
             else if (archive[map.combinedBehavior].enemFitness < map.enemFitness)
             {
                 fitnessDelta = map.enemFitness - archive[map.combinedBehavior].enemFitness;
+            }*/
+            if (archive.TryGetValue(map.combinedBehavior, out Map existing))
+            {
+                if (existing.enemFitness < map.enemFitness)
+                    fitnessDelta = map.enemFitness - existing.enemFitness;
+            }
+            else
+            {
+                discoveredNewCell = true;
+                fitnessDelta = map.enemFitness;
             }
 
             if (discoveredNewCell || fitnessDelta > 0f)
@@ -140,13 +164,18 @@ public class CMA_ME : MapElite
                     compDelta,
                     diffDelta
                 ));
-                archive[map.combinedBehavior] = map;
+                archive.AddOrUpdate(
+                    map.combinedBehavior,
+                    map,
+                    (key, existing) => existing.enemFitness < map.enemFitness ? map : existing
+);
             }
 
             if (sampledThisGeneration >= lambda)
                 UpdateEmitter(archive);
         }
-        public void UpdateEmitter(Dictionary<(Vector2, Vector2, Vector2), Map> archive)
+        // Change signature from Dictionary to ConcurrentDictionary:
+        public void UpdateEmitter(ConcurrentDictionary<(Vector2, Vector2, Vector2), Map> archive)
         {
             if (parents.Count > 0)
             {
@@ -210,7 +239,7 @@ public class CMA_ME : MapElite
             {
                 // No successful children in this batch -> restart
                 restartAmount++;
-                referenceMap = CMA_ME.SelectRandom(archive).Clone();
+                referenceMap = CMA_ME.SelectRandom(new Dictionary<(Vector2, Vector2, Vector2), Map>(archive)).Clone();
 
                 compBias = new float[MapHelpers.EnemyTypes.Length];
                 diffBias = 0.0f;
