@@ -437,8 +437,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4f6ae296224daa4cb4507d17a2c05b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MapElite
-  totalIterations: 50000
-  initialRandomSolutions: 2500
+  totalIterations: 250000
+  initialRandomSolutions: 25000
   trainingLogger: {fileID: 859900378}
 --- !u!114 &859900378
 MonoBehaviour:

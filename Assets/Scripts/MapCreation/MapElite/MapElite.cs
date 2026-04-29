@@ -88,40 +88,72 @@ public class MapElite : MonoBehaviour
 
     public void RunMapElitesEnemies()
     {
+        int completedEnemies = 0;
 
-        for (int i = 0; i < totalIterations * 3; i++)
+        var safeArchive = new ConcurrentDictionary<(Vector2, Vector2, Vector2), Map>();
+
+        var options = new System.Threading.Tasks.ParallelOptions
         {
-            // Generate candidate
+            MaxDegreeOfParallelism = Math.Max(1, System.Environment.ProcessorCount - 2)
+        };
+
+        System.Threading.Tasks.Parallel.For(0, totalIterations * 3, options, i =>
+        {
             Map candidate;
-            if (i <= initialRandomSolutions)
+
+            if (i <= initialRandomSolutions || safeArchive.Count == 0)
             {
-                candidate = GenerateRandomEnemies(SelectRandom(furnArchive));
+                // Use furnishing archive as the base for initial enemy generation
+                Map parent = SelectRandom(new Dictionary<(Vector2, Vector2), Map>(furnArchive));
+                candidate = GenerateRandomEnemies(parent);
             }
             else
             {
-                Map parent = SelectRandom(enemArchive);
+                // Select from the thread-safe local enemy archive
+                Map parent = SelectRandom(new Dictionary<(Vector2, Vector2, Vector2), Map>(safeArchive));
                 candidate = MutateEnemies(parent);
             }
 
-            //behavior + fitness
+            // Behavior + fitness
             var (fitness, behavior) = EnemFitAndBehav.GetEnemyFitnessAndBehavior(candidate);
-            candidate.enemyBehavior = new Vector2Int(behavior.enemyType, behavior.difficulty);
+
+            candidate.enemyBehavior = new Vector2Int(
+                behavior.enemyType,
+                behavior.difficulty
+            );
+
             candidate.enemFitness = fitness;
 
-            // Store candidate + track delta on overwrite
-            var key = (candidate.geoBehavior, candidate.furnBehavior, candidate.enemyBehavior);
+            // Store candidate if the cell is empty or if this candidate is better
+            safeArchive.AddOrUpdate(
+                (candidate.geoBehavior, candidate.furnBehavior, candidate.enemyBehavior),
+                candidate,
+                (key, existing) =>
+                    candidate.CombinedFitness > existing.CombinedFitness
+                        ? candidate
+                        : existing
+            );
 
-            if (!enemArchive.TryGetValue(key, out var prev))
-            {
-                enemArchive[key] = candidate;
-            }
-            else if (candidate.CombinedFitness > prev.CombinedFitness)
-            {
-                enemArchive[key] = candidate;
-            }
-            trainingLogger?.LogEnemies(i, enemArchive);
+            int completed = System.Threading.Interlocked.Increment(ref completedEnemies);
 
+            if (trainingLogger != null &&
+                completed % trainingLogger.LogEveryNIterations == 0)
+            {
+                trainingLogger.LogEnemies(
+                    completed,
+                    new Dictionary<(Vector2, Vector2, Vector2), Map>(safeArchive)
+                );
+            }
+        });
+
+        // Copy local parallel archive back into the main enemy archive
+        foreach (var kvp in safeArchive)
+        {
+            enemArchive[kvp.Key] = kvp.Value;
         }
+
+        // Optional final log
+        // trainingLogger?.LogEnemies(totalIterations * 3, enemArchive);
     }
 
 

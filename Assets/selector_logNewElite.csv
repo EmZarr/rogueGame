@@ -1,0 +1,7 @@
+EnemyComposition, EnemyCompositionBehavior, DifficultyBehavior, DifferenceToOtherLevels, OpenessBehavior, LootDensityBehavior, ObstacleDensityBehavior, DifferenceToOtherLevels
+0.20.20.20.15555560.2444444,76,2,0.04431874,3,1,1,  
+00010,5,0,0.8444445,9,0,2,  
+01000,55,0,0.9,8,2,2,  
+ ,95,1, 5,1,1,0.009895921
+ ,50,1, 0,2,2,0.4375
+ ,43,1, 9,0,0,0.59375

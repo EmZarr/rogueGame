@@ -72,26 +72,27 @@ public class CMA_ME : MapElite
                     trainingLogger.LogEnemies(completed, new Dictionary<(Vector2, Vector2, Vector2), Map>(safeArchive));
             }
         });
-        //trainingLogger?.LogEnemies(totalIterations * 3, enemArchive);
 
         // Copy back to enemArchive if needed elsewhere
         foreach (var kvp in safeArchive)
             enemArchive[kvp.Key] = kvp.Value;
-
-        foreach (Emitter emitter in emitters)
-            Debug.Log("Restarts: " + emitter.restartAmount + " out of " + emitter.nonRestart);
     }
 
     public class Emitter
     {
         // Current search center, our "mean"
         public Map referenceMap;
-        public int restartAmount = 0;
-        public int nonRestart = 0;
 
         // Learned mutation tendencies, our "Covariance Matrix" 
         public float[] compBias = new float[MapHelpers.EnemyTypes.Length];
         public float diffBias = 0.0f;
+        // Size of mutation. Expand contract
+        public float mutationStepSize = 1.0f;
+
+        private const float StepUp = 1.30f;
+        private const float StepDown = 0.9f;
+        private const float MinStep = 0.20f;
+        private const float MaxStep = 3.00f;
 
         // Successful maps from this batch. Discovered new bins or had higher fitness
         public List<SuccessfulSample> parents = new();
@@ -117,18 +118,6 @@ public class CMA_ME : MapElite
             bool discoveredNewCell = false;
             float fitnessDelta = 0f;
 
-            /*
-            // New cell
-            if (!archive.ContainsKey(map.combinedBehavior))
-            {
-                discoveredNewCell = true;
-                fitnessDelta = map.enemFitness;
-            }
-            // Improved old
-            else if (archive[map.combinedBehavior].enemFitness < map.enemFitness)
-            {
-                fitnessDelta = map.enemFitness - archive[map.combinedBehavior].enemFitness;
-            }*/
             if (archive.TryGetValue(map.combinedBehavior, out Map existing))
             {
                 if (existing.enemFitness < map.enemFitness)
@@ -172,7 +161,6 @@ public class CMA_ME : MapElite
         {
             if (parents.Count > 0)
             {
-                nonRestart++;
                 // Improvement emitter ordering:
                 // 1. new cells first
                 // 2. larger fitness delta after
@@ -208,6 +196,22 @@ public class CMA_ME : MapElite
                 // clamp to avoid huge jumps
                 diffBias = Mathf.Clamp(diffBias, -1f, 1f);
 
+                bool foundNewCell = parents.Any(p => p.discoveredNewCell);
+
+                if (foundNewCell)
+                {
+                    // We are still expanding into new behavior cells.
+                    // Take bigger mutations.
+                    mutationStepSize = Mathf.Min(mutationStepSize * StepUp, MaxStep);
+                }
+                else
+                {
+                    // We are only improving existing cells.
+                    // Refine locally.
+                    mutationStepSize = Mathf.Max(mutationStepSize * StepDown, MinStep);
+                }
+
+
                 // Reset batch state
                 parents.Clear();
                 sampledThisGeneration = 0;
@@ -215,12 +219,11 @@ public class CMA_ME : MapElite
             else
             {
                 // No successful children in this batch -> restart
-                restartAmount++;
                 referenceMap = CMA_ME.SelectRandom(new Dictionary<(Vector2, Vector2, Vector2), Map>(archive)).Clone();
 
                 compBias = new float[MapHelpers.EnemyTypes.Length];
                 diffBias = 0.0f;
-
+                mutationStepSize = 1.0f;
                 parents.Clear();
                 sampledThisGeneration = 0;
                 return;
@@ -230,18 +233,17 @@ public class CMA_ME : MapElite
         private float GetParentWeight(int sortedIndex)
         {
             // Simplest option: equal weights
-            return 1f / parents.Count;
+            //return 1f / parents.Count;
 
-            // Alternative if we want top samples to matter more:
-            // float raw = parents.Count - sortedIndex;
-            // float denom = parents.Count * (parents.Count + 1) / 2f;
-            // return raw / denom;
+            // Top samples to matter more:
+            float raw = parents.Count - sortedIndex;
+            float denom = parents.Count * (parents.Count + 1) / 2f;
+            return raw / denom;
         }
 
+        // Instead of summing to 1 with values 0..1, we sum to 0 with values -1 to 1. Clamp at 50% more of an enemy
         private void NormalizeCompBias(float[] bias)
         {
-            // subtract mean so the bias sums roughly to 0
-            // (more of some types, less of others)
             float sum = 0f;
             for (int i = 0; i < bias.Length; i++)
                 sum += bias[i];
@@ -249,15 +251,19 @@ public class CMA_ME : MapElite
             float mean = sum / bias.Length;
             for (int i = 0; i < bias.Length; i++)
                 bias[i] -= mean;
-
-            // clamp to avoid huge jumps
+            // Prevent rare large deltas from dominating too hard.
             for (int i = 0; i < bias.Length; i++)
-                bias[i] = Mathf.Clamp(bias[i], -1f, 1f);
+                bias[i] = Mathf.Clamp(bias[i], -0.5f, 0.5f);
         }
 
         public Map GenerateMap()
         {
-            return ObjectPlacementGenerator.BiasedMutateEnemies(referenceMap.Clone(), compBias, diffBias);
+            return ObjectPlacementGenerator.BiasedMutateEnemies(
+                referenceMap.Clone(),
+                compBias,
+                diffBias,
+                mutationStepSize
+            );
         }
     }
 

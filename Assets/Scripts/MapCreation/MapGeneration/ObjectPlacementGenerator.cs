@@ -16,11 +16,14 @@ public static class ObjectPlacementGenerator
     // The minimum ratio of powerups to health we want in optional rooms
     public const float PowerRatioInOptional = 0.6f;
 
-    public const float DefaultMutateSize = 0.2f;
+    public const float DefaultMutateSize = 0.3f;
 
-    public const float BiasStrength = 2f;
+    // If comp bias says there where 10% more of any enemy type, we make it twice as likely
+    public const float DeltaThatDoublesOdds = 0.10f;
+    public static readonly float BiasStrength = Mathf.Log(2f) / DeltaThatDoublesOdds;
 
     public static readonly Vector2 DefaultBudgetModifierRange = new(0.5f, 1.5f);
+    public static readonly Vector2 DefaultBudgetModifierObstacles = new(0.25f, 3f);
 
     // Base budget before modifiers
     public const int DefaultEnemyBaseBudget = 3;
@@ -113,9 +116,11 @@ public static class ObjectPlacementGenerator
         return map;
     }
 
-    public static Map BiasedMutateEnemies(Map map, float[] compBias, float diffBias)
+    public static Map BiasedMutateEnemies(Map map, float[] compBias, float diffBias, float mutationStepSize)
     {
-        return MutateEnemies(map, compBias, diffBias, DefaultMutateSize, DefaultBudgetModifierRange, DefaultEnemyBaseBudget);
+        float mutateSize = Mathf.Clamp(DefaultMutateSize * mutationStepSize, 0.05f, 1.0f);
+
+        return MutateEnemies(map, compBias, diffBias, mutateSize, DefaultBudgetModifierRange, DefaultEnemyBaseBudget);
     }
     
 
@@ -147,7 +152,7 @@ public static class ObjectPlacementGenerator
         for (int i = 0; i < room.enemies.Count; i++)
         {
             EnemyType type = (EnemyType)room.enemies[i].type;
-            total += Mathf.Max(0f, 1f - BiasStrength * compBias[(int)type]);
+            total += Mathf.Exp(-BiasStrength * compBias[(int)type]);
         }
 
         float r = (float)(Rng.NextDouble() * total);
@@ -157,7 +162,7 @@ public static class ObjectPlacementGenerator
         for (int i = 0; i < room.enemies.Count; i++)
         {
             EnemyType type = (EnemyType)room.enemies[i].type;
-            r -= Mathf.Max(0f, 1f - BiasStrength * compBias[(int)type]);
+            r -= Mathf.Exp(-BiasStrength * compBias[(int)type]);
 
             if (r <= 0f)
             {
@@ -171,17 +176,20 @@ public static class ObjectPlacementGenerator
         }
     }
 
+
     private static EnemyType GetBiasedRandomEnemy(float[] bias)
     {
         int count = MapHelpers.EnemyTypes.Length;
 
+        float total = 0f;
+        float[] weights = new float[count];
         // Add up the chance for each enemy type.
         // Convert bias (-1 -> 1) into weights (0 -> 2)
-        // -1 = never picked, 0 = normal chance, +1 = double chance
-        float total = 0f;
         for (int i = 0; i < count; i++)
-            total += Mathf.Max(0f, 1f + BiasStrength * bias[i]);
-
+        {
+            weights[i] = Mathf.Exp(BiasStrength * bias[i]);
+            total += weights[i];
+        }
         // Pick a random point inside the total weight range
         float r = (float)(Rng.NextDouble() * total);
 
@@ -189,13 +197,11 @@ public static class ObjectPlacementGenerator
         // Each subtraction "consumes" one enemy type's portion
         for (int i = 0; i < count; i++)
         {
-            r -= Mathf.Max(0f, 1f + BiasStrength * bias[i]);
-
+            r -= weights[i];
             // When we cross zero, we've landed in this enemy's "slice"
             if (r <= 0f)
                 return MapHelpers.EnemyTypes[i];
         }
-
         // Fallback
         return MapHelpers.EnemyTypes[count - 1];
     }
@@ -322,7 +328,7 @@ public static class ObjectPlacementGenerator
     }
     public static Map CreateObstaclesOnMap(Map map)
     {
-        return CreateObstaclesOnMap(map, DefaultObstacleBaseBudget, DefaultBudgetModifierRange);
+        return CreateObstaclesOnMap(map, DefaultObstacleBaseBudget, DefaultBudgetModifierObstacles);
     }
     public static Map CreateObstaclesOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
@@ -347,7 +353,7 @@ public static class ObjectPlacementGenerator
     }
     public static Map MutateObstacles(Map map)
     {
-        return MutateObstacles(map, DefaultMutateSize, DefaultBudgetModifierRange, DefaultObstacleBaseBudget);
+        return MutateObstacles(map, DefaultMutateSize, DefaultBudgetModifierObstacles, DefaultObstacleBaseBudget);
     }
     public static Map MutateObstacles(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
     {

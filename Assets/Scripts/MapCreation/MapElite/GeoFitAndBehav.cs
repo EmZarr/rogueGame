@@ -22,7 +22,7 @@ public static class GeoFitAndBehav
         (float min, float max, float weight) optimalMainToOptionalComponents = (0.2f, 0.5f, 0.2f);
 
         // Certain map sizes
-        (int min, int max, float weight) optimalMapSize = (750, 1250, 0.2f);
+        (int min, int max, float weight) optimalMapSize = (750, 1000, 0.2f);
 
         // We dont want more than 10% of tiles to be corridors
         (float min, float max, float weight) optimalCorridorRatio = (0f, 0.1f, 0.2f);
