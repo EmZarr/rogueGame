@@ -673,7 +673,7 @@ MonoBehaviour:
   enableLogging: 1
   logEveryNIterations: 5000
   fileName: selector_logNewElite.csv
-  geoBehaviorBins: 10
+  geoBehaviorBins: 12
   furnLootBins: 3
   furnObstacleBins: 3
   enemyTypeBins: 126

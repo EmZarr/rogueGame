@@ -23,6 +23,7 @@ public static class ObjectPlacementGenerator
     public static readonly float BiasStrength = Mathf.Log(2f) / DeltaThatDoublesOdds;
 
     public static readonly Vector2 DefaultBudgetModifierRange = new(0.5f, 1.5f);
+    public static readonly Vector2 DefaultBudgetModifierObstacles = new(0.25f, 3f);
 
     // Base budget before modifiers
     public const int DefaultEnemyBaseBudget = 3;
@@ -327,7 +328,7 @@ public static class ObjectPlacementGenerator
     }
     public static Map CreateObstaclesOnMap(Map map)
     {
-        return CreateObstaclesOnMap(map, DefaultObstacleBaseBudget, DefaultBudgetModifierRange);
+        return CreateObstaclesOnMap(map, DefaultObstacleBaseBudget, DefaultBudgetModifierObstacles);
     }
     public static Map CreateObstaclesOnMap(Map map, int baseBudget, Vector2 budgetModifierRange)
     {
@@ -352,7 +353,7 @@ public static class ObjectPlacementGenerator
     }
     public static Map MutateObstacles(Map map)
     {
-        return MutateObstacles(map, DefaultMutateSize, DefaultBudgetModifierRange, DefaultObstacleBaseBudget);
+        return MutateObstacles(map, DefaultMutateSize, DefaultBudgetModifierObstacles, DefaultObstacleBaseBudget);
     }
     public static Map MutateObstacles(Map map, float mutateSize, Vector2 budgetModifierRange, int baseBudget)
     {

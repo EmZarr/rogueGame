@@ -146,6 +146,7 @@ public class TrainingLogger : MonoBehaviour
             (geoBehaviorBins * furnLootBins * furnObstacleBins * enemyTypeBins * enemyDifficultyBins) * 100f;
 
         var filledEnemyTypes = maps
+            .Where(m => m.enemyBehavior.y > 0)
             .Select(m => m.enemyBehavior.x)
             .Distinct()
             .OrderBy(x => x)

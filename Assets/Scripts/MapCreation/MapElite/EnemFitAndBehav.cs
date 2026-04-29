@@ -68,7 +68,7 @@ public static class EnemFitAndBehav
         float behaviorConsistency = compositionConsistencySum/map.rooms.Count;
 
         map.difficulty = h.GetBehaviorRange(3, averageRoomDifficultyDensity);
-        return ((EnemyTop3CompositionBehavior(allEnemies, 10), map.difficulty),behaviorConsistency, difficultyPerRoom);
+        return ((EnemyRoleCompositionBehavior(allEnemies, 20), map.difficulty),behaviorConsistency, difficultyPerRoom);
     }
 
     private static float GetDifficultyScalingScore(Map map, List<float> difficultyPerRoom)
@@ -166,70 +166,6 @@ public static class EnemFitAndBehav
         float normalizedDiff = diff / 2f;
 
         return 1f - Mathf.Clamp01(normalizedDiff);
-    }
-
-    // only cares about top 3, so should be 456 comps
-    public static int EnemyTop3CompositionBehavior(List<GridEntry> enemies, int resolution)
-    {
-        if (enemies == null || enemies.Count == 0)
-            return 0;
-
-        int k = MapHelpers.EnemyTypes.Length;
-        int[] counts = new int[k];
-        int total = 0;
-
-        foreach (var e in enemies)
-        {
-            counts[e.type]++;
-            total++;
-        }
-
-        if (total == 0)
-            return 0;
-
-        int N = 100 / resolution; // 10 for 10% resolution
-        int[] units = QuantizeToUnitsLargestRemainder(counts, total, N);
-
-        // Count meaningful enemy types before compression.
-        int nonZero = 0;
-        for (int i = 0; i < k; i++)
-            if (units[i] > 0)
-                nonZero++;
-
-        // Special bin for healthy all-enemy mixes.
-        // Example: 20/20/20/20/20 or similar.
-        if (nonZero >= 5)
-            return 0;
-
-        // Keep only the top 3 enemy types.
-        int[] order = new int[k];
-        for (int i = 0; i < k; i++)
-            order[i] = i;
-
-        Array.Sort(order, (a, b) => units[b].CompareTo(units[a]));
-
-        int[] compressed = new int[k];
-        int keptSum = 0;
-
-        for (int i = 0; i < Mathf.Min(3, k); i++)
-        {
-            int type = order[i];
-            compressed[type] = units[type];
-            keptSum += units[type];
-        }
-
-        if (keptSum == 0)
-            return 0;
-
-        // Renormalize top-3 back to N units, preserving enemy identity.
-        int[] topCounts = new int[k];
-        for (int i = 0; i < k; i++)
-            topCounts[i] = compressed[i];
-
-        int[] renormalized = QuantizeToUnitsLargestRemainder(topCounts, keptSum, N);
-
-        // +1 so healthy-mix bin remains 0.
-        return 1 + (int)RankWeakComposition(renormalized, N);
     }
 
     // Uses composition ranking to reduce search space to 1000 for resolution 10, 126 for resolution 20
