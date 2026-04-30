@@ -7,83 +7,255 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-JSON_FILENAME = "buildMapsArchive.json"
-ICON_DIR = "icons"              # must match the visualizer
+JSON_FILENAME = "maps.json"          # exported by MapJsonExporter
+ICON_DIR = "icons"
 BASE_FONT_SIZE = 18
 BANNER_MARGIN = 8
 
-# -----------------------------
-# Tile ID mapping (Unity -> image)
-# -----------------------------
-EMPTY_TILE = 0
-FLOOR_TILE = 1
-ROAD_TILES = {2}
-WALL_TILES = {3, 4, 5, 31, 32}
-DECOR_TILES = {25, 26, 27}
+# ---------------------------------
+# Enum values from Unity
+# ---------------------------------
+class EnemyType:
+    MELEE = 0
+    RANGED = 1
+    BOMBER = 2
+    ASSASSIN = 3
+    GUARDIAN = 4
 
-LOOT_TILES = {13, 14}
-SPIKE_TILES = {11, 12}
-RANGED_ENEMIES = {40, 41, 42}
-MELEE_ENEMIES = {43, 44}
-EXIT_TILE = 99
-PLAYER_TILE = 100
 
-# -----------------------------
+class LootType:
+    POWERUP = 0
+    HEALTH = 1
+
+
+class TerrainType:
+    STANDARD = 0
+    DECOR1 = 1
+    DECOR2 = 2
+    PATH = 3
+
+
+class ObstacleType:
+    SPIKE = 0
+    PILLAR = 1
+
+
+# ---------------------------------
 # Colors (RGB)
-# -----------------------------
+# ---------------------------------
 COLORS = {
     "empty": (20, 20, 20),
     "ground": (144, 238, 144),
-    "road": (180, 180, 80),
-    "wall": (120, 120, 120),
-    "decor": (144, 238, 144),
+    "path": (180, 180, 80),
+    "decor": (110, 190, 110),
 
     "loot": (0, 80, 255),
     "spike": (255, 0, 0),
+    "pillar": (120, 120, 120),
+
     "enemy_ranged": (255, 255, 0),
     "enemy_melee": (160, 32, 240),
+    "enemy_bomber": (255, 140, 0),
+    "enemy_assassin": (255, 0, 255),
+    "enemy_guardian": (0, 255, 255),
+
     "player": (255, 255, 255),
     "exit": (0, 0, 0),
+
+    "room_outline": (45, 45, 45),
+    "grid": (45, 45, 45),
 }
 
-
+# ---------------------------------
+# Helpers
+# ---------------------------------
 def load_json(path: Path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def reconstruct_array(m: dict) -> np.ndarray:
-    w = int(m.get("width", 0))
-    h = int(m.get("height", 0))
-    if w <= 0 or h <= 0:
-        return np.zeros((0, 0), dtype=int)
+def _v2_xy(v):
+    """
+    Accepts Unity JsonUtility Vector2Int serialization in either form:
+      {"x": 1, "y": 2}
+    or
+      [1, 2]
+    """
+    if isinstance(v, dict):
+        return int(v.get("x", 0)), int(v.get("y", 0))
+    if isinstance(v, (list, tuple)) and len(v) >= 2:
+        return int(v[0]), int(v[1])
+    return 0, 0
 
-    if m.get("flatTiles") is not None:
-        flat = np.array(m["flatTiles"], dtype=int).reshape(-1)
-        if flat.size != w * h:
-            size = min(flat.size, w * h)
-            flat = flat[:size]
-            if size < w * h:
-                pad = np.zeros((w * h - size,), dtype=int)
-                flat = np.concatenate([flat, pad], axis=0)
 
-        arr = flat.reshape((h, w))
-        if np.count_nonzero(arr) == 0:
-            return flat.reshape((w, h)).T
-        return arr
+def _iter_room_grid_entries(m: dict, field_name: str):
+    for room in m.get("rooms", []) or []:
+        for entry in room.get(field_name, []) or []:
+            pos = entry.get("pos", {})
+            x, y = _v2_xy(pos)
+            yield x, y, int(entry.get("type", 0))
 
-    if m.get("tiles") is not None:
-        arr = np.array(m["tiles"], dtype=int)
-        if arr.shape == (h, w):
-            return arr
-        if arr.shape == (w, h):
-            return arr.T
-        try:
-            return arr.reshape(-1).reshape((h, w))
-        except Exception:
-            return np.zeros((h, w), dtype=int)
 
-    return np.zeros((h, w), dtype=int)
+def _iter_all_positions(m: dict):
+    # room tiles / enemies / loot / obstacles
+    for field in ("tiles", "enemies", "loot", "obstacles"):
+        for x, y, _ in _iter_room_grid_entries(m, field):
+            yield x, y
+
+    # room chunks, entry/exit, room positions
+    for room in m.get("rooms", []) or []:
+        for chunk in room.get("chunks", []) or []:
+            px, py = _v2_xy(chunk.get("position", {}))
+            sx, sy = _v2_xy(chunk.get("size", {}))
+            for yy in range(py, py + max(0, sy)):
+                for xx in range(px, px + max(0, sx)):
+                    yield xx, yy
+
+        ex, ey = _v2_xy(room.get("entryTile", {}))
+        ox, oy = _v2_xy(room.get("exitTile", {}))
+        yield ex, ey
+        yield ox, oy
+
+        rx, ry = _v2_xy(room.get("position", {}))
+        yield rx, ry
+
+    # connections
+    for conn in m.get("connections", []) or []:
+        ax, ay = _v2_xy(conn.get("tileA", {}))
+        bx, by = _v2_xy(conn.get("tileB", {}))
+        yield ax, ay
+        yield bx, by
+
+
+def compute_bounds(m: dict):
+    pts = list(_iter_all_positions(m))
+    if not pts:
+        return 0, 0, -1, -1
+
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def make_canvas_arrays(m: dict):
+    min_x, min_y, max_x, max_y = compute_bounds(m)
+    if max_x < min_x or max_y < min_y:
+        return None
+
+    w = max_x - min_x + 1
+    h = max_y - min_y + 1
+
+    # base terrain layer:
+    # -1 = empty
+    #  0 = ground
+    #  1 = decor
+    #  2 = path
+    terrain = np.full((h, w), -1, dtype=np.int16)
+
+    # marker layers
+    enemies = np.full((h, w), -1, dtype=np.int16)
+    loot = np.full((h, w), -1, dtype=np.int16)
+    obstacles = np.full((h, w), -1, dtype=np.int16)
+
+    def to_local(x, y):
+        return x - min_x, y - min_y
+
+    # Fill chunks first as generic ground if present
+    for room in m.get("rooms", []) or []:
+        for chunk in room.get("chunks", []) or []:
+            px, py = _v2_xy(chunk.get("position", {}))
+            sx, sy = _v2_xy(chunk.get("size", {}))
+            for yy in range(py, py + max(0, sy)):
+                for xx in range(px, px + max(0, sx)):
+                    lx, ly = to_local(xx, yy)
+                    if 0 <= lx < w and 0 <= ly < h:
+                        terrain[ly, lx] = max(terrain[ly, lx], 0)
+
+    # Then apply explicit tiles with terrain types
+    for x, y, t in _iter_room_grid_entries(m, "tiles"):
+        lx, ly = to_local(x, y)
+        if not (0 <= lx < w and 0 <= ly < h):
+            continue
+
+        if t == TerrainType.PATH:
+            terrain[ly, lx] = 2
+        elif t in (TerrainType.DECOR1, TerrainType.DECOR2):
+            terrain[ly, lx] = max(terrain[ly, lx], 1)
+        else:
+            terrain[ly, lx] = max(terrain[ly, lx], 0)
+
+    # Connections can be shown as path endpoints; line interpolation added below
+    connection_segments = []
+    for conn in m.get("connections", []) or []:
+        ax, ay = _v2_xy(conn.get("tileA", {}))
+        bx, by = _v2_xy(conn.get("tileB", {}))
+        connection_segments.append(((ax, ay), (bx, by)))
+
+    # Overlay entities
+    for x, y, t in _iter_room_grid_entries(m, "enemies"):
+        lx, ly = to_local(x, y)
+        if 0 <= lx < w and 0 <= ly < h:
+            enemies[ly, lx] = t
+            terrain[ly, lx] = max(terrain[ly, lx], 0)
+
+    for x, y, t in _iter_room_grid_entries(m, "loot"):
+        lx, ly = to_local(x, y)
+        if 0 <= lx < w and 0 <= ly < h:
+            loot[ly, lx] = t
+            terrain[ly, lx] = max(terrain[ly, lx], 0)
+
+    for x, y, t in _iter_room_grid_entries(m, "obstacles"):
+        lx, ly = to_local(x, y)
+        if 0 <= lx < w and 0 <= ly < h:
+            obstacles[ly, lx] = t
+            terrain[ly, lx] = max(terrain[ly, lx], 0)
+
+    # Approximate corridor visualization by drawing orthogonal lines
+    for (ax, ay), (bx, by) in connection_segments:
+        x0, y0 = ax, ay
+        x1, y1 = bx, by
+
+        # horizontal then vertical
+        step_x = 1 if x1 >= x0 else -1
+        for xx in range(x0, x1 + step_x, step_x):
+            lx, ly = to_local(xx, y0)
+            if 0 <= lx < w and 0 <= ly < h:
+                terrain[ly, lx] = max(terrain[ly, lx], 2)
+
+        step_y = 1 if y1 >= y0 else -1
+        for yy in range(y0, y1 + step_y, step_y):
+            lx, ly = to_local(x1, yy)
+            if 0 <= lx < w and 0 <= ly < h:
+                terrain[ly, lx] = max(terrain[ly, lx], 2)
+
+    # Start / exit markers
+    player_pos = None
+    exit_pos = None
+
+    start_idx = int(m.get("startRoomIndex", -1))
+    end_idx = int(m.get("endRoomIndex", -1))
+    rooms = m.get("rooms", []) or []
+
+    if 0 <= start_idx < len(rooms):
+        sx, sy = _v2_xy(rooms[start_idx].get("entryTile", {}))
+        player_pos = to_local(sx, sy)
+
+    if 0 <= end_idx < len(rooms):
+        ex, ey = _v2_xy(rooms[end_idx].get("exitTile", {}))
+        exit_pos = to_local(ex, ey)
+
+    return {
+        "terrain": terrain,
+        "enemies": enemies,
+        "loot": loot,
+        "obstacles": obstacles,
+        "player_pos": player_pos,
+        "exit_pos": exit_pos,
+        "min_x": min_x,
+        "min_y": min_y,
+        "width": w,
+        "height": h,
+    }
 
 
 def _text_size(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont):
@@ -99,41 +271,34 @@ def _text_size(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont):
             return approx_w, approx_h
 
 
-# ==========================
-# NAMING CONVENTION (md5(repr(tuple))[:8])
-# ==========================
+# =========================================
+# Behavior tuple / hash
+# =========================================
 def behavior_tuple_from_json(m: dict) -> tuple:
     """
-    Canonical INT behavior tuple for hashing:
-      (GeometryBehavior, geoY, FurnishingBehaviorSpread, FurnishingBehaviorRatio,
-       EnemyBehaviorRatio, EnemyBehaviorDifficulty)
+    Canonical behavior tuple:
+      (geo.x, 0, furn.x, furn.y, enemy.x, enemy.y)
 
-    Where:
-      GeometryBehavior == geo.x
-      geoY is always 0 (matches your Unity code for geometry behavior)
-      FurnishingBehaviorSpread == furn.x
-      FurnishingBehaviorRatio  == furn.y
-      EnemyBehaviorRatio       == enemy.x
-      EnemyBehaviorDifficulty  == enemy.y
+    Supports JsonUtility Vector2Int shape:
+      {"x": ..., "y": ...}
+    and legacy [x, y].
     """
     def v2_int(name):
-        v = m.get(name, None)
-        if not isinstance(v, (list, tuple)) or len(v) < 2:
-            raise KeyError(f"Map missing '{name}' [x,y].")
-        return int(round(float(v[0]))), int(round(float(v[1])))
+        if name not in m:
+            raise KeyError(f"Map missing '{name}'.")
+        x, y = _v2_xy(m[name])
+        return int(x), int(y)
 
     geo_x, geo_y = v2_int("geoBehavior")
     furn_x, furn_y = v2_int("furnBehavior")
     enem_x, enem_y = v2_int("enemyBehavior")
 
-    # if geo_y is always 0 in your pipeline, force it:
     geo_y = 0
-
     return (geo_x, geo_y, furn_x, furn_y, enem_x, enem_y)
 
 
 def behavior_hash8(t: tuple) -> str:
-    s = repr(tuple(t))  # now repr is like '(3, 0, 5, 1, 2, 1)'
+    s = repr(tuple(t))
     return hashlib.md5(s.encode("utf-8")).hexdigest()[:8]
 
 
@@ -143,11 +308,27 @@ def out_path_for_map(m: dict) -> str:
     return os.path.join(ICON_DIR, f"behavior_{h}.png")
 
 
-def render_map(arr: np.ndarray, dto: dict, out_path: str):
-    if arr.size == 0:
+def _fmt_vec(v):
+    if isinstance(v, dict):
+        x, y = _v2_xy(v)
+        return f"[{x}, {y}]"
+    if isinstance(v, (list, tuple)):
+        return "[" + ", ".join(str(x) for x in v) + "]"
+    return "[]"
+
+
+def render_map(canvas_data: dict, dto: dict, out_path: str):
+    if canvas_data is None:
         return
 
-    h, w = arr.shape
+    terrain = canvas_data["terrain"]
+    enemies = canvas_data["enemies"]
+    loot = canvas_data["loot"]
+    obstacles = canvas_data["obstacles"]
+    player_pos = canvas_data["player_pos"]
+    exit_pos = canvas_data["exit_pos"]
+
+    h, w = terrain.shape
     max_dim = max(w, h, 1)
     scale = max(8, min(18, int(900 / max_dim)))
     img_w = w * scale
@@ -158,41 +339,50 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
 
     for y in range(h):
         for x in range(w):
-            t = int(arr[y, x])
             x0, y0 = x * scale, y * scale
             block = slice(y0, y0 + scale), slice(x0, x0 + scale)
 
-            if t == EMPTY_TILE:
+            tt = int(terrain[y, x])
+            if tt < 0:
                 base = COLORS["empty"]
-            elif t in WALL_TILES:
-                base = COLORS["wall"]
-            elif t in ROAD_TILES:
-                base = COLORS["road"]
-            elif t in DECOR_TILES:
+            elif tt == 2:
+                base = COLORS["path"]
+            elif tt == 1:
                 base = COLORS["decor"]
             else:
                 base = COLORS["ground"]
+
             canvas[block] = base
 
             cx = x0 + scale // 2
             cy = y0 + scale // 2
-            if t in LOOT_TILES:
-                markers.append((cx, cy, COLORS["loot"]))
-            elif t in SPIKE_TILES:
+
+            ot = int(obstacles[y, x])
+            if ot == ObstacleType.SPIKE:
                 markers.append((cx, cy, COLORS["spike"]))
-            elif t in RANGED_ENEMIES:
+            elif ot == ObstacleType.PILLAR:
+                markers.append((cx, cy, COLORS["pillar"]))
+
+            lt = int(loot[y, x])
+            if lt >= 0:
+                markers.append((cx, cy, COLORS["loot"]))
+
+            et = int(enemies[y, x])
+            if et == EnemyType.RANGED:
                 markers.append((cx, cy, COLORS["enemy_ranged"]))
-            elif t in MELEE_ENEMIES:
+            elif et == EnemyType.MELEE:
                 markers.append((cx, cy, COLORS["enemy_melee"]))
-            elif t == EXIT_TILE:
-                markers.append((cx, cy, COLORS["exit"]))
-            elif t == PLAYER_TILE:
-                markers.append((cx, cy, COLORS["player"]))
+            elif et == EnemyType.BOMBER:
+                markers.append((cx, cy, COLORS["enemy_bomber"]))
+            elif et == EnemyType.ASSASSIN:
+                markers.append((cx, cy, COLORS["enemy_assassin"]))
+            elif et == EnemyType.GUARDIAN:
+                markers.append((cx, cy, COLORS["enemy_guardian"]))
 
     img = Image.fromarray(canvas)
     draw = ImageDraw.Draw(img)
 
-    grid_color = (45, 45, 45)
+    grid_color = COLORS["grid"]
     line_width = max(1, scale // 12)
     for gx in range(w + 1):
         xx = gx * scale
@@ -201,35 +391,65 @@ def render_map(arr: np.ndarray, dto: dict, out_path: str):
         yy = gy * scale
         draw.line([(0, yy), (img_w, yy)], fill=grid_color, width=line_width)
 
-    marker_r = max(3, int(scale * 0.45))
+    marker_r = max(3, int(scale * 0.35))
     for cx, cy, color in markers:
         bbox = [cx - marker_r, cy - marker_r, cx + marker_r, cy + marker_r]
         draw.ellipse(bbox, fill=color)
 
-    def _fmt_vec(v):
-        if not v or len(v) == 0:
-            return "[]"
-        return "[" + ", ".join(f"{x:.3f}" for x in v) + "]"
+    # start / exit on top
+    special_r = max(3, int(scale * 0.42))
+    if player_pos is not None:
+        px, py = player_pos
+        if 0 <= px < w and 0 <= py < h:
+            cx = px * scale + scale // 2
+            cy = py * scale + scale // 2
+            bbox = [cx - special_r, cy - special_r, cx + special_r, cy + special_r]
+            draw.ellipse(bbox, fill=COLORS["player"])
 
-    geo_b = dto.get("geoBehavior", [])
-    enemy_b = dto.get("enemyBehavior", [])
-    furn_b = dto.get("furnBehavior", [])
+    if exit_pos is not None:
+        ex, ey = exit_pos
+        if 0 <= ex < w and 0 <= ey < h:
+            margin = max(2, scale // 5)
+            draw.rectangle(
+                [
+                    ex * scale + margin,
+                    ey * scale + margin,
+                    (ex + 1) * scale - margin,
+                    (ey + 1) * scale - margin,
+                ],
+                fill=COLORS["exit"],
+            )
 
-    geo_fit = dto.get("geoFitness", None)
-    enemy_fit = dto.get("enemyFitness", None)
-    furn_fit = dto.get("furnFitness", None)
+    rooms = dto.get("rooms", []) or []
+    connection_count = len(dto.get("connections", []) or [])
+    enemy_count = sum(len(r.get("enemies", []) or []) for r in rooms)
+    loot_count = sum(len(r.get("loot", []) or []) for r in rooms)
+    obstacle_count = sum(len(r.get("obstacles", []) or []) for r in rooms)
+    tile_count = sum(len(r.get("tiles", []) or []) for r in rooms)
+    chunk_count = sum(len(r.get("chunks", []) or []) for r in rooms)
 
-    fit_str = f"fitness={dto.get('fitness', 0):.2f}"
-    if (geo_fit is not None) and (enemy_fit is not None) and (furn_fit is not None):
-        try:
-            fit_str += f"  geoFit={float(geo_fit):.2f} enemyFit={float(enemy_fit):.2f} furnFit={float(furn_fit):.2f}"
-        except Exception:
-            pass
+    geo_fit = dto.get("geoFitness", 0.0)
+    enem_fit = dto.get("enemFitness", dto.get("enemyFitness", 0.0))
+    furn_fit = dto.get("furnFitness", 0.0)
+    combined_fit = float(geo_fit) + float(enem_fit) + float(furn_fit)
 
     text_lines = [
-        f"{fit_str}   geo={_fmt_vec(geo_b)}   enemy={_fmt_vec(enemy_b)}   furn={_fmt_vec(furn_b)}",
-        f"rooms={dto.get('roomsCount',0)} enemies={dto.get('enemiesCount',0)} furnishing={dto.get('furnishingCount',0)}",
-        f"walkable={dto.get('walkableTiles',0)} walls={dto.get('wallTiles',0)} enemyBudget={dto.get('enemyBudget',0)} furnishingBudget={dto.get('furnishingBudget',0)}",
+        (
+            f"fitness={combined_fit:.2f}   "
+            f"geoFit={float(geo_fit):.2f} enemFit={float(enem_fit):.2f} furnFit={float(furn_fit):.2f}   "
+            f"geo={_fmt_vec(dto.get('geoBehavior'))}   "
+            f"enemy={_fmt_vec(dto.get('enemyBehavior'))}   "
+            f"furn={_fmt_vec(dto.get('furnBehavior'))}"
+        ),
+        (
+            f"rooms={len(rooms)} connections={connection_count} chunks={chunk_count} "
+            f"tiles={tile_count} enemies={enemy_count} loot={loot_count} obstacles={obstacle_count}"
+        ),
+        (
+            f"difficulty={dto.get('difficulty', 0)}   "
+            f"bounds=({canvas_data['min_x']},{canvas_data['min_y']}) -> "
+            f"({canvas_data['min_x'] + w - 1},{canvas_data['min_y'] + h - 1})"
+        ),
     ]
     full_text = "   ".join(text_lines)
 
@@ -278,9 +498,9 @@ def main():
         return
 
     data = load_json(p)
-    maps = data.get("maps", [])
+    maps = data.get("wrappedMaps", [])
     if not maps:
-        print("No maps found in JSON.")
+        print("No maps found in JSON (expected key: 'wrappedMaps').")
         return
 
     os.makedirs(ICON_DIR, exist_ok=True)
@@ -290,8 +510,6 @@ def main():
     seen = set()
 
     for i, m in enumerate(maps):
-        arr = reconstruct_array(m)
-
         try:
             bt = behavior_tuple_from_json(m)
         except KeyError as e:
@@ -299,15 +517,23 @@ def main():
             skipped += 1
             continue
 
-        # One icon per unique behavior tuple (optional but usually what you want)
         if bt in seen:
             continue
         seen.add(bt)
 
+        canvas_data = make_canvas_arrays(m)
+        if canvas_data is None:
+            print(f"[SKIP map index {i}] no renderable geometry found")
+            skipped += 1
+            continue
+
         out_file = os.path.join(ICON_DIR, f"behavior_{behavior_hash8(bt)}.png")
-        render_map(arr, m, out_file)
+        render_map(canvas_data, m, out_file)
         saved += 1
-        print(f"Saved {out_file} (w={m.get('width')}, h={m.get('height')})")
+        print(
+            f"Saved {out_file} "
+            f"(w={canvas_data['width']}, h={canvas_data['height']})"
+        )
 
     print(f"\nDone. Saved={saved}, skipped={skipped}, unique_behaviors={len(seen)}")
 

@@ -1,265 +1,241 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.Tilemaps;
 using System.IO;
-
+using UnityEngine;
 
 public class MapSelector : MonoBehaviour
 {
-    [SerializeField]
-    SelectorLogger logger;
+    [SerializeField] private string inputFileName = "enemArchiveEasy_maps.json";
+    [SerializeField] private string outputFileName = "diverse_maps.json";
 
-    [SerializeField]
+    private HashSet<int> geoUsed = new HashSet<int>();
+    private HashSet<int> enemyCompUsed = new HashSet<int>();
 
-    string archiveTostoreIn;
+    private struct ClosestPair
+    {
+        public int indexA;
+        public int indexB;
+        public float distance;
+    }
 
-    void Start(){
-        string path = Path.Combine(Application.streamingAssetsPath, "enemArchiveEasy_maps.json");
+
+    void Start()
+    {
+        string path = Path.Combine(Application.streamingAssetsPath, inputFileName);
+        string archiveToStoreIn = Path.Combine(Application.streamingAssetsPath, outputFileName);
+
         var maps = MapJsonExporter.LoadMaps(path);
-        SelectMaps(maps);
-    }
-    void SelectMaps(List<Map> maps)
-    {
-        List<Map> selectedMaps = new List<Map>();
-        var diverseEnemyBehaviorMaps = SelectMostDiverseEnemyBehavior(maps, 3);
-        var diverseExplorationBehaviorMaps = SelectMostDiverseExplorationBehavior(maps, 3);
-        //Debug.Log("Enemy Maps final: " + diverseEnemyBehaviorMaps.Count);
-        //Debug.Log("Explore Maps final: " + diverseExplorationBehaviorMaps.Count);
+        var selectedMaps = SelectMaps(maps, 6);
 
-        foreach (var map in diverseEnemyBehaviorMaps)
-        {
-            selectedMaps.Add(map);
-        }
-        foreach (var map in diverseExplorationBehaviorMaps)
-        {
-            selectedMaps.Add(map);
-        }
-        MapJsonExporter.SaveMaps(selectedMaps, archiveTostoreIn);
+        MapJsonExporter.SaveMaps(selectedMaps, archiveToStoreIn);
 
     }
 
-
-    //Finds the maps that have the most diverse enemy composition comparetively to each other and the total average
-    List<Map> SelectMostDiverseEnemyBehavior(List<Map> maps, int amountToSelect)
+    public static List<Map> SelectMaps(
+        IReadOnlyList<Map> maps, int amount = 6)
     {
-        float[] averageEnemyComposition = new float[5];
-        List<Map> selectedMaps = new List<Map>();
-        HashSet<Vector2> chosenBehaviors = new HashSet<Vector2>();
-        
-        //Calculate average enemy composition for all maps
-        foreach (var map in maps)
-        {
-            var mapEnemyComposition = EnemFitAndBehav.GetEnemyComposition(map.GetAllEnemies());
-            for(int i=0; i<5; i++)
-            {
-                averageEnemyComposition[i] += mapEnemyComposition[i];
-            }
-        }
-        for (int i=0; i<5; i++)
-        {
-            averageEnemyComposition[i] /= (float) maps.Count;
-            Debug.Log("avg EneComp" + i + ": " + averageEnemyComposition[i]);
-        }
-        //Add level with closest to average enemy composition
-        float highestSimilarity = 0f;
-        Map mapToAdd = new Map();
-        float enemyCount = 0;
-        foreach (var map in maps)
-        {
+        List<Map> selectedMaps = new List<Map>(amount);
 
-            //Brute force fix, no good, but best option
-            float similarity = EnemFitAndBehav.GetCompositionSimilarity(averageEnemyComposition, EnemFitAndBehav.GetEnemyComposition(map.GetAllEnemies()));
-            if(similarity > highestSimilarity)
-            {
-                highestSimilarity = similarity;
-                mapToAdd = map;
-            }
-        }
-        selectedMaps.Add(mapToAdd);
-        chosenBehaviors.Add(mapToAdd.enemyBehavior);
-        logger.LogEnemyComp(mapToAdd, EnemFitAndBehav.GetEnemyComposition(mapToAdd.GetAllEnemies()), 1-highestSimilarity);
+        for (int i = 0; i < amount; i++)
+            selectedMaps.Add(maps[i]);
 
-        //Add n (specified) amount of maps, decided by difference in enemy composition to already added maps.
-        float lowestSimilarity;
-        while (selectedMaps.Count < amountToSelect){
-            lowestSimilarity = (float) selectedMaps.Count;
-            foreach (var map in maps)
+        ClosestPair currentClosest = FindClosestPair(selectedMaps);
+
+        bool improved = true;
+
+        while (improved)
+        {
+            improved = false;
+
+            float bestDistance = currentClosest.distance;
+            int bestRemoveIndex = -1;
+            Map bestAddMap = null;
+            ClosestPair bestClosestAfterSwap = currentClosest;
+
+            for (int candidateIndex = 0; candidateIndex < maps.Count; candidateIndex++)
             {
-                if (chosenBehaviors.Contains(map.enemyBehavior))
-                {
+                Map candidate = maps[candidateIndex];
+
+                if (selectedMaps.Contains(candidate))
                     continue;
-                }
-                float similarity = 0;
-                //Ensures that maps are different from each other all together and not just multiple maps in two extreme ends of the enemy composition scale
-                foreach(var selectedMap in selectedMaps){
-                    similarity += EnemFitAndBehav.GetCompositionSimilarity(EnemFitAndBehav.GetEnemyComposition(selectedMap.GetAllEnemies()), EnemFitAndBehav.GetEnemyComposition(map.GetAllEnemies()));
-                }
-                similarity /= selectedMaps.Count;
-                if(similarity < lowestSimilarity)
-                        {
-                            lowestSimilarity = similarity;
-                            mapToAdd = map;
-                        }
-            }
-            selectedMaps.Add(mapToAdd);
-            chosenBehaviors.Add(mapToAdd.enemyBehavior);
-            logger.LogEnemyComp(mapToAdd, EnemFitAndBehav.GetEnemyComposition(mapToAdd.GetAllEnemies()), 1-lowestSimilarity);
 
-        }
-        return selectedMaps;
-    }
-
-    //Finds the maps that has the most diverse exploration (geometry + furnishing) behavior comparetively to each other and the global average
-    List<Map> SelectMostDiverseExplorationBehavior(List<Map> maps, int amountToSelect)
-    {
-        //Finds the average exploration behavior for all maps
-        float[] averageExplorationBehavior = new float[3];
-        List<Map> selectedMaps = new List<Map>();
-        HashSet<Vector2> chosenBehaviors = new HashSet<Vector2>();
-        foreach (var map in maps)
-        {
-            float[] mapExploreComposition = GetMapExplorationBehavior(map);
-            for(int i=0; i<3; i++)
-            {
-                averageExplorationBehavior[i] += mapExploreComposition[i];
-            }
-        }
-        for (int i=0; i<3; i++)
-        {
-            averageExplorationBehavior[i] /= (float) maps.Count;
-            Debug.Log("avg ExploreBehave" + i + ": " + averageExplorationBehavior[i]);
-        }
-        //Add level with closest to average exploration behavior
-        float highestSimilarity = 0f;
-        Map mapToAdd = new Map();
-        foreach (var map in maps)
-        {
-            float similarity = GetExplorationBehaviorDistance(averageExplorationBehavior, GetMapExplorationBehavior(map));
-            if(similarity > highestSimilarity)
+                for (int removeIndex = 0; removeIndex < selectedMaps.Count; removeIndex++)
                 {
-                    highestSimilarity = similarity;
-                    mapToAdd = map;
-                }
-        }
-        selectedMaps.Add(mapToAdd);
-        chosenBehaviors.Add(mapToAdd.geoBehavior);
-        logger.LogExplorationParameters(mapToAdd, 1-highestSimilarity);
+                    Map removed = selectedMaps[removeIndex];
 
-        //Add n (specified) amount of levels based on their difference in exploration behavior, compared to previously added maps.
-        float lowestSimilarity;
-        while (selectedMaps.Count < amountToSelect){
-            lowestSimilarity = (float) selectedMaps.Count;
-            foreach (var map in maps)
-            {
-                if (chosenBehaviors.Contains(map.geoBehavior)){
-                    continue;
+                    selectedMaps[removeIndex] = candidate;
+
+                    ClosestPair testClosest = FindClosestPair(selectedMaps);
+
+                    selectedMaps[removeIndex] = removed;
+
+                    if (testClosest.distance > bestDistance)
+                    {
+                        bestDistance = testClosest.distance;
+                        bestRemoveIndex = removeIndex;
+                        bestAddMap = candidate;
+                        bestClosestAfterSwap = testClosest;
+                    }
                 }
-                float similarity = 0;
-                foreach(var selectedMap in selectedMaps){
-                    similarity += GetExplorationBehaviorDistance(GetMapExplorationBehavior(selectedMap), GetMapExplorationBehavior(map));
-                }
-                similarity /= selectedMaps.Count;
-                if(similarity < lowestSimilarity)
-                        {
-                            lowestSimilarity = similarity;
-                            mapToAdd = map;
-                        }
             }
-            selectedMaps.Add(mapToAdd);
-            chosenBehaviors.Add(mapToAdd.geoBehavior);
-            logger.LogExplorationParameters(mapToAdd, 1-lowestSimilarity);
+
+            if (bestAddMap != null)
+            {
+                selectedMaps[bestRemoveIndex] = bestAddMap;
+                currentClosest = bestClosestAfterSwap;
+                improved = true;
+            }
         }
+
         return selectedMaps;
+
     }
 
-    List<Map> SelectMostDiverseEnemyBehaviorWithDifficulty(List<Map> maps, int amountToSelect)
+    private static ClosestPair FindClosestPair(List<Map> selectedMaps)
     {
-        float[] averageEnemyComposition = new float[5];
-        List<Map> selectedMaps = new List<Map>();
-        HashSet<Vector2> chosenBehaviors = new HashSet<Vector2>();
-        
-        //Calculate average enemy composition for all maps
-        foreach (var map in maps)
+        ClosestPair closest = new ClosestPair
         {
-            var mapEnemyComposition = EnemFitAndBehav.GetEnemyComposition(map.GetAllEnemies());
-            for(int i=0; i<5; i++)
+            indexA = -1,
+            indexB = -1,
+            distance = float.PositiveInfinity
+        };
+
+        for (int i = 0; i < selectedMaps.Count; i++)
+        {
+            for (int j = i + 1; j < selectedMaps.Count; j++)
             {
-                averageEnemyComposition[i] += mapEnemyComposition[i];
+                float distance = MapDistance(selectedMaps[i], selectedMaps[j]);
+
+                if (distance < closest.distance)
+                {
+                    closest.indexA = i;
+                    closest.indexB = j;
+                    closest.distance = distance;
+                }
             }
         }
-        for (int i=0; i<5; i++)
-        {
-            averageEnemyComposition[i] /= (float) maps.Count;
-            Debug.Log("avg EneComp" + i + ": " + averageEnemyComposition[i]);
-        }
-        //Add level with closest to average enemy composition
-        float highestSimilarity = 0f;
-        Map mapToAdd = new Map();
-        foreach (var map in maps)
-        {
-            float similarity = EnemFitAndBehav.GetCompositionSimilarity(averageEnemyComposition, EnemFitAndBehav.GetEnemyComposition(map.GetAllEnemies()));
-            if(similarity > highestSimilarity)
-                {
-                    highestSimilarity = similarity;
-                    mapToAdd = map;
-                }
-        }
-        selectedMaps.Add(mapToAdd);
-        chosenBehaviors.Add(mapToAdd.enemyBehavior);
-        logger.LogEnemyComp(mapToAdd, EnemFitAndBehav.GetEnemyComposition(mapToAdd.GetAllEnemies()), 1-highestSimilarity);
 
-        //Add n (specified) amount of maps, decided by difference in enemy composition to already added maps.
-        float lowestSimilarity;
-        float comparisonScore = 1;
-        while (selectedMaps.Count < amountToSelect){
-            lowestSimilarity = (float) selectedMaps.Count;
-            comparisonScore = 1;
-            foreach (var map in maps)
-            {
-                if (chosenBehaviors.Contains(map.enemyBehavior))
-                {
-                    continue;
-                }
-                float similarity = 0;
-                float difficulty = 0;
-                //Ensures that maps are different from each other all together and not just multiple maps in two extreme ends of the enemy composition scale
-                foreach(var selectedMap in selectedMaps){
-                    similarity += EnemFitAndBehav.GetCompositionSimilarity(EnemFitAndBehav.GetEnemyComposition(selectedMap.GetAllEnemies()), EnemFitAndBehav.GetEnemyComposition(map.GetAllEnemies()));
-                    difficulty += Mathf.Abs(map.enemyBehavior.y - selectedMap.enemyBehavior.y) * 0.5f;
-                }
-                similarity /= selectedMaps.Count;
-                difficulty /= selectedMaps.Count;
-                difficulty = 1f / (1f + difficulty);
-                var thisCompareScore = 0.7f * similarity + 0.3f * difficulty;
-
-                if(thisCompareScore < comparisonScore)
-                        {
-                            comparisonScore = thisCompareScore;
-                            mapToAdd = map;
-                        }
-            }
-            selectedMaps.Add(mapToAdd);
-            chosenBehaviors.Add(mapToAdd.enemyBehavior);
-            logger.LogEnemyComp(mapToAdd, EnemFitAndBehav.GetEnemyComposition(mapToAdd.GetAllEnemies()), 1-comparisonScore);
-
-        }
-        return selectedMaps;
+        return closest;
     }
 
-    float[] GetMapExplorationBehavior(Map map)
+    // Enemy does count for a bit more
+    private static float MapDistance(Map a, Map b)
     {
-        return new float[] {map.geoBehavior.x, map.furnBehavior.x, map.furnBehavior.y};
+        float geoDistance = GeoDistance(a, b);
+        float furnDistance = FurnDistance(a, b);
+        float enemyDistance = EnemyCompDistance(a.enemyComp, b.enemyComp);
+
+        return Mathf.Sqrt(
+            geoDistance * geoDistance +
+            furnDistance * furnDistance +
+            enemyDistance * enemyDistance
+        );
     }
 
-
-    float GetExplorationBehaviorDistance(float[] map1, float[] map2)
+    private static float GeoDistance(Map a, Map b)
     {
-        float absDiff = Mathf.Abs(map1[0] - map2[0]) + Mathf.Abs(map1[1] - map2[1]) + Mathf.Abs(map1[2] - map2[2]);
-        return 1f - Mathf.Clamp01(absDiff / 16f);
+        // Ordered behavior distance.
+        // 0 vs 12 is farther than 0 vs 6.
+        return Mathf.Abs(a.geoBehavior.x - b.geoBehavior.x) / 12f;
+    }
+
+    private static float FurnDistance(Map a, Map b)
+    {
+        float dx = a.furnBehavior.x - b.furnBehavior.x;
+        float dy = a.furnBehavior.y - b.furnBehavior.y;
+
+        // furnBehavior values are 0..2 on both axes.
+        return Mathf.Sqrt(dx * dx + dy * dy) / Mathf.Sqrt(8f);
     }
 
 
+    private static float EnemyCompDistance(float[] a, float[] b)
+    {
+        float identityDistance = EnemyIdentityDistance(a, b);
+        float shapeDistance = EnemyShapeDistance(a, b);
 
+        return Mathf.Sqrt(
+            identityDistance * identityDistance +
+            shapeDistance * shapeDistance
+        );
+    }
 
+    private static float EnemyIdentityDistance(float[] a, float[] b)
+    {
+        if (a == null || b == null)
+            return 0f;
+
+        int length = Mathf.Min(a.Length, b.Length);
+
+        if (length == 0)
+            return 0f;
+
+        float totalA = 0f;
+        float totalB = 0f;
+
+        for (int i = 0; i < length; i++)
+        {
+            totalA += Mathf.Max(0f, a[i]);
+            totalB += Mathf.Max(0f, b[i]);
+        }
+
+        if (totalA <= 0f || totalB <= 0f)
+            return 0f;
+
+        float shared = 0f;
+
+        for (int i = 0; i < length; i++)
+        {
+            float pa = Mathf.Max(0f, a[i]) / totalA;
+            float pb = Mathf.Max(0f, b[i]) / totalB;
+
+            shared += Mathf.Min(pa, pb);
+        }
+
+        return 1f - shared;
+    }
+    private static float EnemyShapeDistance(float[] a, float[] b)
+    {
+        float effectiveA = EffectiveEnemyCount(a);
+        float effectiveB = EffectiveEnemyCount(b);
+
+        if (effectiveA <= 0f || effectiveB <= 0f)
+            return 0f;
+
+        int enemyTypeCount = Mathf.Min(a.Length, b.Length);
+
+        if (enemyTypeCount <= 1)
+            return 0f;
+
+        float logA = Mathf.Log(effectiveA);
+        float logB = Mathf.Log(effectiveB);
+
+        return Mathf.Abs(logA - logB) / Mathf.Log(enemyTypeCount);
+    }
+
+    private static float EffectiveEnemyCount(float[] comp)
+    {
+        if (comp == null || comp.Length == 0)
+            return 0f;
+
+        float total = 0f;
+
+        for (int i = 0; i < comp.Length; i++)
+            total += Mathf.Max(0f, comp[i]);
+
+        if (total <= 0f)
+            return 0f;
+
+        float entropy = 0f;
+
+        for (int i = 0; i < comp.Length; i++)
+        {
+            float p = Mathf.Max(0f, comp[i]) / total;
+
+            if (p > 0f)
+                entropy -= p * Mathf.Log(p);
+        }
+
+        return Mathf.Exp(entropy);
+    }
 }

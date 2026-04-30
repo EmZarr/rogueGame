@@ -68,7 +68,7 @@ public class LevelManager : MonoBehaviour
 
     void Start()
     {
-        string path = Path.Combine(Application.streamingAssetsPath, "DiverseEliteNew_maps.json");
+        string path = Path.Combine(Application.streamingAssetsPath, "diverse_maps.json");
         //string path = Path.Combine(Application.streamingAssetsPath, "handcrafted_maps.json");
         var archive = MapJsonExporter.LoadMaps(path);
 
