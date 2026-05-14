@@ -27,6 +27,23 @@ BEHAVIOR_COLUMNS = [
 
 NORMALIZATION_METHOD = "zscore"
 
+LEVEL_CONSTANTS_BY_BEHAVIOR = {
+    # Level 1
+    (7, 2, 1, 85, 2): {"powerups": 8,  "health": 6,  "enemies": 32},
+
+    # Level 2
+    (6, 2, 2, 55, 3): {"powerups": 7,  "health": 6,  "enemies": 60},
+
+    # Level 3
+    (9, 3, 1, 0, 2): {"powerups": 25, "health": 7,  "enemies": 30},
+
+    # Level 4
+    (6, 2, 4, 17, 1): {"powerups": 5,  "health": 21, "enemies": 40},
+
+    # Level 5
+    (4, 4, 1, 113, 3): {"powerups": 13, "health": 5,  "enemies": 34},
+}
+
 
 # ============================================================
 # HELPERS
@@ -38,6 +55,12 @@ def safe_div(numerator, denominator, default=0.0):
     if pd.isna(numerator):
         return default
     return float(numerator) / float(denominator)
+
+def get_behavior_key(row):
+    return tuple(
+        int(row[col]) if not pd.isna(row[col]) else None
+        for col in BEHAVIOR_COLUMNS
+    )   
 
 
 def normalize_features(df_features: pd.DataFrame, method: str = "zscore") -> pd.DataFrame:
@@ -89,27 +112,11 @@ def process_csv():
         FILTER_COLUMN,
         PLAYER_ID_COLUMN,
         LEVEL_PLAY_ID_COLUMN,
-        "timePlayed",
-        "AverageDistanceToEnemies",
-        "bowDefense",
-        "knightDefense",
-        "berserkDefense",
-        "bowLightAtk",
-        "knightLightAtk",
-        "berserkLightAtk",
-        "bowHeavyAtk",
-        "knightHeavyAtk",
-        "berserkHeavyAtk",
-        "damageTakenMelee",
-        "damageTakenRanged",
-        "damageTakenGuardianShield",
-        "damageTakenTraps",
-        "bowLightDash",
-        "knightLightDash",
-        "berserkLightDash",
-        "bowHeavyDash",
-        "knightHeavyDash",
-        "berserkHeavyDash",
+        "PowerUpsTaken",
+        "HealthBarrelsTaken",
+        "AvgEnemiesAliveOnPowerUpTaken",
+        "OptionalRoomPercentage",
+        "AverageDistanceToMainPath",
     ] + BEHAVIOR_COLUMNS
 
     missing = [col for col in required_columns if col not in df.columns]
@@ -131,121 +138,50 @@ def process_csv():
         return []
 
     # --------------------------------------------------------
-    # Step 3: feature engineering
-    # --------------------------------------------------------
+# Step 3: feature engineering (NEW)
+# --------------------------------------------------------
+
     feature_df = pd.DataFrame(index=df.index)
 
-    total_defense = (
-        df["bowDefense"] +
-        df["knightDefense"] +
-        df["berserkDefense"]
-    )
+    def get_level_const_from_row(row, key):
+        behavior_key = get_behavior_key(row)
 
-    total_light_attacks = (
-        df["bowLightAtk"] +
-        df["knightLightAtk"] +
-        df["berserkLightAtk"]
-    )
+        if behavior_key not in LEVEL_CONSTANTS_BY_BEHAVIOR:
+            return np.nan
 
-    total_heavy_attacks = (
-        df["bowHeavyAtk"] +
-        df["knightHeavyAtk"] +
-        df["berserkHeavyAtk"]
-    )
-
-    total_attacks = total_light_attacks + total_heavy_attacks
-
-    total_damage_taken = (
-        df["damageTakenMelee"] +
-        df["damageTakenRanged"] +
-        df["damageTakenGuardianShield"] +
-        df["damageTakenTraps"]
-    )
-
-    total_light_dashes = (
-        df["bowLightDash"] +
-        df["knightLightDash"] +
-        df["berserkLightDash"]
-    )
-
-    total_heavy_dashes = (
-        df["bowHeavyDash"] +
-        df["knightHeavyDash"] +
-        df["berserkHeavyDash"]
-    )
+        return LEVEL_CONSTANTS_BY_BEHAVIOR[behavior_key][key]
 
 
+    # --- Percent features ---
 
-    feature_df["avg_distance_to_enemies"] = df["AverageDistanceToEnemies"]
-
-    feature_df["defense_per_time"] = [
-        safe_div(x, t) for x, t in zip(total_defense, df["timePlayed"])
+    feature_df["PowerUpsTakenPercent"] = [
+        safe_div(row["PowerUpsTaken"], get_level_const_from_row(row, "powerups"))
+        for _, row in df.iterrows()
     ]
 
-    feature_df["attacks_per_time"] = [
-        safe_div(x, t) for x, t in zip(total_attacks, df["timePlayed"])
+    feature_df["HealthBarrelsTakenPercent"] = [
+        safe_div(row["HealthBarrelsTaken"], get_level_const_from_row(row, "health"))
+        for _, row in df.iterrows()
     ]
 
-    feature_df["heavy_to_light_ratio"] = [
-        safe_div(h, l) for h, l in zip(total_heavy_attacks, total_light_attacks)
+    feature_df["AverageEnemiesAliveOnPOTakenPct"] = [
+        safe_div(row["AvgEnemiesAliveOnPowerUpTaken"], get_level_const_from_row(row, "enemies"))
+        for _, row in df.iterrows()
     ]
 
-    feature_df["damage_taken_per_time"] = [
-        safe_div(x, t) for x, t in zip(total_damage_taken, df["timePlayed"])
-    ]
 
-    feature_df["light_dashes_per_time"] = [
-        safe_div(x, t) for x, t in zip(total_light_dashes, df["timePlayed"])
-    ]
+    # --- Direct features from CSV ---
 
-    feature_df["heavy_dashes_per_time"] = [
-        safe_div(x, t) for x, t in zip(total_heavy_dashes, df["timePlayed"])
-    ]
+    feature_df["OptionalRoomPercentage"] = pd.to_numeric(
+        df["OptionalRoomPercentage"], errors="coerce"
+    ).fillna(0.0)
 
-    feature_df["RangedAttackShare"] = [
-        safe_div(x, t) for x, t in zip(df["bowLightAtk"], total_light_attacks)
-    ]
+    feature_df["AverageDistanceToMainPath"] = pd.to_numeric(
+        df["AverageDistanceToMainPath"], errors="coerce"
+    ).fillna(0.0)
 
-    feature_df["RangedDashShare"] = [
-        safe_div(x, t) for x, t in zip(df["bowLightDash"], total_light_dashes)
-    ]
 
-    feature_df["RogueDashShare"] = [
-        safe_div(x, t) for x, t in zip(df["berserkLightDash"], total_light_dashes)
-    ]
-
-    feature_df["KnightDashShare"] = [
-        safe_div(x, t) for x, t in zip(df["knightLightDash"], total_light_dashes)
-    ]
-
-    feature_df["RangedHeavyDashShare"] = [
-        safe_div(x, t) for x, t in zip(df["bowHeavyDash"], total_heavy_dashes)
-    ]
-
-    feature_df["RogueHeavyDashShare"] = [
-        safe_div(x, t) for x, t in zip(df["berserkHeavyDash"], total_heavy_dashes)
-    ]
-
-    feature_df["KnightHeavyDashShare"] = [
-        safe_div(x, t) for x, t in zip(df["knightHeavyDash"], total_heavy_dashes)
-    ]
-
-    feature_df["RangedDefShare"] = [
-        safe_div(x, t) for x, t in zip(df["bowDefense"], total_defense)
-    ]
-
-    feature_df["RogueDefShare"] = [
-        safe_div(x, t) for x, t in zip(df["berserkDefense"], total_defense)
-    ]
-
-    feature_df["KnightDefShare"] = [
-        safe_div(x, t) for x, t in zip(df["knightDefense"], total_defense)
-    ]
-
-    feature_df["FormChanges"] = [
-        safe_div(x, t) for x, t in zip(df["FormChangeCountInCombat"], df["timePlayed"])
-    ]
-
+    # Clean
     feature_df = feature_df.replace([np.inf, -np.inf], np.nan).fillna(0.0)
 
     # --------------------------------------------------------
