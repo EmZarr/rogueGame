@@ -7,12 +7,12 @@ import pandas as pd
 # Change values here only.
 # ============================================================
 
-CSV_PATH = "Telemetry_RawControl.csv"
+CSV_PATH = "Experiment1Data.csv"
 
 FILTER_COLUMN = "GeometryBehavior"
 FILTER_VALUES = [1]
 
-INCLUDE_PLAYER_IDS = ["4036b402136b005f97a637e85f7961f4a1df5e23", "a337940f472f2f83c15e80db566145fe9e844d0d", "bbd174147e56b9d0ecff534e0bc4e7aa42920e66", "61ba1ad1e381c2a7ccb892a864aad6a50daf8d96", "86c8cfe04bc19458adcf3c880baccfeb7a03bd7c", "5953ebc01c53dc47066142b416c932f7e8a07982", "e967dc9b7177e4abf497f68b06561fcdd3fb0ebd", "c905b72819f4bbd69818665d6c720bddc85ce1a2"]
+INCLUDE_PLAYER_IDS = []#["4036b402136b005f97a637e85f7961f4a1df5e23", "a337940f472f2f83c15e80db566145fe9e844d0d", "bbd174147e56b9d0ecff534e0bc4e7aa42920e66", "61ba1ad1e381c2a7ccb892a864aad6a50daf8d96", "86c8cfe04bc19458adcf3c880baccfeb7a03bd7c", "5953ebc01c53dc47066142b416c932f7e8a07982", "e967dc9b7177e4abf497f68b06561fcdd3fb0ebd", "c905b72819f4bbd69818665d6c720bddc85ce1a2"]
 
 PLAYER_ID_COLUMN = "playerId"
 LEVEL_PLAY_ID_COLUMN = "levelPlayID"
@@ -29,19 +29,44 @@ NORMALIZATION_METHOD = "zscore"
 
 LEVEL_CONSTANTS_BY_BEHAVIOR = {
     # Level 1
-    (7, 2, 1, 85, 2): {"powerups": 8,  "health": 6,  "enemies": 32},
+    (1, 4, 1, 63, 1): {"powerups": 18,  "health": 12,  "enemies": 5},
 
     # Level 2
-    (6, 2, 2, 55, 3): {"powerups": 7,  "health": 6,  "enemies": 60},
+    (10, 4, 2, 50, 1): {"powerups": 16,  "health": 14,  "enemies": 39},
 
     # Level 3
-    (9, 3, 1, 0, 2): {"powerups": 25, "health": 7,  "enemies": 30},
+    (4, 2, 0, 44, 1): {"powerups": 24, "health": 6,  "enemies": 22},
 
     # Level 4
-    (6, 2, 4, 17, 1): {"powerups": 5,  "health": 21, "enemies": 40},
+    (19, 3, 2, 51, 2): {"powerups": 12,  "health": 18, "enemies": 35},
 
     # Level 5
-    (4, 4, 1, 113, 3): {"powerups": 13, "health": 5,  "enemies": 34},
+    (4, 3, 0, 38, 2): {"powerups": 25, "health": 5,  "enemies": 24},
+
+    (69, 2, 1, 41, 2): {"powerups": 18, "health": 12,  "enemies": 169},
+    
+    (12, 3, 2, 31, 2): {"powerups": 15, "health": 15,  "enemies": 47},
+    
+    (31, 2, 4, 41, 2): {"powerups": 5, "health": 25,  "enemies": 58},
+    
+    (3, 3, 1, 5, 2): {"powerups": 21, "health": 9,  "enemies": 12},
+    
+    (57, 2, 2, 43, 3): {"powerups": 16, "health": 14,  "enemies": 102},
+    
+    (4, 2, 3, 84, 3): {"powerups": 9, "health": 21,  "enemies": 41},
+    
+    (7, 3, 2, 41, 3): {"powerups": 17, "health": 13,  "enemies": 48},
+    
+    (69, 1, 2, 41, 3): {"powerups": 14, "health": 16,  "enemies": 271},
+    
+    (38, 2, 0, 28, 3): {"powerups": 24, "health": 6,  "enemies": 66},
+    
+    (16, 1, 1, 31, 3): {"powerups": 18, "health": 12,  "enemies": 73},
+    
+    (44, 2, 2, 50, 3): {"powerups": 15, "health": 15,  "enemies": 95},
+    
+    (18, 3, 4, 41, 3): {"powerups": 5, "health": 25,  "enemies": 121},
+    
 }
 
 
