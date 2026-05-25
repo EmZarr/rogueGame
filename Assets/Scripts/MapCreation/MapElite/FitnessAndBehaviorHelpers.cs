@@ -1,63 +1,58 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public static class FitnessAndBehaviorHelpers
 {
     // Scores how well a value fits within a desired interval [min, max].
-    //
+
     // Returns a value in range [0, 1]:
     // - 1.0 if value is inside the interval (perfect score)
     // - smoothly decreasing towards 0 the further it moves outside
-    //
+
     // falloff controls how harshly values outside the interval are penalized:
     // - higher = sharper penalty
     // - lower = softer penalty
     public static float ScoreInterval(float value, float min, float max, float falloff = 1.5f)
     {
-        // Safety: if any inputs are invalid, return worst score
+        // For safety, if any inputs are invalid, return worst score
         if (float.IsNaN(value) || float.IsInfinity(value) ||
             float.IsNaN(min) || float.IsNaN(max) ||
             float.IsInfinity(min) || float.IsInfinity(max))
             return 0f;
 
-        // Ensure min <= max (swap if needed)
+        // Ensure that min <= max (we swap if needed)
         if (max < min) (min, max) = (max, min);
 
-        // If value is inside the desired range → perfect score
+        // If the value is inside the desired range = perfect score
         if (value >= min && value <= max)
             return 1f;
 
-        // Compute how far outside the range the value is
-        // Normalize distance relative to the boundary value
-        //
-        // Example:
-        // value < min → distance from min
-        // value > max → distance from max
+        // We compute how far outside the range the value is
+        // Then normalize distance relative to the boundary value
+
+        // value < min -> distance from min
+        // value > max -> distance from max
         float d = (value < min)
             ? (min - value) / Mathf.Max(min, 1e-6f)
             : (value - max) / Mathf.Max(max, 1e-6f);
 
-        // Convert distance into a smooth penalty
-        //
+        // Convert distance into a penalty
         // Formula: 1 / (1 + d^falloff)
-        //
+
         // Behavior:
-        // d = 0   → score = 1
-        // d ↑     → score ↓ smoothly
-        // never hits 0 exactly (nice for evolutionary algorithms)
+        // d = 0 -> score = 1
+        // d ^   -> score v smoothly
+        // never hits 0 exactly (this is nice for evolutionary algorithms)
         return 1f / (1f + Mathf.Pow(d, falloff));
     }
 
     // Maps a continuous value (in range [0, 1]) into a discrete bin index.
-    //
-    // Example:
-    // resolution = 10 → bins: [0..9]
-    // value = 0.2 → bin = 2
-    //
+
+    // resolution = 10 -> bins: [0..9]
+    // value = 0.2 -> bin = 2
     // Effectively:
-    // [0.0–0.1) → 0
-    // [0.1–0.2) → 1
+    // [0.0–0.1] → 0
+    // [0.1–0.2] → 1
     // ...
     // [0.9–1.0] → 9
     public static int GetBehaviorRange(int resolution, float value, float min = 0f, float max = 1f)
@@ -103,11 +98,9 @@ public static class FitnessAndBehaviorHelpers
     }
 
     // Scores how consistent a list of values is around a known average.
-    //
-    // Returns:
     // 1 = all values are identical
-    // 0 = values are as spread out as theoretically possible for this average
-    //
+    // 0 = values are as spread out as much as possible for this average
+
     // Assumes values are in range [0, 1].
     public static float GetConsistencyScore(List<float> values, float average)
     {

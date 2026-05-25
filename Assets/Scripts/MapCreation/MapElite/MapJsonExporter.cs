@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
+// Saves and loads Map archives as JSON.
+
 [Serializable]
+// JsonUtility can't serialize a root List.
 public class MapListWrapper
 {
     public List<Map> wrappedMaps = new();
@@ -57,8 +60,6 @@ public static class MapJsonExporter
             Debug.LogWarning("LoadMaps: file was empty.");
             return new List<Map>();
         }
-
-        Debug.Log($"JSON length: {json?.Length}");
         
         MapListWrapper wrapper = JsonUtility.FromJson<MapListWrapper>(json);
 

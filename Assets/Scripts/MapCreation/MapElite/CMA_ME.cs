@@ -1,16 +1,27 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
-using System.Text;
-using JetBrains.Annotations;
 using System.Collections.Concurrent;
-//using UnityEditorInternal;
 using System;
-//using static UnityEditor.Progress;
 
+// CMA-style variant of the enemy stage.
+
+// Subclasses of MapElite.
+// Therefore geometry and furnishing stages are the same as the base class
+
+// Each Emitter holds a "reference map" plus three learnable things:
+//   - compBias: per-enemy-type pressure (positive = sample more of this type)
+//   - diffBias: pressure on difficulty (positive = sample harder maps)
+//   - mutationStepSize: scalar for how aggressive mutations are
+
+// Children that improved an existing cell or discovered a new cell count as "successful".
+// After samples come back, the emitter recomputes its biases as a rank-weighted average of those successes, and either:
+//   - grows the step size (if any new cell was discovered -> keep exploring)
+//   - shrinks it (if only refining existing cells -> start refining locally)
+//   - restarts from a random elite (if no successes at all)
 public class CMA_ME : MapElite
 {
+    // The same but overwrites enemy with CMA-style
     protected override void Start()
     {
         RunMapElitesGeometry();
@@ -24,11 +35,17 @@ public class CMA_ME : MapElite
     }
 
 
+    // Builds a pool of 15 Emitters, each seeded from a random furnishing elite.
+    // Then generates initialRandomSolutions candidates from random furnishing elites.
+    // Lastly each emitter generates perEmitter candidates in parallel, returning each one to its own ReturnSolution method which updates its biases.
+
+    // Each emitter is owned by exactly one Parallel.ForEach worker, so mutating is thread-safe.
     private void RunCMA_EMEnemies()
     {
         int completedEnem = 0;
 
         List<Emitter> emitters = new List<Emitter>();
+        // Pool of 15 emitters.
         for (int i = 0; i < 15; i++)
             emitters.Add(new Emitter(furnArchive));
 
@@ -49,12 +66,13 @@ public class CMA_ME : MapElite
             );
         }
 
-        // Emitter phase - now parallel
+        // Emitter phase
+        // Divide the remaining iteration budget evenly across emitters.
         int perEmitter = (totalIterations * 3 - initialRandomSolutions) / emitters.Count;
 
         var options = new System.Threading.Tasks.ParallelOptions
         {
-            MaxDegreeOfParallelism = System.Environment.ProcessorCount - 2 // leave some cores free
+            MaxDegreeOfParallelism = System.Environment.ProcessorCount - 2 // leave some cores free, so no explody pc
         };
 
         System.Threading.Tasks.Parallel.ForEach(emitters, options, e =>
@@ -73,11 +91,15 @@ public class CMA_ME : MapElite
             }
         });
 
-        // Copy back to enemArchive if needed elsewhere
+        // Copy thread-safe archive back into base class's enemArchive
         foreach (var kvp in safeArchive)
             enemArchive[kvp.Key] = kvp.Value;
     }
 
+    // Holds:
+    // A reference map (the current center of the search)
+    // Learned biases on enemy composition and difficulty
+    // Scalar step size
     public class Emitter
     {
         // Current search center, our "mean"
@@ -86,6 +108,7 @@ public class CMA_ME : MapElite
         // Learned mutation tendencies, our "Covariance Matrix" 
         public float[] compBias = new float[MapHelpers.EnemyTypes.Length];
         public float diffBias = 0.0f;
+
         // Size of mutation. Expand contract
         public float mutationStepSize = 1.0f;
 
@@ -99,17 +122,21 @@ public class CMA_ME : MapElite
 
         // Total generated maps this batch
         public int sampledThisGeneration = 0;
-
         public int totalGenerated = 0;
 
-        // Batch size before update / restart
+
+        // CMA-ES population size per generation.
         public const int lambda = 37;
 
+        // Seed the emitter from a random furnishing elite.
         public Emitter(Dictionary<(Vector2, Vector2), Map> archive)
         {
             referenceMap = GenerateRandomEnemies(SelectRandom(archive).Clone());
         }
 
+        // Called after each child is evaluated.
+        // If the child is a "success", it joins this batch's parents list and is committed to the archive.
+        // When the batch fills up (>= lambda samples), we call UpdateEmitter to learn from the batch.
         public void ReturnSolution(Map map, ConcurrentDictionary<(Vector2, Vector2, Vector2), Map> archive)
         {
             sampledThisGeneration++;
@@ -118,6 +145,7 @@ public class CMA_ME : MapElite
             bool discoveredNewCell = false;
             float fitnessDelta = 0f;
 
+            // Determine if this child counts as a success.
             if (archive.TryGetValue(map.combinedBehavior, out Map existing))
             {
                 if (existing.enemFitness < map.enemFitness)
@@ -125,6 +153,7 @@ public class CMA_ME : MapElite
             }
             else
             {
+                // Empty cell.
                 discoveredNewCell = true;
                 fitnessDelta = map.enemFitness;
             }
@@ -146,6 +175,8 @@ public class CMA_ME : MapElite
                     compDelta,
                     diffDelta
                 ));
+
+                // Commit the child to the archive (replace if better).
                 archive.AddOrUpdate(
                     map.combinedBehavior,
                     map,
@@ -153,9 +184,11 @@ public class CMA_ME : MapElite
 );
             }
 
+            // End-of-batch update/restart.
             if (sampledThisGeneration >= lambda)
                 UpdateEmitter(archive);
         }
+
         // Change signature from Dictionary to ConcurrentDictionary:
         public void UpdateEmitter(ConcurrentDictionary<(Vector2, Vector2, Vector2), Map> archive)
         {
@@ -169,10 +202,10 @@ public class CMA_ME : MapElite
                     .ThenByDescending(p => p.fitnessDelta)
                     .ToList();
 
-                // 1. Update reference map: best successful child becomes new center
+                // Update reference map: best successful child becomes new center
                 referenceMap = parents[0].map.Clone();
 
-                // 2. Update enemy composition bias: average successful composition delta
+                // Update enemy composition bias: average successful composition delta
                 Array.Clear(compBias, 0, compBias.Length);
 
                 for (int i = 0; i < parents.Count; i++)
@@ -186,16 +219,16 @@ public class CMA_ME : MapElite
                 }
                 NormalizeCompBias(compBias);
 
-                // 3. Update difficulty bias: weighted average successful difficulty delta
+                // Update difficulty bias: weighted average successful difficulty delta
                 diffBias = 0.0f;
                 for (int i = 0; i < parents.Count; i++)
                 {
                     float weight = GetParentWeight(i);
                     diffBias += parents[i].diffDelta * weight;
                 }
+
                 // clamp to avoid huge jumps
                 diffBias = Mathf.Clamp(diffBias, -1f, 1f);
-
                 bool foundNewCell = parents.Any(p => p.discoveredNewCell);
 
                 if (foundNewCell)
@@ -210,7 +243,6 @@ public class CMA_ME : MapElite
                     // Refine locally.
                     mutationStepSize = Mathf.Max(mutationStepSize * StepDown, MinStep);
                 }
-
 
                 // Reset batch state
                 parents.Clear();
@@ -251,6 +283,7 @@ public class CMA_ME : MapElite
             float mean = sum / bias.Length;
             for (int i = 0; i < bias.Length; i++)
                 bias[i] -= mean;
+
             // Prevent rare large deltas from dominating too hard.
             for (int i = 0; i < bias.Length; i++)
                 bias[i] = Mathf.Clamp(bias[i], -0.5f, 0.5f);

@@ -1,23 +1,42 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.ConstrainedExecution;
 using UnityEngine;
 using h = FitnessAndBehaviorHelpers;
+
+// Computes fitness and behavior descriptor for the ENEMY stage of MAP-Elites.
+
+// Behavior:
+// x = composition bin, the mix of enemy types (5 types) encoded as a single integer [0, 126).
+// y = difficulty bin in [0, 3], Average per-tile "difficulty density" across rooms -> More enemy budget = harder.
+
+// Fitness is a weighted sum:
+// 0.6 × composition consistency (each room's mix should resemble the map-wide mix)
+// 0.4 × difficulty scaling (later rooms on the main path should be at least as hard as earlier ones)
+
+// SIDE EFFECT: GetEnemBehav writes map.enemyComp and map.difficulty.
+// CMA_ME's emitters rely on these being populated.
 
 public static class EnemFitAndBehav
 {
     private const float MaxDifficultyDensityForBehavior = 0.06f;
-    // How many enemies does loot counteract
+    // How much one loot tile counteracts the difficulty
     private const float lootCounteract = 0.5f;
 
+
+    // Returns:
+    // - fitness: scalar in [0,1], higher is better
+    // - behavior.enemyType: composition bin index in [0, 126)
+    // - behavior.difficulty: difficulty bin index in [0, 3)
     public static (float fitness, (int enemyType, int difficulty) behavior) GetEnemyFitnessAndBehavior(Map map)
     {
-
         var (behavior, behaviorConsistency, difficultyPerRoom) = GetEnemBehav(map);
 
         return (GetEnemyFitness(map, behaviorConsistency, difficultyPerRoom), behavior);
     }
 
+    // Weighted-sum fitness:
+    // 0.6 × consistency score
+    // 0.4 × difficulty scaling score
     private static float GetEnemyFitness(Map map, float behaviorConsistency, List<float> difficultyPerRoom)
     {
         (float score, float weight) consistencyScore = (behaviorConsistency, 0.6f);
@@ -27,6 +46,12 @@ public static class EnemFitAndBehav
              + consistencyScore.score * consistencyScore.weight;
     }
 
+    // Computes behavior bins + the data needed by GetEnemyFitness.
+
+    // Returns:
+    // - behavior: (compositionBin, difficultyBin)
+    // - behaviorConsistency
+    // - difficultyPerRoom
     private static ((int enemyType, int difficulty) behavior, float behaviorConsistency, List<float> difficultyPerRoom) GetEnemBehav(Map map)
     {
         if (map == null || map.rooms == null || map.rooms.Count == 0)
@@ -35,6 +60,7 @@ public static class EnemFitAndBehav
         var allEnemies = map.GetAllEnemies();
 
         List<float> difficultyPerRoom = new List<float>(map.rooms.Count);
+        // Store map-wide composition for use by CMA_ME
         map.enemyComp = GetEnemyComposition(allEnemies);
 
         float difficultyDensitySum = 0f;
@@ -42,40 +68,41 @@ public static class EnemFitAndBehav
 
         foreach (var room in map.rooms)
         {
-            // How different is room comp from map comp
+            // How similar this rooms enemy mix is to the map's overall mix
             compositionConsistencySum += GetCompositionSimilarity(map.enemyComp, GetEnemyComposition(room.enemies));
 
-            // Total room difficulty:
-            // - enemies count by their actual used budget
-            // - loot counts negative portion enemy
-            float roomDifficulty =
-                room.enemyBudgetUsed -
-                room.loot.Count * lootCounteract;
+            // Room difficulty = enemy budget actually used, minus loot weight.
+            float roomDifficulty = room.enemyBudgetUsed - room.loot.Count * lootCounteract;
 
             // Difficulty per tile in the room
             float difficultyDensity = roomDifficulty / room.tiles.Count;
 
-            // Normalize so 6% = 1, 0% = 0
+            // Normalize so (6%) -> 1.0
             float normalizedDifficultyDensity = Mathf.Clamp01(difficultyDensity / MaxDifficultyDensityForBehavior);
 
             difficultyPerRoom.Add(normalizedDifficultyDensity);
             difficultyDensitySum += normalizedDifficultyDensity;
         }
 
-
         float averageRoomDifficultyDensity = difficultyDensitySum / map.rooms.Count;
-
         float behaviorConsistency = compositionConsistencySum/map.rooms.Count;
 
+        // Store difficulty bin on the map
         map.difficulty = h.GetBehaviorRange(3, averageRoomDifficultyDensity);
         return ((EnemyRoleCompositionBehavior(allEnemies, 20), map.difficulty),behaviorConsistency, difficultyPerRoom);
     }
 
+    // Scores how difficulty grows along the main path.
+    // Returns:
+    // 1.0 if difficulty never decreases as the player progresses
+    // 0.0 if it always decreases
+   
+    // Special cases:
+    // returns 1 if there are 0 or 1 main-path rooms (nothing to compare)
+    // returns 0 if inputs are inconsistent
     private static float GetDifficultyScalingScore(Map map, List<float> difficultyPerRoom)
     {
-        if (map == null || map.rooms == null || map.rooms.Count == 0 ||
-            difficultyPerRoom == null || difficultyPerRoom.Count != map.rooms.Count)
-            return 0f;
+        if (map == null || map.rooms == null || map.rooms.Count == 0 || difficultyPerRoom == null || difficultyPerRoom.Count != map.rooms.Count) return 0f;
 
         // Collect main-path rooms with their difficulty
         List<(int orderIndex, float difficulty)> mainPathDifficulties = new();
@@ -90,7 +117,6 @@ public static class EnemFitAndBehav
             mainPathDifficulties.Add((room.orderIndex, difficultyPerRoom[i]));
         }
 
-        // Need at least 2 rooms to evaluate scaling
         if (mainPathDifficulties.Count <= 1)
             return 1f;
 
@@ -108,8 +134,7 @@ public static class EnemFitAndBehav
                 totalPairs++;
 
                 // Good if later room is at least as hard as earlier room
-                if (mainPathDifficulties[j].difficulty >= mainPathDifficulties[i].difficulty)
-                    goodPairs++;
+                if (mainPathDifficulties[j].difficulty >= mainPathDifficulties[i].difficulty) goodPairs++;
             }
         }
 
@@ -119,6 +144,9 @@ public static class EnemFitAndBehav
         return (float)goodPairs / totalPairs;
     }
 
+    // Computes the composition for a list of enemies.
+    // composition[i] = fraction of enemies.
+    // Returns a zero vector if the list is empty.
     public static float[] GetEnemyComposition(List<GridEntry> enemies)
     {
         float[] composition = new float[MapHelpers.EnemyTypes.Length];
@@ -127,7 +155,7 @@ public static class EnemFitAndBehav
             return composition;
 
         int total = 0;
-
+        
         foreach (var e in enemies)
         {
             int t = e.type;
@@ -138,6 +166,7 @@ public static class EnemFitAndBehav
         if (total == 0)
             return composition;
 
+        // Normalize to fractions
         for (int i = 0; i < composition.Length; i++)
         {
             composition[i] /= total;
@@ -146,9 +175,10 @@ public static class EnemFitAndBehav
         return composition;
     }
 
+    // Compares two composition vectors.
     // Returns:
-    // 1 → identical compositions
-    // 0 → completely different compositions
+    // 1 -> identical compositions
+    // 0 -> completely different compositions
     public static float GetCompositionSimilarity(float[] a, float[] b)
     {
         if (a == null || b == null || a.Length != b.Length){

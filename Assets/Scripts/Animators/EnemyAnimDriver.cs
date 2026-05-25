@@ -156,6 +156,4 @@ public class EnemyAnimDriver : MonoBehaviour
         animator.speed = prevSpeed;
         SetInAction(false);
     }
-
-
 }

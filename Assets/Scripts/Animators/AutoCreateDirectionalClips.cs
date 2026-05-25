@@ -148,7 +148,7 @@ public class AutoCreateDirectionalClips : EditorWindow
             if (string.IsNullOrEmpty(path))
                 continue;
 
-            // Only operate on textures
+            //Only operate on textures
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (tex == null)
             {
@@ -156,17 +156,17 @@ public class AutoCreateDirectionalClips : EditorWindow
                 continue;
             }
 
-            // 1) Auto-slice
+            //Auto-slice
             if (!SliceTextureIntoGrid(path, tileSize))
             {
                 Debug.LogError($"Failed slicing: {path}");
                 continue;
             }
 
-            // 2) Load sliced sprites
+            //Load sliced sprites
             Sprite[] sprites = AssetDatabase.LoadAllAssetsAtPath(path)
                 .OfType<Sprite>()
-                .OrderBy(s => s.name) // stable order; you can remove if you rely on Unity import order
+                .OrderBy(s => s.name) // stable order;
                 .ToArray();
 
             if (sprites.Length < requiredSpriteCount)
@@ -178,7 +178,7 @@ public class AutoCreateDirectionalClips : EditorWindow
                 continue;
             }
 
-            // 3) Create 8 directional clips
+            //Create 8 directional clips
             for (int d = 0; d < DirNames.Length; d++)
             {
                 AnimationClip clip = new AnimationClip
@@ -229,10 +229,8 @@ public class AutoCreateDirectionalClips : EditorWindow
         Debug.Log("Sliced spritesheets + created directional animation clips!");
     }
 
-    /// <summary>
     /// Slices the texture at assetPath into a grid (tileSize x tileSize) and reimports.
     /// Returns false if invalid size or importer missing.
-    /// </summary>
     private static bool SliceTextureIntoGrid(string assetPath, int tileSize)
     {
         TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
@@ -273,7 +271,7 @@ public class AutoCreateDirectionalClips : EditorWindow
         importer.mipmapEnabled = false;
         importer.textureCompression = TextureImporterCompression.Uncompressed;
 
-        // Optional: set this to your usual PPU if you want; 64 makes 1 tile = 1 unit if tile is 64px
+        // Optional
         importer.spritePixelsPerUnit = tileSize;
 
         int cols = texWidth / tileSize;

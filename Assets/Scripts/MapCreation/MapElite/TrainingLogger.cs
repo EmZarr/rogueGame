@@ -13,7 +13,7 @@ public class TrainingLogger : MonoBehaviour
     [SerializeField] private string fileName = "training_log.csv";
 
     [Header("Behavior Bin Counts")]
-    [SerializeField] private int geoBehaviorBins = 10;
+    [SerializeField] private int geoBehaviorBins = 12;
 
     [SerializeField] private int furnLootBins = 3;
     [SerializeField] private int furnObstacleBins = 3;
