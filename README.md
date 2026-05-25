@@ -18,7 +18,7 @@ The end-to-end flow always follows the same four steps:
 
 > **Important:** the generator scenes save their output to the `Assets/` folder, but `MapSelector` and `GamePlay` read from `Assets/StreamingAssets/`. You have to manually move (or copy) the file between steps 1 and 3. The code does not do this for you.
 
-### Scene 1: generating an archive
+### Generating an archive
 
 You have three choices, depending on what kind of generator you want to use.
 
@@ -29,7 +29,7 @@ You have three choices, depending on what kind of generator you want to use.
 1. Open the scene.
 2. Click the `grid` GameObject in the hierarchy.
 3. In the inspector, find the **CMA_ME** component. You can tune:
-   - **Total Iterations** - how many candidates each stage runs (enemy stage runs 3× this).
+   - **Total Iterations** - how many candidates each stage runs (enemy stage runs 3x this).
    - **Initial Random Solutions** - how many random seed candidates each stage starts with before mutation kicks in.
    - **Training Logger** - drag in the TrainingLogger GameObject if you want CSV progress logs.
 4. Press **Play**.
@@ -55,7 +55,7 @@ Same procedure as CMA-ME, but the output files are named without the "Easy" suff
 1. Open the scene.
 2. Click the `grid` GameObject.
 3. In the inspector, find the **RandomMapGeneratorEliteStyle** component. Tune:
-   - **Random Map Amount** — how many random maps to generate per stage.
+   - **Random Map Amount** - how many random maps to generate per stage.
 4. Press **Play**.
 5. The output file is `Random_MapsUpdated.json` in `Assets/`.
 
@@ -73,8 +73,8 @@ The full archive has hundreds of maps. The selector picks a small, maximally-div
 1. Open the scene.
 2. Click the `grid` GameObject.
 3. In the inspector, find the **MapSelector** component. Set:
-   - **Input File Name** — the filename you just moved into StreamingAssets (e.g. `enemArchiveEasy_maps.json`).
-   - **Output File Name** — what to call the selected subset. **Default is `diverse_maps.json`** — the GamePlay scene expects exactly this name, so keep it unless you also change the LevelManager Script.
+   - **Input File Name** - the filename you just moved into StreamingAssets (e.g. `enemArchiveEasy_maps.json`).
+   - **Output File Name** - what to call the selected subset. **Default is `diverse_maps.json`** - the GamePlay scene expects exactly this name, so keep it unless you also change the LevelManager Script.
 4. Press **Play**.
 5. The output file is written into `Assets/StreamingAssets/` automatically (no manual move needed this time).
 
@@ -110,7 +110,7 @@ python ScriptName.py
 
 ### Rendering map previews (ArchiveRunner)
 
-Turns a JSON archive into PNG thumbnails — one per unique behavior.
+Turns a JSON archive into PNG thumbnails - one per unique behavior.
 **Inputs:**
 
 - A file named `maps.json` in the repository root. Rename any of your archive files (`enemArchiveEasy_maps.json`, `diverse_maps.json`, etc.) to `maps.json` before running.
@@ -133,9 +133,9 @@ This is the workflow for going from a raw telemetry CSV to interactive plots.
 
 **Inputs you need to provide:**
 
-- `Telemetry_RawControl.csv` in the repository root — exported from your playtest sessions.
+- `Telemetry_RawControl.csv` in the repository root - exported from your playtest sessions.
 
-**Step 1 — verify the data.**
+**Step 1 - verify the data.**
 
 ```bash
 python FilteredFeatures.py
@@ -144,11 +144,11 @@ python FilteredFeatures.py
 You won't normally run this alone; it's a library used by the next steps. But running it once confirms your CSV path and player IDs are correct.
 To change which players or which behavior groups are included, edit the constants at the top of `FilteredFeatures.py`:
 
-- `CSV_PATH` — path to the telemetry file
-- `INCLUDE_PLAYER_IDS` — list of player IDs to keep
-- `FILTER_VALUES` — which geometry behavior bins to include
+- `CSV_PATH` - path to the telemetry file
+- `INCLUDE_PLAYER_IDS` - list of player IDs to keep
+- `FILTER_VALUES` - which geometry behavior bins to include
 
-**Step 2 — run the main visualization.**
+**Step 2 - run the main visualization.**
 
 ```bash
 python DataVisualizer.py
@@ -191,7 +191,7 @@ To configure: edit the constants near the top of the file (`N_CLUSTERS`, `INCLUD
 python CompareBehaviorDiff.py
 ```
 
-Prints to the terminal — per-player Wilcoxon test results comparing intra-player telemetry distances when behavior is the same vs. when behavior differs.
+Prints to the terminal - per-player Wilcoxon test results comparing intra-player telemetry distances when behavior is the same vs. when behavior differs.
 
 ## Other Pyton scripts
 
