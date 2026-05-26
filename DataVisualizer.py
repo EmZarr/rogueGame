@@ -1,39 +1,60 @@
 import os
-import sys
 import hashlib
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 from ClusterProject import cluster_entries
-from FilteredFeatures import CSV_PATH, INCLUDE_PLAYER_IDS
 
-
-# ============================================================
-# VISUALIZER CONFIG
-# Change visual-only settings here.
-# ============================================================
 
 ICON_DIR = "icons"
 VIDEO_ROOT_DIR = "MyRecordings"
 PANEL_WIDTH = 0.33
 
-MARKERS = ["o", "s", "^", "D", "P", "X", "*", "v", "<", ">"]
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v"}
 
+# Marker shapes recycled across behaviors. Matplotlib only has ~10 distinct ones.
+MARKERS = ["o", "s", "^", "D", "P", "X", "*", "v", "<", ">"]
+
+# (label, index in canonical 6-tuple, max value)
+# Maxes are the actual bin counts coming out of the C# fitness/behavior code:
+#   geo openness          → 12 bins  (GeoFitAndBehav uses GetBehaviorRangeSmooth(12, ...))
+#   loot density          → 3 bins
+#   obstacle density      → 3 bins
+#   enemy composition     → 126 bins (resolution=20 in EnemFitAndBehav)
+#   enemy difficulty      → 3 bins
+# Adjust the labels here to whatever names you use in your writeup.
 BEHAVIOR_FIELDS = [
-    ("Room Amount Tier", 0, 100),
-    ("Loot on Main Ratio", 2, 5),
-    ("Loot Health Ratio", 3, 5),
+    ("Room Amount Tier", 0, 12),
+    ("Loot on Main Ratio", 2, 3),
+    ("Loot Health Ratio", 3, 3),
     ("Enemy Encounter Type", 4, 126),
-    ("Difficulty", 5, 5),
+    ("Difficulty", 5, 3),
 ]
+
+# Short forms used in the side-panel behavior rows so each behavior
+# fits on one line. Edit if you change the labels above.
+COMPACT_LABELS = {
+    "Room Amount Tier": "Rooms",
+    "Loot on Main Ratio": "LootM",
+    "Loot Health Ratio": "LootH",
+    "Enemy Encounter Type": "Enemy",
+    "Difficulty": "Diff",
+}
+
+# Alpha levels for the three filter states
+DEFAULT_ALPHA = 0.75      # no filter active
+HIGHLIGHT_ALPHA = 0.95    # point matches the active filter
+DIM_ALPHA = 0.08          # point does not match the active filter
 
 
 def session_to_color(session_id: str):
+    """Deterministic random color from a player ID — used only for the side-panel player dots."""
     hash_val = int(hashlib.md5(str(session_id).encode("utf-8")).hexdigest(), 16)
     rng = np.random.RandomState(hash_val % (2**32))
     return tuple(rng.rand(3))
@@ -54,6 +75,7 @@ def behavior_to_icon_path(behavior_tuple, icon_dir: str) -> str | None:
 
 
 def format_behavior_rows(behavior_tuple: tuple) -> str:
+    """Multi-line verbose label (used in the hover tooltip)."""
     lines = []
     for name, idx, mx in BEHAVIOR_FIELDS:
         val = int(behavior_tuple[idx])
@@ -61,12 +83,22 @@ def format_behavior_rows(behavior_tuple: tuple) -> str:
     return "\n".join(lines)
 
 
+def format_behavior_compact(behavior_tuple: tuple) -> str:
+    """Single-line compact label (used in the side-panel rows)."""
+    parts = []
+    for name, idx, mx in BEHAVIOR_FIELDS:
+        val = int(behavior_tuple[idx])
+        short = COMPACT_LABELS.get(name, name)
+        parts.append(f"{short} {val}/{mx}")
+    return "  ·  ".join(parts)
+
+
 def open_expanded(image_path: str, title: str):
     img = mpimg.imread(image_path)
-    fig = plt.figure(figsize=(7, 7))
+    fig = plt.figure(figsize=(4.5, 4.5))
     ax = fig.add_subplot(111)
     ax.imshow(img)
-    ax.set_title(title)
+    ax.set_title(title, fontsize=10)
     ax.axis("off")
     fig.tight_layout()
     fig.show()
@@ -98,18 +130,11 @@ def build_video_match_tokens(entry: dict) -> dict:
 
     level_tokens = []
     if level_play_id:
-        level_tokens = [
-            level_play_id,
-            level_play_id.replace("-", "_"),
-            level_play_id.replace("_", "-"),
-            level_play_id.replace(" ", "_"),
-            level_play_id.replace(" ", "-"),
-        ]
+        level_tokens.append(level_play_id)
 
     return {
         "player_id": player_id,
         "behavior_hash": beh_hash,
-        "level_play_id": level_play_id,
         "level_tokens": level_tokens,
     }
 
@@ -118,54 +143,46 @@ def iter_video_files(root_dir: str):
     root = Path(root_dir)
     if not root.exists():
         return
+    for path in root.rglob("*"):
+        if path.is_file() and path.suffix.lower() in VIDEO_EXTS:
+            yield path
 
-    for p in root.rglob("*"):
-        if p.is_file() and p.suffix.lower() in VIDEO_EXTS:
-            yield p
 
-
-def find_video_for_entry(entry: dict, video_root_dir: str) -> str | None:
+def find_video_for_entry(entry: dict, root_dir: str) -> str | None:
     tokens = build_video_match_tokens(entry)
-
     player_id = tokens["player_id"]
-    behavior_hash = tokens["behavior_hash"]
-    level_play_id = tokens["level_play_id"]
+    beh_hash = tokens["behavior_hash"]
     level_tokens = tokens["level_tokens"]
 
-    candidates = []
+    best_match = None
+    best_score = -1
 
-    for p in iter_video_files(video_root_dir) or []:
-        name = p.name
-
-        if player_id not in name:
-            continue
-        if behavior_hash not in name:
-            continue
+    for video_path in iter_video_files(root_dir):
+        name = video_path.name.lower()
 
         score = 0
 
-        if level_play_id and level_play_id in name:
-            score += 4
-        elif any(tok in name for tok in level_tokens):
+        if player_id and player_id.lower() in name:
             score += 3
 
-        if level_play_id and score < 3:
-            continue
+        if beh_hash and beh_hash.lower() in name:
+            score += 2
 
-        candidates.append((score, p.stat().st_mtime, p))
+        for lt in level_tokens:
+            if lt and lt.lower() in name:
+                score += 2
 
-    if not candidates:
+        if score > best_score:
+            best_score = score
+            best_match = str(video_path)
+
+    if best_score <= 0:
         return None
 
-    candidates.sort(key=lambda x: (x[0], x[1]), reverse=True)
-    return str(candidates[0][2])
+    return best_match
 
 
 def open_video_file(video_path: str):
-    if not video_path or not os.path.exists(video_path):
-        print(f"Video not found: {video_path}")
-        return
-
     try:
         if sys.platform.startswith("win"):
             os.startfile(video_path)  # type: ignore[attr-defined]
@@ -174,7 +191,7 @@ def open_video_file(video_path: str):
         else:
             subprocess.Popen(["xdg-open", video_path])
     except Exception as e:
-        print(f"Failed to open video: {e}")
+        print(f"Could not open video file: {e}")
 
 
 def open_session_popup(entry: dict, icon_path: str | None, video_path: str | None):
@@ -254,6 +271,13 @@ def visualize_player_clusters():
     session_color_map = {player_id: session_to_color(player_id) for player_id in unique_players}
     behavior_marker_map = {b: MARKERS[i % len(MARKERS)] for i, b in enumerate(unique_behaviors)}
 
+    # Kept for informational printing only — clusters are conveyed via spatial grouping + tooltip.
+    unique_clusters = sorted({
+        int(entry["info"]["cluster_label"])
+        for entry in clustered_entries
+        if entry["info"].get("cluster_label") is not None
+    })
+
     explained_variance = getattr(projection_model, "explained_variance_ratio_", None)
 
     fig = plt.figure(figsize=(16, 10))
@@ -262,28 +286,40 @@ def visualize_player_clusters():
     panel = fig.add_axes([0.07 + (0.88 - PANEL_WIDTH) + 0.02, 0.10, PANEL_WIDTH - 0.04, 0.83])
     panel.set_axis_off()
 
-    point_targets = {}
-    click_targets = {}
+    point_targets = {}     # scatter → entry index (used by pick handler for popup)
+    click_targets = {}     # text/scatter artist → payload (used by pick handler for panel)
+    point_metadata = []    # ordered list of {scatter, player_id, behavior, cluster_label}
     missing_icons = []
 
+    # ---------------- main scatter plot ----------------
+    # Color = player, shape = behavior. Cluster info is revealed in the tooltip.
     for i, entry in enumerate(clustered_entries):
         info = entry["info"]
         player_id = info["playerId"]
         behavior = canonical_behavior_tuple_from_info(info)
+        cluster_label = info.get("cluster_label")
 
         scatter = ax.scatter(
             coords[i, 0],
             coords[i, 1],
             c=[session_color_map[player_id]],
             marker=behavior_marker_map[behavior],
-            s=55,
-            alpha=0.75,
+            s=80,
+            alpha=DEFAULT_ALPHA,
             edgecolors="black",
-            linewidth=0.3,
+            linewidth=0.4,
             picker=True,
         )
         point_targets[scatter] = i
+        point_metadata.append({
+            "scatter": scatter,
+            "player_id": player_id,
+            "behavior": behavior,
+            "cluster_label": cluster_label,
+            "index": i,
+        })
 
+    # ---------------- cluster centers (black X markers) ----------------
     center_coords = []
     seen_clusters = set()
 
@@ -294,7 +330,6 @@ def visualize_player_clusters():
 
         if cluster_label is None or center is None:
             continue
-
         if cluster_label in seen_clusters:
             continue
 
@@ -321,43 +356,79 @@ def visualize_player_clusters():
 
     ax.set_title(
         "Telemetry Behaviour Clustering (2D PCA Projection)\n"
-        "Color = Player | Shape = Behavior Configuration | Click a point to open replay"
+        "Color = Player | Shape = Behavior | Hover for details | Click a row to filter | Click a point to open replay"
     )
     ax.grid(True, alpha=0.25)
 
+    # ---------------- filter state ----------------
+    # Use single-item lists so the closures below can mutate them.
+    clicked_filter = [None]   # persistent filter set by clicking a row
+    hover_filter = [None]     # temporary filter set by hovering a point
+
+    def get_effective_filter():
+        return hover_filter[0] if hover_filter[0] is not None else clicked_filter[0]
+
+    def apply_filter():
+        eff = get_effective_filter()
+        for meta in point_metadata:
+            if eff is None:
+                meta["scatter"].set_alpha(DEFAULT_ALPHA)
+            else:
+                kind, value = eff
+                if kind == "player":
+                    match = meta["player_id"] == value
+                elif kind == "behavior":
+                    match = meta["behavior"] == value
+                else:
+                    match = True
+                meta["scatter"].set_alpha(HIGHLIGHT_ALPHA if match else DIM_ALPHA)
+        fig.canvas.draw_idle()
+
+    # ---------------- right side panel ----------------
+
+    # "Show all" reset row at the very top
+    reset_artist = panel.text(
+        0.02,
+        0.985,
+        "↺ Show all (clear filter)",
+        transform=panel.transAxes,
+        va="top",
+        fontsize=10,
+        weight="bold",
+        color="#444444",
+    )
+    reset_artist.set_picker(True)
+    click_targets[reset_artist] = ("__reset_filter__",)
+
     panel.text(
         0.02,
-        0.98,
-        "Behaviors (click to see map)",
+        0.94,
+        "Behaviors (click to filter / open map)",
         transform=panel.transAxes,
         va="top",
         fontsize=11,
         weight="bold",
     )
 
-    col1_x_marker, col1_x_text = 0.02, 0.08
-    col2_x_marker, col2_x_text = 0.52, 0.58
+    col1_x_marker, col1_x_text = 0.03, 0.07
 
-    row_h_beh = 0.17
-    top_beh = 0.93
-    behaviors_bottom_cutoff = 0.44
+    row_h_beh = 0.045              # one line per behavior
+    top_beh = 0.89
+    max_behavior_rows = 8          # hard cap so a flood of behaviors can't push players off-panel
+
+    n_drawn_behaviors = 0
 
     for i, behavior in enumerate(unique_behaviors):
-        col = i % 2
-        row = i // 2
-
-        x_marker = col1_x_marker if col == 0 else col2_x_marker
-        x_text = col1_x_text if col == 0 else col2_x_text
-
-        y = top_beh - row * row_h_beh
-        if y < behaviors_bottom_cutoff:
+        if i >= max_behavior_rows:
             break
+        y = top_beh - i * row_h_beh
 
+        # Marker matches the shape used for this behavior on the main plot.
         panel.scatter(
-            x_marker,
-            y - 0.01,
+            col1_x_marker,
+            y,
             transform=panel.transAxes,
-            s=70,
+            s=60,
             marker=behavior_marker_map[behavior],
             color="lightgray",
             edgecolors="black",
@@ -367,100 +438,225 @@ def visualize_player_clusters():
 
         icon_path = behavior_to_icon_path(behavior, ICON_DIR)
 
-        label = format_behavior_rows(behavior)
+        label = format_behavior_compact(behavior)
         if icon_path is None:
             missing_icons.append(behavior)
-            label += "\n(no icon)"
+            label += "   (no icon)"
 
         txt = panel.text(
-            x_text,
+            col1_x_text,
             y,
             label,
             transform=panel.transAxes,
-            va="top",
-            fontsize=9,
-            linespacing=1.15,
+            va="center",
+            fontsize=8,
         )
         txt.set_picker(True)
         click_targets[txt] = ("__behavior__", behavior, icon_path)
+        n_drawn_behaviors = i + 1
+
+    # If there are more behaviors than fit, tell the user
+    if len(unique_behaviors) > n_drawn_behaviors:
+        hidden_beh = len(unique_behaviors) - n_drawn_behaviors
+        y = top_beh - n_drawn_behaviors * row_h_beh
+        panel.text(
+            col1_x_text,
+            y,
+            f"… and {hidden_beh} more behavior(s) not shown",
+            transform=panel.transAxes,
+            va="center",
+            fontsize=7,
+            style="italic",
+            color="#888888",
+        )
 
     sessions_expanded = True
 
-    sessions_header_y = 0.34
-    sessions_top_y = 0.30
-    row_h_sess = 0.042
+    # Position the players section right below the last behavior — no big gap.
+    last_beh_y = top_beh - max(0, n_drawn_behaviors - 1) * row_h_beh
+    # Extra padding if we showed a "... and N more" footnote
+    extra_pad = row_h_beh if len(unique_behaviors) > n_drawn_behaviors else 0.0
+
+    sessions_header_y = last_beh_y - row_h_beh - extra_pad - 0.025
+    sessions_top_y = sessions_header_y - 0.035
+    row_h_sess = 0.026
+    visible_session_rows = 7
+    sessions_cutoff = sessions_top_y - visible_session_rows * row_h_sess
 
     sessions_header = panel.text(
         0.02,
         sessions_header_y,
-        "▼ Players (click to collapse)",
+        "▼ Players (scroll / click to filter)",
         transform=panel.transAxes,
         va="center",
-        fontsize=11,
+        fontsize=10,
         weight="bold",
     )
     sessions_header.set_picker(True)
     click_targets[sessions_header] = ("__toggle_sessions__",)
 
+    # Bordered rectangle around the scrollable area — makes it visually obvious
+    # that this is a scroll region.
+    from matplotlib.patches import Rectangle
+    scroll_box = Rectangle(
+        (0.005, sessions_cutoff - 0.005),
+        0.99,
+        sessions_top_y - sessions_cutoff + row_h_sess * 0.5 + 0.005,
+        transform=panel.transAxes,
+        fill=True,
+        facecolor="#fafafa",
+        edgecolor="#cccccc",
+        linewidth=0.8,
+        zorder=0,
+    )
+    panel.add_patch(scroll_box)
+
+    # How many player rows fit in the viewport at once
+    max_visible_rows = visible_session_rows
+
     session_row_artists = []
 
+    # Create ALL player rows. Visibility + position is then managed by
+    # update_player_rows() based on scroll_offset, so the visible rows
+    # form a sliding window over this list.
     for j, player_id in enumerate(unique_players):
-        yy = sessions_top_y - j * row_h_sess
-        if yy < 0.16:
-            break
+        initial_y = sessions_top_y - j * row_h_sess  # will be updated immediately
 
         dot = panel.scatter(
-            0.04,
-            yy,
+            0.03,
+            initial_y,
             transform=panel.transAxes,
-            s=70,
+            s=45,
             marker="o",
             color=session_color_map[player_id],
             edgecolors="black",
-            linewidths=0.6,
+            linewidths=0.5,
             zorder=3,
+            picker=True,
         )
+
+        # Truncate long hash-style IDs so they actually fit in the panel
+        pid_str = str(player_id)
+        short_pid = pid_str[:10] + "…" if len(pid_str) > 11 else pid_str
+
         txt = panel.text(
-            0.10,
-            yy,
-            str(player_id),
+            0.08,
+            initial_y,
+            short_pid,
             transform=panel.transAxes,
             va="center",
-            fontsize=9,
+            fontsize=8,
+            picker=True,
         )
+
+        click_targets[dot] = ("__player__", player_id)
+        click_targets[txt] = ("__player__", player_id)
         session_row_artists.append((dot, txt))
 
-    def set_sessions_visible(visible: bool):
-        for dot, txt in session_row_artists:
-            dot.set_visible(visible)
-            txt.set_visible(visible)
+    # Status line that shows what's hidden above/below the viewport
+    overflow_artist = panel.text(
+        0.02,
+        sessions_cutoff - 0.005,
+        "",
+        transform=panel.transAxes,
+        va="top",
+        fontsize=7,
+        style="italic",
+        color="#888888",
+    )
+
+    scroll_offset = [0]
+
+    def update_player_rows():
+        n = len(session_row_artists)
+        max_offset = max(0, n - max_visible_rows)
+        scroll_offset[0] = max(0, min(scroll_offset[0], max_offset))
+
+        for j, (dot, txt) in enumerate(session_row_artists):
+            visual_index = j - scroll_offset[0]
+            if 0 <= visual_index < max_visible_rows:
+                target_y = sessions_top_y - visual_index * row_h_sess
+                dot.set_offsets([[0.03, target_y]])
+                txt.set_position((0.08, target_y))
+                dot.set_visible(sessions_expanded)
+                txt.set_visible(sessions_expanded)
+            else:
+                dot.set_visible(False)
+                txt.set_visible(False)
+
+        above = scroll_offset[0]
+        below = max(0, n - max_visible_rows - scroll_offset[0])
+        parts = []
+        if above > 0:
+            parts.append(f"↑ {above} above")
+        if below > 0:
+            parts.append(f"↓ {below} below")
+        if parts and sessions_expanded:
+            overflow_artist.set_text("  │  ".join(parts) + "   (scroll over players to see more)")
+            overflow_artist.set_visible(True)
+        else:
+            overflow_artist.set_visible(False)
+
         fig.canvas.draw_idle()
+
+    def set_sessions_visible(visible: bool):
+        if not visible:
+            # Collapsed: hide every player artist plus the overflow line
+            for dot, txt in session_row_artists:
+                dot.set_visible(False)
+                txt.set_visible(False)
+            overflow_artist.set_visible(False)
+            fig.canvas.draw_idle()
+        else:
+            # Expanded: let update_player_rows pick which rows are visible
+            update_player_rows()
 
     def update_sessions_header():
         sessions_header.set_text(
-            "▼ Players (click to collapse)" if sessions_expanded else "► Players (click to expand)"
+            "▼ Players (scroll / click to filter)" if sessions_expanded else "► Players (click to expand)"
         )
         fig.canvas.draw_idle()
 
-    if explained_variance is not None and hasattr(projection_model, "components_"):
-        pc1_text = _build_pc_text(projection_model, feature_names, 0)
-        pc2_text = _build_pc_text(projection_model, feature_names, 1)
+    def on_scroll(event):
+        # Use contains() rather than event.inaxes since the panel has
+        # set_axis_off() and inaxes can be unreliable in that case.
+        contains, _ = panel.contains(event)
+        if not contains:
+            return
+        if not sessions_expanded:
+            return
 
-        interpretation_text = (
-            "PCA Dimension Interpretation\n\n"
-            f"PC1 ({explained_variance[0] * 100:.1f}% variance)\n"
-            f"{pc1_text}\n\n"
-            f"PC2 ({explained_variance[1] * 100:.1f}% variance)\n"
-            f"{pc2_text}\n\n"
-            "Engineered features\n"
-            + "\n".join(f"- {f}" for f in feature_names)
-        )
+        delta = 1 if event.button == "down" else -1
+        new_offset = scroll_offset[0] + delta
+        n = len(session_row_artists)
+        max_offset = max(0, n - max_visible_rows)
+        new_offset = max(0, min(new_offset, max_offset))
+        if new_offset != scroll_offset[0]:
+            scroll_offset[0] = new_offset
+            update_player_rows()
+
+    fig.canvas.mpl_connect("scroll_event", on_scroll)
+
+
+    if explained_variance is not None and hasattr(projection_model, "components_"):
+        # Show every PC the model produced, not just PC1/PC2. One line each
+        # with the top-2 loadings inline so the box stays compact even for
+        # 5+ components.
+        lines = ["PCA Dimensions (top loadings)", ""]
+        for i, var in enumerate(explained_variance):
+            pc_text = _build_pc_text(projection_model, feature_names, i, top_n=2)
+            inline = ", ".join(pc_text.splitlines())
+            lines.append(f"PC{i+1} ({var * 100:.1f}%): {inline}")
+        interpretation_text = "\n".join(lines)
     else:
-        interpretation_text = "Engineered features\n" + "\n".join(f"- {f}" for f in feature_names)
+        interpretation_text = "(no PCA loadings available)"
+
+    # Anchor PCA box dynamically right below the scroll box so it gets all leftover vertical space.
+    pca_anchor_y = sessions_cutoff - 0.05
 
     panel.text(
         0.02,
-        0.13,
+        pca_anchor_y,
         interpretation_text,
         transform=panel.transAxes,
         va="top",
@@ -468,6 +664,7 @@ def visualize_player_clusters():
         bbox=dict(boxstyle="round,pad=0.5", facecolor="white", edgecolor="gray"),
     )
 
+    # ---------------- click handler ----------------
     def on_pick(event):
         nonlocal sessions_expanded
 
@@ -483,13 +680,34 @@ def visualize_player_clusters():
                 update_sessions_header()
                 return
 
-            if kind == "__behavior__":
-                _, behavior, icon_path = payload
-                if icon_path is None:
-                    return
-                open_expanded(icon_path, title=f"Behavior {behavior}")
+            if kind == "__reset_filter__":
+                clicked_filter[0] = None
+                apply_filter()
                 return
 
+            if kind == "__behavior__":
+                _, behavior, icon_path = payload
+
+                # Toggle behavior filter on/off
+                new_filter = ("behavior", behavior)
+                clicked_filter[0] = None if clicked_filter[0] == new_filter else new_filter
+                apply_filter()
+
+                # Also open the map preview if we have one
+                if icon_path:
+                    open_expanded(icon_path, title=f"Behavior {behavior}")
+                return
+
+            if kind == "__player__":
+                _, player_id = payload
+
+                # Toggle player filter on/off
+                new_filter = ("player", player_id)
+                clicked_filter[0] = None if clicked_filter[0] == new_filter else new_filter
+                apply_filter()
+                return
+
+        # Click on a plot point → open the session popup (and replay if it exists)
         if artist in point_targets:
             idx = point_targets[artist]
             entry = clustered_entries[idx]
@@ -514,6 +732,100 @@ def visualize_player_clusters():
 
     fig.canvas.mpl_connect("pick_event", on_pick)
 
+    # ---------------- hover tooltip + per-point highlight ----------------
+    # One reusable annotation that follows the mouse and shows what's under it.
+    hover_annotation = ax.annotate(
+        "",
+        xy=(0, 0),
+        xytext=(15, 15),
+        textcoords="offset points",
+        bbox=dict(boxstyle="round,pad=0.5", facecolor="#fffaf0", edgecolor="black", linewidth=0.8),
+        fontsize=9,
+        zorder=10,
+        visible=False,
+    )
+
+    # Default visual style for an unselected point (so we can restore it after un-hovering)
+    DEFAULT_EDGE_COLOR = "black"
+    DEFAULT_EDGE_WIDTH = 0.4
+    DEFAULT_SIZE = 80
+    HIGHLIGHT_EDGE_COLOR = "#ffcc00"   # bright yellow outline
+    HIGHLIGHT_EDGE_WIDTH = 2.5
+    HIGHLIGHT_SIZE = 200
+
+    # Track which scatter currently has the "you are hovering me" ring
+    currently_highlighted = [None]
+
+    def set_highlighted_scatter(scatter):
+        prev = currently_highlighted[0]
+        if prev is not None and prev is not scatter:
+            prev.set_edgecolors(DEFAULT_EDGE_COLOR)
+            prev.set_linewidths(DEFAULT_EDGE_WIDTH)
+            prev.set_sizes([DEFAULT_SIZE])
+            prev.set_zorder(2)
+        if scatter is not None:
+            scatter.set_edgecolors(HIGHLIGHT_EDGE_COLOR)
+            scatter.set_linewidths(HIGHLIGHT_EDGE_WIDTH)
+            scatter.set_sizes([HIGHLIGHT_SIZE])
+            scatter.set_zorder(5)
+        currently_highlighted[0] = scatter
+
+    def build_tooltip_text(meta):
+        # Compact, multi-line tooltip
+        behavior_lines = format_behavior_rows(meta["behavior"]).split("\n")
+        return (
+            f"Player: {meta['player_id']}\n"
+            f"Cluster: {meta['cluster_label']}\n"
+            + "\n".join(behavior_lines)
+        )
+
+    def clear_hover():
+        changed = False
+        if hover_filter[0] is not None:
+            hover_filter[0] = None
+            changed = True
+        if currently_highlighted[0] is not None:
+            set_highlighted_scatter(None)
+            changed = True
+        if hover_annotation.get_visible():
+            hover_annotation.set_visible(False)
+            changed = True
+        if changed:
+            apply_filter()
+
+    def on_motion(event):
+        # Cursor outside the plot → reset everything hover-related
+        if event.inaxes != ax:
+            clear_hover()
+            return
+
+        # Find the topmost point under the cursor (newest scatter wins on overlap)
+        for meta in reversed(point_metadata):
+            contains, _ = meta["scatter"].contains(event)
+            if contains:
+                new_hover = ("player", meta["player_id"])
+
+                # Update tooltip text + position
+                hover_annotation.xy = (event.xdata, event.ydata)
+                hover_annotation.set_text(build_tooltip_text(meta))
+                hover_annotation.set_visible(True)
+
+                # Highlight the specific point under the cursor
+                set_highlighted_scatter(meta["scatter"])
+
+                if hover_filter[0] != new_hover:
+                    hover_filter[0] = new_hover
+                    apply_filter()
+                else:
+                    # Filter unchanged but tooltip moved → still need a redraw
+                    fig.canvas.draw_idle()
+                return
+
+        # Cursor is inside the plot but not over any point
+        clear_hover()
+
+    fig.canvas.mpl_connect("motion_notify_event", on_motion)
+
     set_sessions_visible(sessions_expanded)
     update_sessions_header()
 
@@ -522,8 +834,10 @@ def visualize_player_clusters():
         print(f"\nWARNING: VIDEO_ROOT_DIR does not exist: {VIDEO_ROOT_DIR}")
     else:
         count_videos = sum(1 for _ in iter_video_files(VIDEO_ROOT_DIR))
-        print(f"\nCSV: {CSV_PATH}")
-        print(f"Included players: {INCLUDE_PLAYER_IDS if INCLUDE_PLAYER_IDS else 'ALL'}")
+        print(f"\nIncluded clusters: {unique_clusters}")
+        print(f"Included players ({len(unique_players)}):")
+        for p in unique_players:
+            print(f"  - {p}")
         print(f"Video search root: {video_root.resolve()}")
         print(f"Found {count_videos} candidate video files recursively.")
 
