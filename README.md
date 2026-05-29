@@ -193,10 +193,6 @@ python CompareBehaviorDiff.py
 
 Prints to the terminal - per-player Wilcoxon test results comparing intra-player telemetry distances when behavior is the same vs. when behavior differs.
 
-## Other Pyton scripts
-
-All of theese scripts are located under the `Old/`
-
 ### (Scree)
 
 **Inputs:**
@@ -210,6 +206,10 @@ python Scree.py
 ```
 
 Runs Archetypal Analysis for K = 1 through 20, prints sum of squares for each, then opens a scree plot. Find the in the curve to pick a good K. The chosen K then goes into `ClusterProject.py` under `ANALYSIS_KWARGS["n_archetypes"]`.
+
+## Other Pyton scripts
+
+All of theese scripts are located under the `Old/`
 
 ### Statistical tests (KRW / MUI / MixedEffects / Wilxocon)
 
