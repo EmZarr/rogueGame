@@ -5,6 +5,7 @@ This project has two halves:
 - A **Unity side** that generates roguelike maps using MAP-Elites, CMA-ME, or random generation, then plays them.
 - A **Python side** that analyzes player telemetry after testing sessions.
 
+
 ## Unity: generating, selecting, and playing maps
 
 ### The pipeline at a glance
@@ -29,14 +30,15 @@ You have three choices, depending on what kind of generator you want to use.
 1. Open the scene.
 2. Click the `grid` GameObject in the hierarchy.
 3. In the inspector, find the **CMA_ME** component. You can tune:
-   - **Total Iterations** - how many candidates each stage runs (enemy stage runs 3x this).
-   - **Initial Random Solutions** - how many random seed candidates each stage starts with before mutation kicks in.
-   - **Training Logger** - drag in the TrainingLogger GameObject if you want CSV progress logs.
+  - **Total Iterations** - how many candidates each stage runs (enemy stage runs 3x this).
+  - **Initial Random Solutions** - how many random seed candidates each stage starts with before mutation kicks in.
+  - **Training Logger** - drag in the TrainingLogger GameObject if you want CSV progress logs.
 4. Press **Play**.
 5. When it finishes, you'll find three new files in your `Assets/` folder:
-   - `geoArchiveEasy_maps.json`
-   - `furnArchiveEasy_maps.json`
-   - `enemArchiveEasy_maps.json` <- this is the one you'll use next
+  - `geoArchiveEasy_maps.json`
+  - `furnArchiveEasy_maps.json`
+  - `enemArchiveEasy_maps.json` <- this is the one you'll use next
+
 
 #### standard MAP-Elites
 
@@ -48,6 +50,7 @@ Same procedure as CMA-ME, but the output files are named without the "Easy" suff
 - `furnArchive_maps.json`
 - `enemArchive_maps.json` <- this one
 
+
 #### random (no elite search)
 
 **Scene:** `Assets/Scenes/RandomMapCreationScene.unity`
@@ -55,9 +58,10 @@ Same procedure as CMA-ME, but the output files are named without the "Easy" suff
 1. Open the scene.
 2. Click the `grid` GameObject.
 3. In the inspector, find the **RandomMapGeneratorEliteStyle** component. Tune:
-   - **Random Map Amount** - how many random maps to generate per stage.
+  - **Random Map Amount** - how many random maps to generate per stage.
 4. Press **Play**.
 5. The output file is `Random_MapsUpdated.json` in `Assets/`.
+
 
 ### Moving the file (manual step)
 
@@ -67,16 +71,16 @@ If `Assets/StreamingAssets/` doesn't exist yet, create it.
 
 ### Selecting a diverse subset
 
-The full archive has hundreds of maps. The selector picks a small, maximally-diverse subset to play.
-**Scene:** `Assets/Scenes/MapSelectorScene.unity`
+The full archive has hundreds of maps. The selector picks a small, maximally-diverse subset to play. **Scene:** `Assets/Scenes/MapSelectorScene.unity`
 
 1. Open the scene.
 2. Click the `grid` GameObject.
 3. In the inspector, find the **MapSelector** component. Set:
-   - **Input File Name** - the filename you just moved into StreamingAssets (e.g. `enemArchiveEasy_maps.json`).
-   - **Output File Name** - what to call the selected subset. **Default is `diverse_maps.json`** - the GamePlay scene expects exactly this name, so keep it unless you also change the LevelManager Script.
+  - **Input File Name** - the filename you just moved into StreamingAssets (e.g. `enemArchiveEasy_maps.json`).
+  - **Output File Name** - what to call the selected subset. **Default is `diverse_maps.json`** - the GamePlay scene expects exactly this name, so keep it unless you also change the LevelManager Script.
 4. Press **Play**.
 5. The output file is written into `Assets/StreamingAssets/` automatically (no manual move needed this time).
+
 
 ### Playing the maps
 
@@ -86,9 +90,11 @@ The full archive has hundreds of maps. The selector picks a small, maximally-div
 2. Open the scene.
 3. Press **Play**. The LevelManager loads 8 maps from the file and runs them as a level loop.
 
+
 If you saved your selector output with a different name, edit `LevelManager.cs` line 71.
 
 ---
+
 
 ## Python: analyzing telemetry and rendering maps
 
@@ -96,27 +102,27 @@ If you saved your selector output with a different name, edit `LevelManager.cs` 
 
 Install the packages used across all the scripts:
 
-```bash
+```
 pip install numpy pandas scipy scikit-learn matplotlib seaborn statsmodels Pillow py-pcha archetypes
 ```
 
 (Python 3.10+)
 All Python scripts expect to be run from the **repository root**:
 
-```bash
+```
 cd path/to/rogueGame
 python ScriptName.py
 ```
 
 ### Rendering map previews (ArchiveRunner)
 
-Turns a JSON archive into PNG thumbnails - one per unique behavior.
-**Inputs:**
+Turns a JSON archive into PNG thumbnails - one per unique behavior. **Inputs:**
 
 - A file named `maps.json` in the repository root. Rename any of your archive files (`enemArchiveEasy_maps.json`, `diverse_maps.json`, etc.) to `maps.json` before running.
-  **Run:**
+**Run:**
 
-```bash
+
+```
 python ArchiveRunner.py
 ```
 
@@ -124,6 +130,7 @@ python ArchiveRunner.py
 
 - An `icons/` folder full of PNGs, one per behavior, named `behavior_<>.png`.
 - The hash matches the behavior tuple, so the same map always gets the same filename.
+
 
 These PNGs are used by the visualizers below (DataVisualizer, ExplorationVisualizer) to show map previews when you click on data points.
 
@@ -135,9 +142,10 @@ This is the workflow for going from a raw telemetry CSV to interactive plots.
 
 - `Telemetry_RawControl.csv` in the repository root - exported from your playtest sessions.
 
+
 **Step 1 - verify the data.**
 
-```bash
+```
 python FilteredFeatures.py
 ```
 
@@ -148,9 +156,10 @@ To change which players or which behavior groups are included, edit the constant
 - `INCLUDE_PLAYER_IDS` - list of player IDs to keep
 - `FILTER_VALUES` - which geometry behavior bins to include
 
+
 **Step 2 - run the main visualization.**
 
-```bash
+```
 python DataVisualizer.py
 ```
 
@@ -162,6 +171,7 @@ This:
 4. Clicking a behavior in the side panel pops up the map preview from `icons/`
 5. Clicking a data point looks for a matching replay video in `MyRecordings/`
 
+
 You'll want to make sure `icons/` and `MyRecordings/` exist alongside the script for the click-through features to work, they arent needed but nice.
 
 ### Alternative visualizer (ExplorationVisualizer)
@@ -170,9 +180,10 @@ You'll want to make sure `icons/` and `MyRecordings/` exist alongside the script
 
 - `Telemetry_Raw.csv` in the repository root.
 
+
 **Run:**
 
-```bash
+```
 python ExplorationVisualizer.py
 ```
 
@@ -185,9 +196,10 @@ To configure: edit the constants near the top of the file (`N_CLUSTERS`, `INCLUD
 
 - Same as DataVisualizer (uses ClusterProject which uses FilteredFeatures, so it needs `Telemetry_RawControl.csv`).
 
+
 **Run:**
 
-```bash
+```
 python CompareBehaviorDiff.py
 ```
 
@@ -199,9 +211,10 @@ Prints to the terminal - per-player Wilcoxon test results comparing intra-player
 
 - Same `Telemetry_RawControl.csv` as the main pipeline.
 
+
 **Run:**
 
-```bash
+```
 python Scree.py
 ```
 
@@ -222,9 +235,11 @@ These four scripts run different statistical tests on `Telemetry_Raw.csv` to che
 | `MixedEffects.py` | Linear mixed-effects regression (random intercept per player) | `python MixedEffects.py` |
 | `Wilxocon.py`     | Wilcoxon signed-rank across level configs                     | `python Wilxocon.py`     |
 
+
 All four need `Telemetry_Raw.csv` in the repository root.
 
 ---
+
 
 ## Full end-to-end workflow (typical playtest)
 
@@ -237,3 +252,22 @@ If you're running a complete cycle from "I want to train a new model" to "I have
 5. **Build and ship the game** to playtesters; collect telemetry CSVs.
 6. **Drop the CSVs in the repo root** as `Telemetry_RawControl.csv` (for clustering) or `Telemetry_Raw.csv` (for stats).
 7. **Analyze** -> run `python DataVisualizer.py` for clusters, `python ExplorationVisualizer.py` for the 3D plot, plus whichever stats tests you need.
+
+---
+
+## ExperimentData folder
+
+The repository includes an `ExperimentData/` folder containing recorded playtest data from our study sessions.
+
+To use it:
+
+1. Rename the choosen file from `ExperimentData` to the expected input filename e.g.`Telemetry_Raw.csv` (depending on which script you want to run).  
+2. Then copy/move the CSV file and place it directly in the same folder as the script you want to run.
+
+---
+
+## Third-party assets
+
+The following assets are used in this project but are not owned by the project authors. Please refer to each asset's original license before redistribution.
+
+- 
