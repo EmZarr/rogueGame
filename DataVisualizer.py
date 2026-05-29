@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import colorsys
 
 from ClusterProject import cluster_entries
 
@@ -30,7 +31,7 @@ MARKERS = ["o", "s", "^", "D", "P", "X", "*", "v", "<", ">"]
 #   enemy difficulty      → 3 bins
 # Adjust the labels here to whatever names you use in your writeup.
 BEHAVIOR_FIELDS = [
-    ("Room Amount Tier", 0, 12),
+    ("Openess", 0, 12),
     ("Loot on Main Ratio", 2, 3),
     ("Loot Health Ratio", 3, 3),
     ("Enemy Encounter Type", 4, 126),
@@ -40,9 +41,9 @@ BEHAVIOR_FIELDS = [
 # Short forms used in the side-panel behavior rows so each behavior
 # fits on one line. Edit if you change the labels above.
 COMPACT_LABELS = {
-    "Room Amount Tier": "Rooms",
-    "Loot on Main Ratio": "LootM",
-    "Loot Health Ratio": "LootH",
+    "Openess": "Openess",
+    "Loot on Main Ratio": "LootMPR",
+    "Loot Health Ratio": "LootHR",
     "Enemy Encounter Type": "Enemy",
     "Difficulty": "Diff",
 }
@@ -53,11 +54,51 @@ HIGHLIGHT_ALPHA = 0.95    # point matches the active filter
 DIM_ALPHA = 0.08          # point does not match the active filter
 
 
-def session_to_color(session_id: str):
-    """Deterministic random color from a player ID — used only for the side-panel player dots."""
-    hash_val = int(hashlib.md5(str(session_id).encode("utf-8")).hexdigest(), 16)
+# Clearly distinguishable baseline colors
+BASE_PLAYER_COLORS = [
+    "#e41a1c",  # red
+    "#377eb8",  # blue
+    "#4daf4a",  # green
+    "#984ea3",  # purple
+    "#ff7f00",  # orange
+    "#ffff33",  # yellow
+    "#a65628",  # brown
+    "#f781bf",  # pink
+    "#17becf",  # cyan
+    "#999999",  # gray
+]
+
+def _hex_to_rgb01(hex_color: str):
+    hex_color = hex_color.lstrip("#")
+    return tuple(int(hex_color[i:i+2], 16) / 255.0 for i in (0, 2, 4))
+
+
+def session_to_color(session_id: str, player_index: int):
+    """
+    Assign highly distinct colors first.
+    After the base palette is exhausted, generate deterministic
+    variants using the player hash.
+    """
+
+    # First N players get maximally distinct colors
+    if player_index < len(BASE_PLAYER_COLORS):
+        return _hex_to_rgb01(BASE_PLAYER_COLORS[player_index])
+
+    # Additional players:
+    # deterministic hue generation from hash
+    hash_val = int(
+        hashlib.md5(str(session_id).encode("utf-8")).hexdigest(),
+        16
+    )
+
     rng = np.random.RandomState(hash_val % (2**32))
-    return tuple(rng.rand(3))
+
+    # Generate vivid colors with constrained saturation/value
+    hue = rng.rand()
+    sat = 0.65 + rng.rand() * 0.25
+    val = 0.75 + rng.rand() * 0.20
+
+    return colorsys.hsv_to_rgb(hue, sat, val)
 
 
 def behavior_hash8(behavior_tuple) -> str:
@@ -268,7 +309,7 @@ def visualize_player_clusters():
     unique_behaviors = list(dict.fromkeys(behaviors))
 
     unique_players = list(dict.fromkeys(entry["info"]["playerId"] for entry in clustered_entries))
-    session_color_map = {player_id: session_to_color(player_id) for player_id in unique_players}
+    session_color_map = {player_id: session_to_color(player_id, i) for i, player_id in enumerate(unique_players)}
     behavior_marker_map = {b: MARKERS[i % len(MARKERS)] for i, b in enumerate(unique_behaviors)}
 
     # Kept for informational printing only — clusters are conveyed via spatial grouping + tooltip.
@@ -355,7 +396,7 @@ def visualize_player_clusters():
         ax.set_ylabel("Axis 2")
 
     ax.set_title(
-        "Telemetry Behaviour Clustering (2D PCA Projection)\n"
+        "Player Clustering - Experiment 3-B Combat(PCA Projection)\n"
         "Color = Player | Shape = Behavior | Hover for details | Click a row to filter | Click a point to open replay"
     )
     ax.grid(True, alpha=0.25)
@@ -403,7 +444,7 @@ def visualize_player_clusters():
     panel.text(
         0.02,
         0.94,
-        "Behaviors (click to filter / open map)",
+        "Level Descriptors (click to filter / open map)",
         transform=panel.transAxes,
         va="top",
         fontsize=11,
@@ -412,21 +453,43 @@ def visualize_player_clusters():
 
     col1_x_marker, col1_x_text = 0.03, 0.07
 
-    row_h_beh = 0.045              # one line per behavior
+    row_h_beh = 0.045
     top_beh = 0.89
-    max_behavior_rows = 8          # hard cap so a flood of behaviors can't push players off-panel
 
-    n_drawn_behaviors = 0
+    # Number of visible rows in the viewport
+    max_visible_behavior_rows = 8
 
+    behavior_scroll_offset = [0]
+    behavior_row_artists = []
+
+    # Scroll area bounds
+    behavior_cutoff_y = top_beh - max_visible_behavior_rows * row_h_beh
+
+    # Visual background box
+    from matplotlib.patches import Rectangle
+
+    behavior_scroll_box = Rectangle(
+        (0.005, behavior_cutoff_y - 0.005),
+        0.99,
+        top_beh - behavior_cutoff_y + row_h_beh * 0.5 + 0.005,
+        transform=panel.transAxes,
+        fill=True,
+        facecolor="#fafafa",
+        edgecolor="#cccccc",
+        linewidth=0.8,
+        zorder=0,
+    )
+
+    panel.add_patch(behavior_scroll_box)
+
+    # Create ALL behavior rows once
     for i, behavior in enumerate(unique_behaviors):
-        if i >= max_behavior_rows:
-            break
-        y = top_beh - i * row_h_beh
 
-        # Marker matches the shape used for this behavior on the main plot.
-        panel.scatter(
+        initial_y = top_beh - i * row_h_beh
+
+        marker_artist = panel.scatter(
             col1_x_marker,
-            y,
+            initial_y,
             transform=panel.transAxes,
             s=60,
             marker=behavior_marker_map[behavior],
@@ -434,50 +497,97 @@ def visualize_player_clusters():
             edgecolors="black",
             linewidths=0.6,
             zorder=3,
+            picker=True,
         )
 
         icon_path = behavior_to_icon_path(behavior, ICON_DIR)
 
         label = format_behavior_compact(behavior)
+
         if icon_path is None:
             missing_icons.append(behavior)
-            label += "   (no icon)"
 
         txt = panel.text(
             col1_x_text,
-            y,
+            initial_y,
             label,
             transform=panel.transAxes,
             va="center",
             fontsize=8,
+            picker=True,
         )
-        txt.set_picker(True)
-        click_targets[txt] = ("__behavior__", behavior, icon_path)
-        n_drawn_behaviors = i + 1
 
-    # If there are more behaviors than fit, tell the user
-    if len(unique_behaviors) > n_drawn_behaviors:
-        hidden_beh = len(unique_behaviors) - n_drawn_behaviors
-        y = top_beh - n_drawn_behaviors * row_h_beh
-        panel.text(
-            col1_x_text,
-            y,
-            f"… and {hidden_beh} more behavior(s) not shown",
-            transform=panel.transAxes,
-            va="center",
-            fontsize=7,
-            style="italic",
-            color="#888888",
+        click_targets[txt] = ("__behavior__", behavior, icon_path)
+        click_targets[marker_artist] = ("__behavior__", behavior, icon_path)
+
+        behavior_row_artists.append((marker_artist, txt))
+
+    behavior_overflow_artist = panel.text(
+        0.02,
+        behavior_cutoff_y - 0.005,
+        "",
+        transform=panel.transAxes,
+        va="top",
+        fontsize=7,
+        style="italic",
+        color="#888888",
+    )
+
+    def update_behavior_rows():
+
+        n = len(behavior_row_artists)
+
+        max_offset = max(0, n - max_visible_behavior_rows)
+
+        behavior_scroll_offset[0] = max(
+            0,
+            min(behavior_scroll_offset[0], max_offset)
         )
+
+        for i, (marker_artist, txt) in enumerate(behavior_row_artists):
+
+            visual_index = i - behavior_scroll_offset[0]
+
+            if 0 <= visual_index < max_visible_behavior_rows:
+
+                target_y = top_beh - visual_index * row_h_beh
+
+                marker_artist.set_offsets([[col1_x_marker, target_y]])
+                txt.set_position((col1_x_text, target_y))
+
+                marker_artist.set_visible(True)
+                txt.set_visible(True)
+
+            else:
+                marker_artist.set_visible(False)
+                txt.set_visible(False)
+
+        above = behavior_scroll_offset[0]
+        below = max(0, n - max_visible_behavior_rows - behavior_scroll_offset[0])
+
+        parts = []
+
+        if above > 0:
+            parts.append(f"↑ {above} above")
+
+        if below > 0:
+            parts.append(f"↓ {below} below")
+
+        if parts:
+            behavior_overflow_artist.set_text(
+                "  │  ".join(parts) + "   (scroll over levels)"
+            )
+            behavior_overflow_artist.set_visible(True)
+        else:
+            behavior_overflow_artist.set_visible(False)
+
+        fig.canvas.draw_idle()
+
+    update_behavior_rows()
 
     sessions_expanded = True
 
-    # Position the players section right below the last behavior — no big gap.
-    last_beh_y = top_beh - max(0, n_drawn_behaviors - 1) * row_h_beh
-    # Extra padding if we showed a "... and N more" footnote
-    extra_pad = row_h_beh if len(unique_behaviors) > n_drawn_behaviors else 0.0
-
-    sessions_header_y = last_beh_y - row_h_beh - extra_pad - 0.025
+    sessions_header_y = behavior_cutoff_y - 0.06
     sessions_top_y = sessions_header_y - 0.035
     row_h_sess = 0.026
     visible_session_rows = 7
@@ -618,22 +728,58 @@ def visualize_player_clusters():
         fig.canvas.draw_idle()
 
     def on_scroll(event):
-        # Use contains() rather than event.inaxes since the panel has
-        # set_axis_off() and inaxes can be unreliable in that case.
+
         contains, _ = panel.contains(event)
+
         if not contains:
-            return
-        if not sessions_expanded:
             return
 
         delta = 1 if event.button == "down" else -1
-        new_offset = scroll_offset[0] + delta
-        n = len(session_row_artists)
-        max_offset = max(0, n - max_visible_rows)
-        new_offset = max(0, min(new_offset, max_offset))
-        if new_offset != scroll_offset[0]:
-            scroll_offset[0] = new_offset
-            update_player_rows()
+
+        renderer = fig.canvas.get_renderer()
+
+        #
+        # Detect whether mouse is inside the BEHAVIOR scroll box
+        #
+        behavior_bbox = behavior_scroll_box.get_window_extent(renderer)
+
+        if behavior_bbox.contains(event.x, event.y):
+
+            new_offset = behavior_scroll_offset[0] + delta
+
+            n = len(behavior_row_artists)
+
+            max_offset = max(0, n - max_visible_behavior_rows)
+
+            new_offset = max(0, min(new_offset, max_offset))
+
+            if new_offset != behavior_scroll_offset[0]:
+                behavior_scroll_offset[0] = new_offset
+                update_behavior_rows()
+
+            return
+
+        #
+        # Detect whether mouse is inside the PLAYER scroll box
+        #
+        scroll_bbox = scroll_box.get_window_extent(renderer)
+
+        if scroll_bbox.contains(event.x, event.y):
+
+            if not sessions_expanded:
+                return
+
+            new_offset = scroll_offset[0] + delta
+
+            n = len(session_row_artists)
+
+            max_offset = max(0, n - max_visible_rows)
+
+            new_offset = max(0, min(new_offset, max_offset))
+
+            if new_offset != scroll_offset[0]:
+                scroll_offset[0] = new_offset
+                update_player_rows()
 
     fig.canvas.mpl_connect("scroll_event", on_scroll)
 

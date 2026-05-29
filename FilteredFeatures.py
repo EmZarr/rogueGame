@@ -7,12 +7,12 @@ import pandas as pd
 # Change values here only.
 # ============================================================
 
-CSV_PATH = "Telemetry_RawControl.csv"
+CSV_PATH = "Experiment3RandomMapsData.csv"
 
 FILTER_COLUMN = "GeometryBehavior"
-FILTER_VALUES = [1]
+FILTER_VALUES = []
 
-INCLUDE_PLAYER_IDS = ["4036b402136b005f97a637e85f7961f4a1df5e23", "a337940f472f2f83c15e80db566145fe9e844d0d", "bbd174147e56b9d0ecff534e0bc4e7aa42920e66", "61ba1ad1e381c2a7ccb892a864aad6a50daf8d96", "86c8cfe04bc19458adcf3c880baccfeb7a03bd7c", "5953ebc01c53dc47066142b416c932f7e8a07982", "e967dc9b7177e4abf497f68b06561fcdd3fb0ebd", "c905b72819f4bbd69818665d6c720bddc85ce1a2"]
+INCLUDE_PLAYER_IDS = []#["4036b402136b005f97a637e85f7961f4a1df5e23", "a337940f472f2f83c15e80db566145fe9e844d0d", "bbd174147e56b9d0ecff534e0bc4e7aa42920e66", "61ba1ad1e381c2a7ccb892a864aad6a50daf8d96", "86c8cfe04bc19458adcf3c880baccfeb7a03bd7c", "5953ebc01c53dc47066142b416c932f7e8a07982", "e967dc9b7177e4abf497f68b06561fcdd3fb0ebd", "c905b72819f4bbd69818665d6c720bddc85ce1a2"]
 
 PLAYER_ID_COLUMN = "playerId"
 LEVEL_PLAY_ID_COLUMN = "levelPlayID"
